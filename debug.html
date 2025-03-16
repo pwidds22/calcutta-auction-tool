@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Page</title>
+</head>
+<body>
+    <h1>Debug Page</h1>
+    <p>This page will help identify JavaScript errors in your Calcutta Auction Tool.</p>
+    <p>Check the browser console for error messages.</p>
+
+    <script>
+        // Add a global error handler
+        window.onerror = function(message, source, lineno, colno, error) {
+            document.body.innerHTML += `<div style="color: red; border: 1px solid red; padding: 10px; margin: 10px;">
+                <h3>JavaScript Error:</h3>
+                <p>Message: ${message}</p>
+                <p>Source: ${source}</p>
+                <p>Line: ${lineno}, Column: ${colno}</p>
+                <p>Error: ${error}</p>
+            </div>`;
+            return true;
+        };
+
+        // Try to load the auction-tool.js file
+        const script = document.createElement('script');
+        script.src = 'js/auction-tool.js';
+        script.onerror = function() {
+            document.body.innerHTML += `<div style="color: red; border: 1px solid red; padding: 10px; margin: 10px;">
+                <h3>Failed to load script:</h3>
+                <p>js/auction-tool.js</p>
+            </div>`;
+        };
+        document.head.appendChild(script);
+    </script>
+</body>
+</html>

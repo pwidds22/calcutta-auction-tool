@@ -1,0 +1,618 @@
+/* Main Styles for Calcutta Auction Tool */
+
+/* General Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+.navbar-brand {
+    font-weight: bold;
+}
+
+/* Card Styling */
+.card {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.card-header {
+    font-weight: bold;
+}
+
+/* Table Styling */
+.table th {
+    background-color: #ffffff;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid #dee2e6;
+    border-right: 1px solid #dee2e6;
+    box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1);
+    white-space: nowrap;
+    min-width: 70px;
+    padding: 8px 5px;
+    min-height: 40px;
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+/* Style for the top merged header row */
+.table thead tr:first-child th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+    border-right: 1px solid #dee2e6;
+    padding: 6px 5px;
+}
+
+/* Style for the second header row */
+.table thead tr:last-child th {
+    background-color: #ffffff;
+    font-size: 0.8rem;
+    padding: 6px 5px;
+    font-weight: 500;
+    border-right: 1px solid #dee2e6;
+}
+
+/* Remove right border from last column in both rows */
+.table thead tr th:last-child {
+    border-right: none;
+}
+
+/* Specific styling for profit section header */
+.table thead tr:first-child th[colspan="6"] {
+    background-color: #e9ecef;
+    color: #495057;
+    font-weight: 600;
+    border-left: 2px solid #dee2e6;
+    border-right: 2px solid #dee2e6;
+}
+
+/* Style for profit columns in second row */
+.table thead tr:last-child th.profit-projection {
+    border-left: none;
+    border-right: none;
+}
+
+.table thead tr:last-child th.profit-projection:first-of-type {
+    border-left: 2px solid #dee2e6;
+}
+
+.table thead tr:last-child th.profit-projection:last-of-type {
+    border-right: 2px solid #dee2e6;
+}
+
+/* Style for My Team column header */
+.table thead tr:first-child th:last-child {
+    background-color: #ffffff;
+    border-left: 1px solid #dee2e6;
+}
+
+.table td {
+    padding: 10px 5px;
+    min-height: 45px;
+    vertical-align: middle;
+    font-size: 0.85rem;
+    border-right: 1px solid #dee2e6;
+}
+
+/* Remove the last border from cells */
+.table th:last-child,
+.table td:last-child {
+    border-right: none;
+}
+
+/* Specific column widths */
+.table th:nth-child(9), /* Sugg. Bid column */
+.table th:nth-child(10), /* Fair Value column */
+.table th:nth-child(11) { /* Price column */
+    min-width: 90px !important; /* Increased from default */
+}
+
+.table td:nth-child(9), /* Sugg. Bid column */
+.table td:nth-child(10), /* Fair Value column */
+.table td:nth-child(11) { /* Price column */
+    min-width: 90px !important; /* Increased from default */
+}
+
+/* Make profit columns more compact */
+.table th:nth-child(4), /* R32 */
+.table th:nth-child(5), /* S16 */
+.table th:nth-child(6), /* E8 */
+.table th:nth-child(7), /* F4 */
+.table th:nth-child(8), /* F2 */
+.table th:nth-child(9) { /* Champ */
+    min-width: 55px !important; /* Made even more compact */
+}
+
+.table td:nth-child(4), /* R32 */
+.table td:nth-child(5), /* S16 */
+.table td:nth-child(6), /* E8 */
+.table td:nth-child(7), /* F4 */
+.table td:nth-child(8), /* F2 */
+.table td:nth-child(9) { /* Champ */
+    min-width: 55px !important; /* Made even more compact */
+}
+
+.table-responsive {
+    max-height: 600px;
+    overflow-y: auto;
+    overflow-x: auto; /* Ensure horizontal scrolling works properly */
+    width: 100%; /* Ensure the table takes full width of container */
+}
+
+.profit-projection {
+    background-color: #f8f9fa;
+    display: table-cell !important;
+    visibility: visible !important;
+    width: auto !important;
+    min-width: 65px !important; /* Reduced from 80px */
+    min-height: 45px !important; /* Reduced from 50px */
+    opacity: 1 !important;
+    border: 1px solid #dee2e6 !important;
+    padding: 10px 5px !important; /* Reduced from 12px 6px */
+    border-right: 1px solid #dee2e6 !important;
+}
+
+.profit-projection > div:first-child {
+    margin-bottom: 2px;
+}
+
+.profit-projection > div.text-muted {
+    font-size: 0.75em; /* Reduced from 0.8em */
+    color: #6c757d !important;
+}
+
+.profit-projection.positive-value {
+    color: #198754;
+    font-weight: bold;
+}
+
+.profit-projection.negative-value {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+/* Show profit projection columns when the table has the show-profits class */
+.show-profits .profit-projection {
+    display: table-cell !important;
+    visibility: visible !important;
+    width: auto !important;
+    opacity: 1 !important;
+}
+
+/* Always ensure purchase price cells are visible */
+.purchase-price-cell {
+    display: table-cell !important;
+}
+
+/* Form Controls */
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Custom Styling for Inputs */
+input[type="number"] {
+    text-align: right;
+    width: 100%; /* Ensure inputs take full width of their cells */
+    min-width: 80px; /* Ensure minimum width for number inputs */
+}
+
+/* Team ownership checkbox styling */
+.team-checkbox {
+    width: 20px;
+    height: 20px;
+}
+
+/* Positive and negative values */
+.positive-value {
+    color: green !important;
+    font-weight: bold !important;
+}
+
+.negative-value {
+    color: red !important;
+    font-weight: bold !important;
+}
+
+/* Highlight rows for teams you own */
+.my-team-row {
+    background-color: rgba(25, 135, 84, 0.15) !important;
+}
+
+/* Styling for odds inputs */
+.odds-input {
+    width: 70px; /* Reduced from 80px */
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    .table th, .table td {
+        font-size: 0.85rem;
+        padding: 8px 4px;
+        min-width: 60px;
+    }
+    
+    .profit-projection {
+        min-width: 60px !important;
+        padding: 8px 4px !important;
+    }
+    
+    .odds-input {
+        width: 60px;
+    }
+    
+    /* Ensure price column has enough width */
+    .table th:nth-child(11), .table td:nth-child(11) {
+        min-width: 80px !important;
+    }
+}
+
+@media (max-width: 992px) {
+    .table th, .table td {
+        font-size: 0.8rem;
+        padding: 6px 3px;
+        min-width: 55px;
+    }
+    
+    .profit-projection {
+        min-width: 55px !important;
+        padding: 6px 3px !important;
+    }
+    
+    .odds-input {
+        width: 55px;
+    }
+    
+    /* Ensure price column has enough width */
+    .table th:nth-child(11), .table td:nth-child(11) {
+        min-width: 70px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .card-title {
+        font-size: 1.2rem;
+    }
+    
+    .table th, .table td {
+        font-size: 0.75rem;
+        padding: 4px 2px;
+        min-width: 45px;
+    }
+    
+    .profit-projection {
+        min-width: 45px !important;
+        padding: 4px 2px !important;
+    }
+    
+    .odds-input {
+        width: 45px;
+    }
+    
+    /* Ensure price column has enough width */
+    .table th:nth-child(11), .table td:nth-child(11) {
+        min-width: 60px !important;
+    }
+}
+
+/* Team Odds Table Styling */
+#oddsTable {
+    font-size: 0.85rem;
+}
+
+#oddsTable thead tr:first-child th {
+    font-weight: 600;
+    border-bottom: none;
+}
+
+#oddsTable thead tr:last-child th {
+    font-weight: 500;
+    vertical-align: middle;
+    padding: 10px 5px;
+}
+
+#oddsTable tbody td {
+    padding: 10px 5px;
+    vertical-align: middle;
+}
+
+#oddsTable input[type="text"] {
+    width: 100%;
+    padding: 4px 8px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+#oddsTable input[type="text"]:focus {
+    outline: none;
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+#oddsTable .form-check-input {
+    margin: 0;
+    cursor: pointer;
+}
+
+/* Add hover effect to table rows */
+#oddsTable tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05) !important;
+}
+
+/* Style the odds input columns */
+#oddsTable td:nth-child(4),
+#oddsTable td:nth-child(5),
+#oddsTable td:nth-child(6),
+#oddsTable td:nth-child(7),
+#oddsTable td:nth-child(8),
+#oddsTable td:nth-child(9) {
+    min-width: 100px;
+    text-align: center;
+}
+
+/* Style the probability display */
+.probability-display {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-top: 2px;
+}
+
+/* Quick Actions styling */
+.card-header h5 {
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.card-body .btn {
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+    min-width: 140px;
+}
+
+.card-body .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.card-body .btn i {
+    font-size: 1.1rem;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-danger:hover {
+    background-color: #bb2d3b;
+    border-color: #b02a37;
+}
+
+.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+}
+
+/* Team Auction Tracker header buttons */
+.card-header .btn-light {
+    background-color: rgba(255, 255, 255, 0.9);
+    border: none;
+    font-size: 0.875rem;
+    padding: 0.375rem 0.75rem;
+    transition: all 0.2s ease-in-out;
+}
+
+.card-header .btn-light:hover {
+    background-color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.card-header .btn-light i {
+    font-size: 1rem;
+}
+
+/* Adjust spacing in Auction Management card */
+.auction-tracker {
+    background-color: #ffffff !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+}
+
+.auction-tracker h5 {
+    color: #212529;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+}
+
+.auction-tracker .card {
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    margin-bottom: 0;
+}
+
+.auction-tracker .card-header {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.auction-tracker .card-header h6 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.auction-tracker .card-body {
+    padding: 1rem;
+}
+
+.auction-tracker .text-muted {
+    color: #6c757d !important;
+    font-size: 0.875rem;
+}
+
+.auction-tracker .fw-bold {
+    font-size: 0.875rem;
+}
+
+/* Spacing between stats in cards */
+.auction-tracker .d-flex.justify-content-between {
+    margin-bottom: 0.5rem !important;
+}
+
+.auction-tracker .d-flex.justify-content-between:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* Card color schemes */
+.auction-tracker .border-primary {
+    border-color: #0d6efd !important;
+}
+
+.auction-tracker .border-secondary {
+    border-color: #6c757d !important;
+}
+
+.auction-tracker .border-success {
+    border-color: #198754 !important;
+}
+
+/* Row spacing in auction tracker */
+.auction-tracker .row.g-4 {
+    margin: 0 !important;
+}
+
+.auction-tracker .col-md-4 {
+    padding: 0.75rem;
+}
+
+/* Value formatting */
+.auction-tracker .positive-value {
+    color: #198754 !important;
+}
+
+.auction-tracker .negative-value {
+    color: #dc3545 !important;
+}
+
+/* Remove alert styling */
+.alert.auction-tracker {
+    border-radius: 0;
+}
+
+/* Sort button styling */
+#sortDirection {
+    width: auto;
+    min-width: 40px;
+    padding: 0.375rem 0.75rem;
+}
+
+/* Adjust input group for sort option */
+.input-group {
+    display: flex;
+    align-items: stretch;
+}
+
+.input-group select {
+    flex: 1;
+}
+
+.input-group .btn {
+    flex: 0 0 auto;
+}
+
+/* Profit projection columns styling */
+.profit-projection:last-child {
+    border-right: none !important;
+}
+
+/* Value info columns styling */
+.table th[data-column="suggBid"],
+.table th[data-column="fairValue"],
+.table th[data-column="price"],
+.table td[data-column="suggBid"],
+.table td[data-column="fairValue"],
+.table td[data-column="price"] {
+    border-right: 1px solid #dee2e6;
+}
+
+/* Team Odds page styling */
+.card-header .btn-light {
+    background-color: rgba(255, 255, 255, 0.9);
+    border: none;
+    font-size: 0.875rem;
+    padding: 0.375rem 0.75rem;
+    transition: all 0.2s ease-in-out;
+}
+
+.card-header .btn-light:hover {
+    background-color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.card-header .btn-light i {
+    font-size: 1rem;
+}
+
+/* Understanding Odds cards */
+.understanding-odds .card {
+    transition: transform 0.2s;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.understanding-odds .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.understanding-odds .card-header {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.understanding-odds .card-header h6 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.understanding-odds .card-body {
+    padding: 1rem;
+}
+
+.understanding-odds p {
+    color: #495057;
+    line-height: 1.5;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card-header .btn-light span {
+        display: none;
+    }
+    
+    .card-header .btn-light {
+        padding: 0.375rem;
+    }
+    
+    .card-header .btn-light i {
+        margin: 0;
+    }
+    
+    .understanding-odds .card {
+        margin-bottom: 1rem;
+    }
+}

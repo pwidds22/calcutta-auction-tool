@@ -1,0 +1,1541 @@
+// Calcutta Auction Tool JavaScript
+
+// Global variables
+let auctionTeams = [];
+let payoutRules = null;  // Initialize as null, will be loaded per user
+let estimatedPotSize = null;  // Initialize as null, will be loaded per user
+let projectedPotSize = 0;
+let myTeams = [];
+let opponentsTeams = [];
+let availableTeams = [];
+let showProfits = false;
+let profitColumns = [];
+let currentPage = 1;
+let teamsPerPage = 20;
+let totalPages = 0;
+let auctionFilteredTeams = [];
+let auctionRegionFilter = 'All';
+let currentStatusFilter = 'All';
+let auctionSearchTerm = '';
+let auctionSortOption = 'seed';
+let auctionSortDirection = 'asc';
+let potSize = null;  // Initialize as null, will be loaded per user
+let profitCache = {};
+let isLoading = false;
+
+// Base teams data - this is constant and should not change
+const AUCTION_BASE_TEAMS = getDefaultTeams();
+
+// Initialize teams
+async function initializeTeams() {
+    console.log('Initializing teams...');
+    isLoading = true;
+    updateUI();
+    
+    try {
+        // Start with the base teams data
+        auctionTeams = AUCTION_BASE_TEAMS.map(baseTeam => ({
+            ...baseTeam,
+            purchasePrice: 0,
+            isMyTeam: false,
+            odds: {
+                r32: 0,
+                s16: 0,
+                e8: 0,
+                f4: 0,
+                f2: 0,
+                champ: 0
+            }
+        }));
+        
+        // First try to load teams from team-odds.js data
+        const teamOddsData = localStorage.getItem('teamOddsData');
+        
+        if (teamOddsData) {
+            try {
+                const oddsData = JSON.parse(teamOddsData);
+                console.log('Found team odds data:', oddsData.length);
+                
+                if (oddsData.length > 0) {
+                    // Merge odds data with base teams
+                    oddsData.forEach(userTeam => {
+                        const team = auctionTeams.find(t => t.id === userTeam.id);
+                        if (team) {
+                            team.americanOdds = userTeam.americanOdds;
+                            team.odds = userTeam.odds;
+                            team.winPercentage = userTeam.winPercentage;
+                            team.valuePercentage = userTeam.valuePercentage;
+                            team.purchasePrice = userTeam.purchasePrice || 0;
+                            team.isMyTeam = userTeam.isMyTeam || false;
+                        }
+                    });
+                    console.log('Teams initialized from team-odds data:', auctionTeams.length);
+                    isLoading = false;
+                    updateUI();
+                    return;
+                }
+            } catch (error) {
+                console.error('Error loading team odds data:', error);
+            }
+        }
+        
+        // If no team-odds data, try to load from localStorage or server
+        const savedTeams = await loadTeamsFromStorage();
+        
+        if (savedTeams) {
+            // Merge saved data with base teams
+            savedTeams.forEach(userTeam => {
+                const team = auctionTeams.find(t => t.id === userTeam.id);
+                if (team) {
+                    team.americanOdds = userTeam.americanOdds;
+                    team.odds = userTeam.odds;
+                    team.winPercentage = userTeam.winPercentage;
+                    team.valuePercentage = userTeam.valuePercentage;
+                    team.purchasePrice = userTeam.purchasePrice || 0;
+                    team.isMyTeam = userTeam.isMyTeam || false;
+                }
+            });
+            console.log('Teams loaded:', auctionTeams.length);
+        } else {
+            // Try to load teams from the server
+            try {
+                const response = await authFetch('/api/data');
+                
+                if (!response.ok) {
+                    console.error(`Server responded with status: ${response.status}`);
+                    const errorText = await response.text();
+                    console.error(`Error response: ${errorText}`);
+                    throw new Error(`Failed to load data: ${response.statusText}`);
+                }
+                
+                const userData = await response.json();
+                if (userData.teams && userData.teams.length > 0) {
+                    // Merge server data with base teams
+                    userData.teams.forEach(userTeam => {
+                        const team = auctionTeams.find(t => t.id === userTeam.id);
+                        if (team) {
+                            team.americanOdds = userTeam.americanOdds;
+                            team.odds = userTeam.odds;
+                            team.winPercentage = userTeam.winPercentage;
+                            team.valuePercentage = userTeam.valuePercentage;
+                            team.purchasePrice = userTeam.purchasePrice || 0;
+                            team.isMyTeam = userTeam.isMyTeam || false;
+                        }
+                    });
+                    console.log('Teams loaded from server:', auctionTeams.length);
+                    
+                    // Update the UI immediately
+                    updateUI();
+                    return;
+                }
+            } catch (error) {
+                console.error('Error loading teams from server:', error.message);
+                // Continue with base teams if server load fails
+            }
+        }
+        
+        // If we get here, we're using base teams
+        console.log('Using base teams:', auctionTeams.length);
+        
+        // Update the UI
+        updateUI();
+    } catch (error) {
+        console.error('Error initializing teams:', error);
+        const errorMessage = document.getElementById('errorMessage');
+        if (errorMessage) {
+            errorMessage.textContent = 'Error loading teams. Please try refreshing the page.';
+            errorMessage.style.display = 'block';
+        }
+    } finally {
+        isLoading = false;
+        updateUI();
+    }
+}
+
+// Save teams data to localStorage and server
+async function saveTeamsToStorage() {
+    try {
+        // Create a copy of teams with ONLY the user-specific data
+        const teamsToSave = auctionTeams.map(team => ({
+            id: team.id,  // We need the ID to match with base team data
+            americanOdds: team.americanOdds,
+            odds: team.odds,
+            winPercentage: team.winPercentage,
+            valuePercentage: team.valuePercentage,
+            purchasePrice: team.purchasePrice || 0,
+            isMyTeam: team.isMyTeam || false
+        }));
+        
+        // Save to localStorage as a fallback
+        localStorage.setItem('calcuttaTeams', JSON.stringify(teamsToSave));
+        console.log('Teams saved to localStorage');
+        
+        // Save to server if logged in
+        if (isLoggedIn()) {
+            const userData = {
+                teams: teamsToSave,  // Only saving user-specific data
+                payoutRules: payoutRules,
+                estimatedPotSize: estimatedPotSize
+            };
+            
+            const success = await saveUserData(userData);
+            if (success) {
+                console.log('Teams saved to server');
+            } else {
+                console.error('Failed to save teams to server');
+            }
+        }
+    } catch (error) {
+        console.error('Error saving teams:', error);
+    }
+}
+
+// Load teams data from localStorage or server
+async function loadTeamsFromStorage() {
+    try {
+        // Try to load from server first if logged in
+        if (isLoggedIn()) {
+            const userData = await loadUserData();
+            
+            if (userData && userData.teams && userData.teams.length > 0) {
+                console.log('Teams loaded from server');
+                
+                // Also update payout rules and pot size
+                if (userData.payoutRules) {
+                    payoutRules = userData.payoutRules;
+                }
+                
+                if (userData.estimatedPotSize) {
+                    estimatedPotSize = userData.estimatedPotSize;
+                }
+                
+                return userData.teams;
+            }
+        }
+        
+        // Fallback to localStorage
+        const savedTeams = localStorage.getItem('calcuttaTeams');
+        if (savedTeams) {
+            console.log('Found saved teams in localStorage');
+            return JSON.parse(savedTeams);
+        }
+        
+        console.log('No saved teams found');
+        return null;
+    } catch (error) {
+        console.error('Error loading teams:', error);
+        return null;
+    }
+}
+
+// Initialize the application
+async function initializeApp() {
+    // Reset all session-specific variables
+    auctionTeams = [];
+    myTeams = [];
+    opponentsTeams = [];
+    availableTeams = [];
+    auctionFilteredTeams = [];
+    profitCache = {};
+    
+    // Check if user is logged in
+    checkAuth();
+    
+    // Initialize teams
+    await initializeTeams();
+    
+    // Load saved settings (this will set payoutRules and estimatedPotSize)
+    await loadSavedSettings();
+    
+    // Set potSize based on estimatedPotSize
+    potSize = estimatedPotSize;
+    
+    // Load projected pot size from localStorage
+    const savedProjectedPotSize = localStorage.getItem('projectedPotSize');
+    if (savedProjectedPotSize !== null) {
+        projectedPotSize = parseFloat(savedProjectedPotSize);
+        document.getElementById('projectedPotSize').value = projectedPotSize.toFixed(2);
+    }
+    
+    // Calculate team values
+    calculateTeamValues();
+    
+    // Update team categories
+    updateTeamCategories();
+    
+    // Initialize event listeners
+    initializeEventListeners();
+    
+    // Update UI
+    updateUI();
+}
+
+// Initialize event listeners
+function initializeEventListeners() {
+    try {
+        console.log('Initializing event listeners');
+        
+        // Save settings button
+        const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+        if (saveSettingsBtn) {
+            saveSettingsBtn.addEventListener('click', saveSettings);
+            console.log('Added event listener to saveSettingsBtn');
+        }
+        
+        // Reset auction button
+        const resetAuctionBtn = document.getElementById('resetAuctionBtn');
+        if (resetAuctionBtn) {
+            resetAuctionBtn.addEventListener('click', resetAuction);
+            console.log('Added event listener to resetAuctionBtn');
+        }
+        
+        // Sync team odds button
+        const syncTeamOddsButton = document.getElementById('syncTeamOdds');
+        if (syncTeamOddsButton) {
+            syncTeamOddsButton.addEventListener('click', function() {
+                syncWithTeamOdds();
+                alert('Teams synced with latest odds data!');
+            });
+            console.log('Added event listener to sync team odds button');
+        }
+        
+        // Payout rule inputs
+        const payoutRuleInputs = document.querySelectorAll('.payout-rule-input, #roundOf64, #roundOf32, #sweet16, #elite8, #finalFour, #champion, #biggestUpset, #highestSeed, #largestMargin, #customProp');
+        payoutRuleInputs.forEach(input => {
+            if (input) {
+                input.addEventListener('change', updatePayoutRules);
+                console.log(`Added event listener to ${input.id || 'payout rule input'}`);
+            }
+        });
+        
+        // Pot size input
+        const estimatedPotSizeInput = document.getElementById('estimatedPotSize');
+        if (estimatedPotSizeInput) {
+            estimatedPotSizeInput.addEventListener('change', function() {
+                estimatedPotSize = parseFloat(this.value) || 10000;
+                potSize = estimatedPotSize;
+                
+                // Save settings when pot size changes
+                saveSettings();
+                
+                // Reset the profit cache when pot size changes
+                resetProfitCache();
+                
+                calculateProjectedPotSize();
+                updateTeamTable();
+            });
+            console.log('Added event listener to estimatedPotSize');
+        }
+        
+        // Filter and search controls
+        const regionFilter = document.getElementById('regionFilter');
+        if (regionFilter) {
+            regionFilter.addEventListener('change', function() {
+                auctionRegionFilter = this.value;
+                updateTeamTable();
+            });
+            console.log('Added event listener to regionFilter');
+        }
+        
+        const statusFilter = document.getElementById('statusFilter');
+        if (statusFilter) {
+            statusFilter.addEventListener('change', function() {
+                currentStatusFilter = this.value;
+                updateTeamTable();
+            });
+            console.log('Added event listener to statusFilter');
+        }
+        
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                auctionSearchTerm = this.value.toLowerCase();
+                updateTeamTable();
+            });
+            console.log('Added event listener to searchInput');
+        }
+        
+        // Sort controls
+        const sortOption = document.getElementById('sortOption');
+        if (sortOption) {
+            sortOption.addEventListener('change', function() {
+                auctionSortOption = this.value;
+                updateTeamTable();
+            });
+            console.log('Added event listener to sortOption');
+        }
+        
+        // Sort direction
+        const sortDirectionBtn = document.getElementById('sortDirection');
+        if (sortDirectionBtn) {
+            sortDirectionBtn.addEventListener('click', function() {
+                console.log('Sort direction button clicked');
+                console.log('Current sort direction:', auctionSortDirection);
+                
+                // Toggle sort direction
+                auctionSortDirection = auctionSortDirection === 'asc' ? 'desc' : 'asc';
+                console.log('New sort direction:', auctionSortDirection);
+                
+                // Update the sort icon
+                const sortIcon = document.getElementById('sortIcon');
+                if (sortIcon) {
+                    console.log('Updating sort icon');
+                    sortIcon.className = 'fas fa-sort-' + (auctionSortDirection === 'asc' ? 'up' : 'down');
+                    console.log('New sort icon class:', sortIcon.className);
+                } else {
+                    console.error('Sort icon element not found');
+                }
+                
+                // Update the team table
+                console.log('Calling updateTeamTable()');
+                updateTeamTable();
+            });
+            console.log('Added event listener to sort direction button');
+        } else {
+            console.error('Sort direction button not found in DOM');
+        }
+        
+        console.log('Event listeners initialized successfully');
+    } catch (error) {
+        console.error('Error initializing event listeners:', error);
+    }
+}
+
+// Reset auction
+function resetAuction() {
+    if (confirm('Are you sure you want to reset the auction? This will clear all purchase prices and team selections.')) {
+        auctionTeams.forEach(team => {
+            team.purchasePrice = 0;
+            team.isMyTeam = false;
+        });
+        
+        // Update team categories
+        updateTeamCategories();
+        
+        // Update projected pot size
+        calculateProjectedPotSize();
+        
+        // Update auction results tracker
+        updateAuctionResultsTracker();
+        
+        // Update team table
+        updateTeamTable();
+        
+        // Save the reset teams to localStorage
+        saveTeamsToStorage();
+        
+        // Sync with team odds to ensure we have the latest data
+        syncWithTeamOdds();
+        
+        alert('Auction has been reset.');
+    }
+}
+
+// Reset the profit cache
+function resetProfitCache() {
+    console.log('Resetting profit cache');
+    profitCache = {};
+}
+
+// Update payout rules
+function updatePayoutRules() {
+    // Get all payout values and convert to numbers, defaulting to 0 if invalid
+    payoutRules.roundOf64 = parseFloat(document.getElementById('roundOf64').value) || 0;
+    payoutRules.roundOf32 = parseFloat(document.getElementById('roundOf32').value) || 0;
+    payoutRules.sweet16 = parseFloat(document.getElementById('sweet16').value) || 0;
+    payoutRules.elite8 = parseFloat(document.getElementById('elite8').value) || 0;
+    payoutRules.finalFour = parseFloat(document.getElementById('finalFour').value) || 0;
+    payoutRules.champion = parseFloat(document.getElementById('champion').value) || 0;
+    payoutRules.biggestUpset = parseFloat(document.getElementById('biggestUpset').value) || 0;
+    payoutRules.highestSeed = parseFloat(document.getElementById('highestSeed').value) || 0;
+    payoutRules.largestMargin = parseFloat(document.getElementById('largestMargin').value) || 0;
+    payoutRules.customProp = parseFloat(document.getElementById('customProp').value) || 0;
+    
+    // Calculate round totals
+    const r64total = payoutRules.roundOf64 * 32;
+    const r32total = payoutRules.roundOf32 * 16;
+    const s16total = payoutRules.sweet16 * 8;
+    const e8total = payoutRules.elite8 * 4;
+    const f4total = payoutRules.finalFour * 2;
+    const champtotal = payoutRules.champion * 1;
+    
+    // Update the round total displays
+    document.getElementById('r64total').textContent = r64total.toFixed(2);
+    document.getElementById('r32total').textContent = r32total.toFixed(2);
+    document.getElementById('s16total').textContent = s16total.toFixed(2);
+    document.getElementById('e8total').textContent = e8total.toFixed(2);
+    document.getElementById('f4total').textContent = f4total.toFixed(2);
+    document.getElementById('champtotal').textContent = champtotal.toFixed(2);
+    
+    // Calculate total payout percentage
+    const roundPayouts = r64total + r32total + s16total + e8total + f4total + champtotal;
+    
+    // Add special category payouts
+    const specialPayouts = (
+        payoutRules.biggestUpset +
+        payoutRules.highestSeed +
+        payoutRules.largestMargin +
+        payoutRules.customProp
+    );
+    
+    const totalPayout = roundPayouts + specialPayouts;
+    
+    // Update validation display
+    const validationDiv = document.getElementById('totalPayoutValidation');
+    const totalSpan = document.getElementById('totalPayoutPercentage');
+    const messageSpan = document.getElementById('totalPayoutMessage');
+    
+    if (validationDiv && totalSpan && messageSpan) {
+        totalSpan.textContent = totalPayout.toFixed(2);
+        validationDiv.style.display = 'block';
+        
+        if (Math.abs(totalPayout - 100) < 0.01) {  // Account for floating point precision
+            validationDiv.className = 'alert alert-success';
+            messageSpan.textContent = ' - Perfect!';
+        } else if (totalPayout > 100) {
+            validationDiv.className = 'alert alert-danger';
+            messageSpan.textContent = ' - Total must equal 100%';
+        } else {
+            validationDiv.className = 'alert alert-warning';
+            messageSpan.textContent = ' - Total must equal 100%';
+        }
+    }
+    
+    // Reset the profit cache when payout rules change
+    resetProfitCache();
+    
+    // Recalculate team values based on new payout rules
+    calculateTeamValues();
+    
+    // Update the UI
+    updateUI();
+}
+
+// Update pot size
+function updatePotSize() {
+    estimatedPotSize = parseFloat(document.getElementById('estimatedPotSize').value) || 0;
+    
+    // Update the UI
+    updateUI();
+}
+
+// Save settings
+async function saveSettings() {
+    try {
+        // Update payout rules
+        updatePayoutRules();
+        
+        // Update pot size
+        updatePotSize();
+        
+        // Save to localStorage
+        const settings = {
+            payoutRules,
+            estimatedPotSize
+        };
+        localStorage.setItem('calcuttaSettings', JSON.stringify(settings));
+        
+        // Save to server if logged in
+        if (isLoggedIn()) {
+            const userData = {
+                teams: auctionTeams,
+                payoutRules: payoutRules,
+                estimatedPotSize: estimatedPotSize
+            };
+            
+            const success = await saveUserData(userData);
+            if (success) {
+                console.log('Settings saved to server');
+            } else {
+                console.error('Failed to save settings to server');
+            }
+        }
+        
+        // Recalculate team values
+        calculateTeamValues();
+        
+        // Update UI
+        updateUI();
+        
+        console.log('Settings saved');
+    } catch (error) {
+        console.error('Error saving settings:', error);
+    }
+}
+
+// Load saved settings
+async function loadSavedSettings() {
+    // Set default values first
+    payoutRules = {
+        roundOf64: 0.50,
+        roundOf32: 1.00,
+        sweet16: 2.50,
+        elite8: 4.00,
+        finalFour: 8.00,
+        champion: 16.00,
+        biggestUpset: 0,
+        highestSeed: 0,
+        largestMargin: 0,
+        customProp: 0
+    };
+    estimatedPotSize = 10000;
+    potSize = 10000;
+    
+    // Try to load from server first if logged in
+    if (isLoggedIn()) {
+        try {
+            const userData = await loadUserData();
+            if (userData && userData.payoutRules) {
+                payoutRules = userData.payoutRules;
+                // Update UI with user's specific payout rules
+                Object.keys(payoutRules).forEach(rule => {
+                    const input = document.getElementById(rule);
+                    if (input) {
+                        input.value = payoutRules[rule];
+                    }
+                });
+            }
+            if (userData && userData.estimatedPotSize) {
+                estimatedPotSize = userData.estimatedPotSize;
+                potSize = estimatedPotSize;
+                document.getElementById('estimatedPotSize').value = estimatedPotSize;
+            }
+        } catch (error) {
+            console.error('Error loading user data:', error);
+            // Fall back to localStorage only if server load fails
+            loadFromLocalStorage();
+        }
+    } else {
+        loadFromLocalStorage();
+    }
+}
+
+function loadFromLocalStorage() {
+    const savedSettings = localStorage.getItem('calcuttaSettings');
+    if (savedSettings) {
+        try {
+            const settings = JSON.parse(savedSettings);
+            if (settings.payoutRules) {
+                payoutRules = settings.payoutRules;
+                // Update UI with saved payout rules
+                Object.keys(payoutRules).forEach(rule => {
+                    const input = document.getElementById(rule);
+                    if (input) {
+                        input.value = payoutRules[rule];
+                    }
+                });
+            }
+            
+            if (settings.estimatedPotSize) {
+                estimatedPotSize = settings.estimatedPotSize;
+                potSize = estimatedPotSize;
+                document.getElementById('estimatedPotSize').value = estimatedPotSize;
+            }
+        } catch (error) {
+            console.error('Error parsing saved settings:', error);
+        }
+    }
+}
+
+// Calculate team values based on payout rules and odds
+function calculateTeamValues() {
+    console.log('Calculating team values');
+    
+    try {
+        // Calculate total pot size
+        const potSize = (projectedPotSize > 0 ? projectedPotSize : estimatedPotSize);
+        
+        // Calculate team values based on win percentages
+        auctionTeams.forEach(team => {
+            team.valuePercentage = team.winPercentage;
+        });
+        
+        // Normalize value percentages to ensure they sum to 1
+        const totalValuePercentage = auctionTeams.reduce((sum, team) => sum + team.valuePercentage, 0);
+        
+        if (totalValuePercentage > 0) {
+            auctionTeams.forEach(team => {
+                team.valuePercentage = team.valuePercentage / totalValuePercentage;
+            });
+        }
+        
+        console.log('Team values calculated successfully');
+    } catch (error) {
+        console.error('Error calculating team values:', error);
+    }
+}
+
+// Update team categories
+function updateTeamCategories() {
+    console.log('Updating team categories');
+    
+    try {
+        // Reset team categories
+        myTeams = auctionTeams.filter(team => team.isMyTeam);
+        opponentsTeams = auctionTeams.filter(team => team.purchasePrice > 0 && !team.isMyTeam);
+        availableTeams = auctionTeams.filter(team => team.purchasePrice === 0);
+        
+        // Update category counts
+        document.getElementById('myTeamsCount').textContent = myTeams.length;
+        document.getElementById('opponentsTeamsCount').textContent = opponentsTeams.length;
+        document.getElementById('availableTeamsCount').textContent = availableTeams.length;
+        
+        // Update summary statistics
+        updateSummaryStatistics();
+        
+        console.log('Team categories updated successfully');
+        console.log(`My teams: ${myTeams.length}, Opponents teams: ${opponentsTeams.length}, Available teams: ${availableTeams.length}`);
+    } catch (error) {
+        console.error('Error updating team categories:', error);
+    }
+}
+
+// Calculate projected pot size based on purchases
+function calculateProjectedPotSize() {
+    const purchasedTeams = auctionTeams.filter(team => team.purchasePrice > 0);
+    
+    if (purchasedTeams.length === 0) {
+        projectedPotSize = 0;
+        resetProfitCache(); // Reset cache when projected pot size changes
+        localStorage.setItem('projectedPotSize', '0');
+        return;
+    }
+    
+    let totalPaid = 0;
+    let totalValuePercentage = 0;
+    
+    purchasedTeams.forEach(team => {
+        totalPaid += team.purchasePrice;
+        totalValuePercentage += team.valuePercentage;
+    });
+    
+    const oldProjectedPotSize = projectedPotSize;
+    
+    if (totalValuePercentage > 0) {
+        projectedPotSize = totalPaid / totalValuePercentage;
+    } else {
+        projectedPotSize = 0;
+    }
+    
+    // Save projected pot size to localStorage
+    localStorage.setItem('projectedPotSize', projectedPotSize.toString());
+    
+    // Reset cache if projected pot size has changed
+    if (oldProjectedPotSize !== projectedPotSize) {
+        resetProfitCache();
+    }
+}
+
+// Update the UI
+function updateUI() {
+    const tableBody = document.getElementById('teamTableBody');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const errorMessage = document.getElementById('errorMessage');
+    
+    if (!tableBody) return;
+    
+    // Show/hide loading indicator
+    if (loadingIndicator) {
+        loadingIndicator.style.display = isLoading ? 'block' : 'none';
+    }
+    
+    // Clear error message when not loading
+    if (errorMessage) {
+        errorMessage.style.display = 'none';
+    }
+    
+    if (isLoading) {
+        tableBody.innerHTML = '<tr><td colspan="100%" class="text-center">Loading teams...</td></tr>';
+        return;
+    }
+    
+    if (auctionTeams.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="100%" class="text-center">No teams available</td></tr>';
+        return;
+    }
+    
+    // Filter and sort teams
+    filterTeams();
+    sortTeams();
+    
+    // Update pagination
+    updatePagination();
+    
+    // Update summary statistics
+    updateSummaryStatistics();
+    
+    // Update auction results tracker
+    updateAuctionResultsTracker();
+    
+    // Update table headers
+    updateTableHeaders();
+    
+    // Update team table
+    updateTeamTable();
+}
+
+// Update summary statistics
+function updateSummaryStatistics() {
+    console.log('Updating summary statistics');
+    
+    try {
+        // Calculate total pot size
+        const potSize = (projectedPotSize > 0 ? projectedPotSize : estimatedPotSize);
+        
+        // Update projected pot size display
+        document.getElementById('projectedPotSize').value = projectedPotSize.toFixed(2);
+        
+        // Calculate and update my teams statistics
+        const myTeamsTotalPaid = myTeams.reduce((sum, team) => sum + team.purchasePrice, 0);
+        const myTeamsProjectedValue = myTeams.reduce((sum, team) => sum + (team.valuePercentage * potSize), 0);
+        const myTeamsExpectedProfit = myTeamsProjectedValue - myTeamsTotalPaid;
+        const myTeamsROI = myTeamsTotalPaid > 0 ? (myTeamsExpectedProfit / myTeamsTotalPaid * 100) : 0;
+        
+        document.getElementById('myTeamsTotalPaid').textContent = myTeamsTotalPaid.toFixed(2);
+        document.getElementById('myTeamsProjectedValue').textContent = myTeamsProjectedValue.toFixed(2);
+        document.getElementById('myTeamsExpectedProfit').textContent = myTeamsExpectedProfit.toFixed(2);
+        document.getElementById('myTeamsROI').textContent = myTeamsROI.toFixed(2);
+        
+        // Calculate and update opponents' teams statistics
+        const opponentsTeamsTotalPaid = opponentsTeams.reduce((sum, team) => sum + team.purchasePrice, 0);
+        const opponentsTeamsProjectedValue = opponentsTeams.reduce((sum, team) => sum + (team.valuePercentage * potSize), 0);
+        const opponentsTeamsExpectedProfit = opponentsTeamsProjectedValue - opponentsTeamsTotalPaid;
+        const opponentsTeamsROI = opponentsTeamsTotalPaid > 0 ? (opponentsTeamsExpectedProfit / opponentsTeamsTotalPaid * 100) : 0;
+        
+        document.getElementById('opponentsTeamsTotalPaid').textContent = opponentsTeamsTotalPaid.toFixed(2);
+        document.getElementById('opponentsTeamsProjectedValue').textContent = opponentsTeamsProjectedValue.toFixed(2);
+        document.getElementById('opponentsTeamsExpectedProfit').textContent = opponentsTeamsExpectedProfit.toFixed(2);
+        document.getElementById('opponentsTeamsROI').textContent = opponentsTeamsROI.toFixed(2);
+        
+        // Calculate and update available teams statistics
+        const availableTeamsProjectedValue = availableTeams.reduce((sum, team) => sum + (team.valuePercentage * potSize), 0);
+        document.getElementById('availableTeamsProjectedValue').textContent = availableTeamsProjectedValue.toFixed(2);
+        
+        console.log('Summary statistics updated successfully');
+    } catch (error) {
+        console.error('Error updating summary statistics:', error);
+    }
+}
+
+// Update table headers based on showProfits setting
+function updateTableHeaders() {
+    // Always ensure showProfits is true
+    showProfits = true;
+    
+    console.log('Updating table headers, showProfits:', showProfits);
+    
+    const table = document.querySelector('#teamTableBody').closest('table');
+    if (!table) return;
+    
+    // Always ensure the table has the show-profits class
+    table.classList.add('show-profits');
+    
+    // Check if thead exists, if not create it
+    let thead = table.querySelector('thead');
+    if (!thead) {
+        thead = document.createElement('thead');
+        table.prepend(thead);
+    }
+    
+    // Create two header rows - one for merged headers and one for column names
+    let mergedHeaderRow = thead.querySelector('tr:first-child');
+    let columnHeaderRow = thead.querySelector('tr:last-child');
+    
+    // Clear existing headers
+    thead.innerHTML = '';
+    
+    // Create merged header row
+    mergedHeaderRow = document.createElement('tr');
+    columnHeaderRow = document.createElement('tr');
+    thead.appendChild(mergedHeaderRow);
+    thead.appendChild(columnHeaderRow);
+    
+    // Add merged cells for standard headers
+    const standardMergedCell = document.createElement('th');
+    standardMergedCell.colSpan = 3; // Spans Region, Seed, Team
+    standardMergedCell.textContent = 'Team Info';
+    mergedHeaderRow.appendChild(standardMergedCell);
+    
+    // Add merged cell for profit columns
+    const profitMergedCell = document.createElement('th');
+    profitMergedCell.colSpan = 6; // Spans all profit columns
+    profitMergedCell.textContent = 'Total Profit After Reaching Round';
+    profitMergedCell.classList.add('text-center', 'bg-light');
+    mergedHeaderRow.appendChild(profitMergedCell);
+    
+    // Add merged cells for remaining headers
+    const valueMergedCell = document.createElement('th');
+    valueMergedCell.colSpan = 3; // Spans Sugg. Bid, Fair Value, Price
+    valueMergedCell.textContent = 'Value Info';
+    mergedHeaderRow.appendChild(valueMergedCell);
+    
+    const myTeamMergedCell = document.createElement('th');
+    myTeamMergedCell.rowSpan = 2; // Spans both rows
+    myTeamMergedCell.textContent = 'My Team';
+    myTeamMergedCell.classList.add('bg-white'); // Add white background
+    mergedHeaderRow.appendChild(myTeamMergedCell);
+    
+    // Add standard column headers
+    const standardHeaders = ['Region', 'Seed', 'Team'];
+    standardHeaders.forEach(header => {
+        const th = document.createElement('th');
+        th.textContent = header;
+        columnHeaderRow.appendChild(th);
+    });
+    
+    // Add profit column headers with shorter names
+    const profitHeaders = ['R32', 'S16', 'E8', 'F4', 'F2', 'Champ'];
+    profitHeaders.forEach(header => {
+        const th = document.createElement('th');
+        th.textContent = header;
+        th.classList.add('profit-projection');
+        columnHeaderRow.appendChild(th);
+    });
+    
+    // Add remaining column headers
+    const remainingHeaders = ['Sugg. Bid', 'Fair Value', 'Price'];
+    remainingHeaders.forEach(header => {
+        const th = document.createElement('th');
+        th.textContent = header;
+        columnHeaderRow.appendChild(th);
+    });
+}
+
+// Update team table
+function updateTeamTable() {
+    // Always ensure showProfits is true
+    showProfits = true;
+    
+    // Get the table body
+    const tableBody = document.getElementById('teamTableBody');
+    if (!tableBody) {
+        console.error('Team table body not found');
+        return;
+    }
+    
+    // Always ensure the table has the show-profits class
+    const table = tableBody.closest('table');
+    if (table) {
+        table.classList.add('show-profits');
+        console.log('Table classes:', table.className);
+    } else {
+        console.error('Table not found');
+    }
+    
+    console.log('Updating team table, showProfits:', showProfits);
+    console.log('Teams count:', auctionTeams.length);
+    
+    // Apply filters and sorting BEFORE clearing the table
+    filterTeams();
+    sortTeams();
+    
+    // Update table headers based on showProfits setting
+    updateTableHeaders();
+    
+    // Clear the table body AFTER filtering and sorting
+    tableBody.innerHTML = '';
+    
+    // If no teams after filtering, show a message
+    if (auctionFilteredTeams.length === 0) {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 13; // Updated colspan to include profit columns
+        cell.textContent = 'No teams match the current filters';
+        cell.className = 'text-center';
+        row.appendChild(cell);
+        tableBody.appendChild(row);
+        return;
+    }
+    
+    console.log('Filtered teams count:', auctionFilteredTeams.length);
+    
+    // Create a fresh copy of the filtered teams for display
+    const teamsToDisplay = [...auctionFilteredTeams];
+    
+    // Add each team to the table
+    teamsToDisplay.forEach(team => {
+        const row = document.createElement('tr');
+        
+        // Add region, seed, and team name
+        const regionCell = document.createElement('td');
+        regionCell.textContent = team.region;
+        regionCell.setAttribute('data-column', 'region');
+        row.appendChild(regionCell);
+        
+        const seedCell = document.createElement('td');
+        seedCell.textContent = team.seed;
+        seedCell.setAttribute('data-column', 'seed');
+        row.appendChild(seedCell);
+        
+        const nameCell = document.createElement('td');
+        nameCell.textContent = team.name;
+        nameCell.setAttribute('data-column', 'name');
+        row.appendChild(nameCell);
+        
+        // Always add profit projections (removed conditional)
+        // Calculate profit projections
+        const profits = calculateRoundProfits(team);
+        console.log(`Profit projections for ${team.name}:`, profits);
+        
+        // Add profit cells for each round
+        const profitRounds = ['r32', 's16', 'e8', 'f4', 'f2', 'champ'];
+        profitRounds.forEach(round => {
+            const profitCell = document.createElement('td');
+            profitCell.setAttribute('data-column', round);
+            const profitValue = profits[round];
+            
+            // Create a div for the profit value
+            const profitDiv = document.createElement('div');
+            profitDiv.textContent = formatCurrency(profitValue);
+            profitDiv.classList.add('profit-projection');
+            if (profitValue > 0) {
+                profitDiv.classList.add('positive-value');
+            } else if (profitValue < 0) {
+                profitDiv.classList.add('negative-value');
+            }
+            
+            // Create a div for the probability
+            const probabilityDiv = document.createElement('div');
+            probabilityDiv.className = 'text-center small text-muted';
+            probabilityDiv.textContent = `${(team.odds[round] * 100).toFixed(2)}%`;
+            
+            // Add both divs to the cell
+            profitCell.appendChild(profitDiv);
+            profitCell.appendChild(probabilityDiv);
+            profitCell.classList.add('profit-projection');
+            
+            row.appendChild(profitCell);
+            console.log(`Added profit cell for ${team.name} ${round}: ${formatCurrency(profitValue)} (${(team.odds[round] * 100).toFixed(2)}%)`);
+        });
+        
+        // Add suggested bid, fair value, and purchase price
+        const suggestedBidCell = document.createElement('td');
+        suggestedBidCell.textContent = formatCurrency(calculateSuggestedBid(team));
+        suggestedBidCell.setAttribute('data-column', 'suggBid');
+        row.appendChild(suggestedBidCell);
+        
+        const fairValueCell = document.createElement('td');
+        fairValueCell.textContent = formatCurrency(calculateFairValue(team));
+        fairValueCell.setAttribute('data-column', 'fairValue');
+        row.appendChild(fairValueCell);
+        
+        const purchasePriceCell = document.createElement('td');
+        purchasePriceCell.setAttribute('data-column', 'price');
+        const purchasePriceInput = document.createElement('input');
+        purchasePriceInput.type = 'number';
+        purchasePriceInput.min = '0';
+        purchasePriceInput.step = '1';
+        purchasePriceInput.value = team.purchasePrice || '';
+        purchasePriceInput.className = 'form-control purchase-price-input';
+        purchasePriceInput.dataset.teamId = team.id;
+        
+        // Add multiple event listeners to maintain focus behavior
+        purchasePriceInput.addEventListener('change', function() {
+            updateTeamPurchasePrice(team.id, parseFloat(this.value) || 0);
+        });
+        
+        // Handle blur event (when input loses focus)
+        purchasePriceInput.addEventListener('blur', function() {
+            updateTeamPurchasePrice(team.id, parseFloat(this.value) || 0);
+        });
+        
+        // Handle keydown event for tab key
+        purchasePriceInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                updateTeamPurchasePrice(team.id, parseFloat(this.value) || 0);
+            }
+        });
+        
+        purchasePriceCell.appendChild(purchasePriceInput);
+        row.appendChild(purchasePriceCell);
+        
+        // Add "My Team" checkbox
+        const myTeamCell = document.createElement('td');
+        const myTeamCheckbox = document.createElement('input');
+        myTeamCheckbox.type = 'checkbox';
+        myTeamCheckbox.className = 'form-check-input team-checkbox';
+        myTeamCheckbox.checked = team.isMyTeam || false;
+        myTeamCheckbox.dataset.teamId = team.id;
+        myTeamCheckbox.addEventListener('change', function() {
+            updateMyTeam(team.id, this.checked);
+        });
+        myTeamCell.appendChild(myTeamCheckbox);
+        row.appendChild(myTeamCell);
+        
+        // Add the row to the table
+        tableBody.appendChild(row);
+    });
+    
+    // Hide pagination controls since we're showing all teams
+    const paginationContainer = document.getElementById('pagination');
+    if (paginationContainer) {
+        paginationContainer.innerHTML = '';
+    }
+}
+
+// Update auction results tracker
+function updateAuctionResultsTracker() {
+    console.log('Updating auction results tracker');
+    
+    // Get the auction results table body
+    const auctionResultsBody = document.getElementById('auctionResultsBody');
+    if (!auctionResultsBody) {
+        console.error('Auction results body not found');
+        return;
+    }
+    
+    // Clear the table body
+    auctionResultsBody.innerHTML = '';
+    
+    // Filter teams that have been purchased
+    const purchasedTeams = auctionTeams.filter(team => team.purchasePrice > 0);
+    
+    console.log('Purchased teams count:', purchasedTeams.length);
+    
+    // Sort purchased teams by purchase price (descending)
+    const sortedPurchasedTeams = [...purchasedTeams].sort((a, b) => b.purchasePrice - a.purchasePrice);
+    
+    // Add each purchased team to the table
+    sortedPurchasedTeams.forEach(team => {
+        const row = document.createElement('tr');
+        
+        // Add team name
+        const nameCell = document.createElement('td');
+        nameCell.textContent = team.name;
+        row.appendChild(nameCell);
+        
+        // Add region
+        const regionCell = document.createElement('td');
+        regionCell.textContent = team.region;
+        row.appendChild(regionCell);
+        
+        // Add seed
+        const seedCell = document.createElement('td');
+        seedCell.textContent = team.seed;
+        row.appendChild(seedCell);
+        
+        // Add purchase price
+        const priceCell = document.createElement('td');
+        priceCell.textContent = formatCurrency(team.purchasePrice);
+        row.appendChild(priceCell);
+        
+        // Add owner (My Team or not)
+        const ownerCell = document.createElement('td');
+        ownerCell.textContent = team.isMyTeam ? 'Me' : 'Opponent';
+        row.appendChild(ownerCell);
+        
+        // Add the row to the table
+        auctionResultsBody.appendChild(row);
+    });
+    
+    // Update summary statistics
+    updateSummaryStatistics();
+}
+
+// Calculate profit projections for each round (cumulative)
+function calculateRoundProfits(team) {
+    console.log('Calculating round profits for team:', team.name);
+    
+    // Use estimated pot size if projected pot size is not available
+    const potSize = (projectedPotSize > 0) ? projectedPotSize : estimatedPotSize;
+    console.log('Using pot size:', potSize);
+    
+    // Get the purchase price (default to 0 if not set)
+    const purchasePrice = parseFloat(team.purchasePrice) || 0;
+    console.log('Purchase price:', purchasePrice);
+    
+    // Check if we already have calculated profits for this purchase price
+    const cacheKey = purchasePrice.toString();
+    if (profitCache[cacheKey]) {
+        console.log('Using cached profits for purchase price:', purchasePrice);
+        return profitCache[cacheKey];
+    }
+    
+    // Calculate individual round payouts based on payout rules
+    // These are fixed percentages of the pot size
+    const roundPayouts = {
+        r32: potSize * (payoutRules.roundOf64 / 100),  // Payout for making R32 (winning R64)
+        s16: potSize * (payoutRules.roundOf32 / 100),  // Payout for making S16 (winning R32)
+        e8: potSize * (payoutRules.sweet16 / 100),     // Payout for making E8 (winning S16)
+        f4: potSize * (payoutRules.elite8 / 100),      // Payout for making F4 (winning E8)
+        f2: potSize * (payoutRules.finalFour / 100),   // Payout for making championship (winning F4)
+        champ: potSize * (payoutRules.champion / 100)  // Payout for winning championship
+    };
+    
+    console.log('Round payouts:', roundPayouts);
+    
+    // Calculate cumulative payouts (sum of all payouts up to and including that round)
+    const cumulativePayouts = {
+        r32: roundPayouts.r32,
+        s16: roundPayouts.r32 + roundPayouts.s16,
+        e8: roundPayouts.r32 + roundPayouts.s16 + roundPayouts.e8,
+        f4: roundPayouts.r32 + roundPayouts.s16 + roundPayouts.e8 + roundPayouts.f4,
+        f2: roundPayouts.r32 + roundPayouts.s16 + roundPayouts.e8 + roundPayouts.f4 + roundPayouts.f2,
+        champ: roundPayouts.r32 + roundPayouts.s16 + roundPayouts.e8 + roundPayouts.f4 + roundPayouts.f2 + roundPayouts.champ
+    };
+    
+    console.log('Cumulative payouts:', cumulativePayouts);
+    
+    // Calculate profits for each round (cumulative payout minus purchase price)
+    const profits = {
+        r32: cumulativePayouts.r32 - purchasePrice,    // Profit if make R32
+        s16: cumulativePayouts.s16 - purchasePrice,    // Profit if make S16
+        e8: cumulativePayouts.e8 - purchasePrice,      // Profit if make E8
+        f4: cumulativePayouts.f4 - purchasePrice,      // Profit if make F4
+        f2: cumulativePayouts.f2 - purchasePrice,      // Profit if make championship game
+        champ: cumulativePayouts.champ - purchasePrice // Profit if win championship
+    };
+    
+    console.log('Profits:', profits);
+    
+    // Cache the profits for this purchase price
+    profitCache[cacheKey] = profits;
+    
+    return profits;
+}
+
+// Calculate suggested bid for a team
+function calculateSuggestedBid(team) {
+    const potSize = (projectedPotSize > 0 ? projectedPotSize : estimatedPotSize);
+    const teamValue = team.valuePercentage * potSize;
+    
+    // Suggested bid is slightly below the expected value (90-95% of value)
+    // This ensures some potential profit for the buyer
+    const bidFactor = 0.95;
+    return teamValue * bidFactor;
+}
+
+// Helper function to format currency
+function formatCurrency(value) {
+    return '$' + parseFloat(value).toFixed(2);
+}
+
+// Update team purchase price
+function updateTeamPurchasePrice(teamId, price) {
+    console.log(`Updating team ${teamId} purchase price to ${price}`);
+    
+    // Find the team
+    const team = auctionTeams.find(t => t.id === teamId);
+    if (!team) {
+        console.error(`Team with ID ${teamId} not found`);
+        return;
+    }
+    
+    // Update the purchase price
+    team.purchasePrice = price;
+    
+    // If price is 0, reset isMyTeam
+    if (price === 0) {
+        team.isMyTeam = false;
+    }
+    
+    // Save teams to localStorage
+    saveTeamsToStorage();
+    
+    // Update UI
+    updateTeamCategories();
+    calculateProjectedPotSize();
+    updateAuctionResultsTracker();
+}
+
+// Update my team status
+function updateMyTeam(teamId, isMyTeam) {
+    console.log(`Updating team ${teamId} isMyTeam to ${isMyTeam}`);
+    
+    // Find the team
+    const team = auctionTeams.find(t => t.id === teamId);
+    if (!team) {
+        console.error(`Team with ID ${teamId} not found`);
+        return;
+    }
+    
+    // Update isMyTeam
+    team.isMyTeam = isMyTeam;
+    
+    // Save teams to localStorage
+    saveTeamsToStorage();
+    
+    // Update UI
+    updateTeamCategories();
+    updateAuctionResultsTracker();
+}
+
+// Calculate fair value for a team
+function calculateFairValue(team) {
+    // Get pot size for calculations
+    const potSize = (projectedPotSize > 0 ? projectedPotSize : estimatedPotSize);
+    
+    // Calculate fair value
+    return team.valuePercentage * potSize;
+}
+
+// Synchronize with team odds data
+function syncWithTeamOdds() {
+    // Check if team odds data is available in local storage
+    const teamOddsData = localStorage.getItem('teamOddsData');
+    
+    if (teamOddsData) {
+        try {
+            const oddsData = JSON.parse(teamOddsData);
+            console.log('Found team odds data:', oddsData.length);
+            
+            if (oddsData.length > 0) {
+                // Create a map of existing teams for quick lookup
+                const existingTeamsMap = {};
+                auctionTeams.forEach(team => {
+                    existingTeamsMap[team.id] = team;
+                });
+                
+                // Update teams array with new odds data while preserving purchase prices and isMyTeam status
+                auctionTeams = oddsData.map(oddsTeam => {
+                    const existingTeam = existingTeamsMap[oddsTeam.id];
+                    
+                    return {
+                        ...oddsTeam,
+                        purchasePrice: existingTeam ? existingTeam.purchasePrice : (oddsTeam.purchasePrice || 0),
+                        isMyTeam: existingTeam ? existingTeam.isMyTeam : (oddsTeam.isMyTeam || false)
+                    };
+                });
+                
+                // Recalculate team values
+                calculateTeamValues();
+                
+                // Update team categories
+                updateTeamCategories();
+                
+                // Update the UI
+                updateUI();
+                
+                // Save the updated teams to localStorage
+                saveTeamsToStorage();
+                
+                console.log('Teams synced with odds data:', auctionTeams.length);
+            } else {
+                console.warn('Team odds data is empty');
+            }
+        } catch (error) {
+            console.error('Error syncing with team odds data:', error);
+        }
+    } else {
+        console.warn('No team odds data found in localStorage');
+    }
+    
+    // Always ensure showProfits is true after syncing
+    showProfits = true;
+    
+    // Always ensure the table has the show-profits class
+    const table = document.querySelector('#teamTableBody').closest('table');
+    if (table) {
+        table.classList.add('show-profits');
+    }
+}
+
+// Check for team odds updates periodically
+setInterval(syncWithTeamOdds, 5000);
+
+// Filter teams based on current filters
+function filterTeams() {
+    // Apply region filter
+    if (auctionRegionFilter === 'All') {
+        auctionFilteredTeams = [...auctionTeams];
+    } else {
+        auctionFilteredTeams = auctionTeams.filter(team => team.region === auctionRegionFilter);
+    }
+    
+    // Apply status filter
+    if (currentStatusFilter === 'Available') {
+        auctionFilteredTeams = auctionFilteredTeams.filter(team => team.purchasePrice === 0);
+    } else if (currentStatusFilter === 'Taken') {
+        auctionFilteredTeams = auctionFilteredTeams.filter(team => team.purchasePrice > 0);
+    }
+    
+    // Apply search filter
+    if (auctionSearchTerm) {
+        auctionFilteredTeams = auctionFilteredTeams.filter(team => 
+            team.name.toLowerCase().includes(auctionSearchTerm) || 
+            team.region.toLowerCase().includes(auctionSearchTerm) ||
+            team.seed.toString().includes(auctionSearchTerm)
+        );
+    }
+}
+
+// Sort teams based on selected option and direction
+function sortTeams() {
+    if (!auctionFilteredTeams) {
+        filterTeams();
+    }
+    
+    console.log('Sorting teams with option:', auctionSortOption, 'direction:', auctionSortDirection);
+    
+    // Create a fresh copy of the array before sorting
+    auctionFilteredTeams = [...auctionFilteredTeams].sort((a, b) => {
+        let result;
+        
+        // Get values based on sort option
+        switch (auctionSortOption) {
+            case 'name':
+                result = a.name.localeCompare(b.name);
+                break;
+            case 'seed':
+                result = a.seed - b.seed;
+                break;
+            case 'valuePercentage':
+                const valueA = parseFloat(a.valuePercentage) || 0;
+                const valueB = parseFloat(b.valuePercentage) || 0;
+                result = valueA - valueB;
+                break;
+            case 'region':
+                result = a.region.localeCompare(b.region);
+                break;
+            default:
+                // Default to value percentage sorting
+                const defaultValueA = parseFloat(a.valuePercentage) || 0;
+                const defaultValueB = parseFloat(b.valuePercentage) || 0;
+                result = defaultValueA - defaultValueB;
+        }
+        
+        // Apply sort direction consistently for all fields
+        return auctionSortDirection === 'asc' ? result : -result;
+    });
+    
+    console.log('First team after sorting:', auctionFilteredTeams[0]?.name);
+}
+
+// Update pagination controls
+function updatePagination() {
+    const paginationContainer = document.getElementById('pagination');
+    if (!paginationContainer) {
+        console.error('Pagination container not found');
+        return;
+    }
+    
+    // Clear pagination container
+    paginationContainer.innerHTML = '';
+    
+    // If no pages, return
+    if (totalPages <= 1) {
+        return;
+    }
+    
+    // Create pagination nav
+    const nav = document.createElement('nav');
+    nav.setAttribute('aria-label', 'Team pagination');
+    
+    // Create pagination list
+    const ul = document.createElement('ul');
+    ul.className = 'pagination';
+    
+    // Previous button
+    const prevLi = document.createElement('li');
+    prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+    const prevLink = document.createElement('a');
+    prevLink.className = 'page-link';
+    prevLink.href = '#';
+    prevLink.textContent = 'Previous';
+    if (currentPage > 1) {
+        prevLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            currentPage--;
+            updateTeamTable();
+        });
+    }
+    prevLi.appendChild(prevLink);
+    ul.appendChild(prevLi);
+    
+    // Page numbers
+    const maxPages = 5; // Maximum number of page links to show
+    const startPage = Math.max(1, currentPage - Math.floor(maxPages / 2));
+    const endPage = Math.min(totalPages, startPage + maxPages - 1);
+    
+    
+    for (let i = startPage; i <= endPage; i++) {
+        const pageLi = document.createElement('li');
+        pageLi.className = `page-item ${i === currentPage ? 'active' : ''}`;
+        const pageLink = document.createElement('a');
+        pageLink.className = 'page-link';
+        pageLink.href = '#';
+        pageLink.textContent = i;
+        if (i !== currentPage) {
+            pageLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                currentPage = i;
+                updateTeamTable();
+            });
+        }
+        pageLi.appendChild(pageLink);
+        ul.appendChild(pageLi);
+    }
+    
+    // Next button
+    const nextLi = document.createElement('li');
+    nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+    const nextLink = document.createElement('a');
+    nextLink.className = 'page-link';
+    nextLink.href = '#';
+    nextLink.textContent = 'Next';
+    if (currentPage < totalPages) {
+        nextLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            currentPage++;
+            updateTeamTable();
+        });
+    }
+    nextLi.appendChild(nextLink);
+    ul.appendChild(nextLi);
+    
+    // Add pagination to container
+    nav.appendChild(ul);
+    paginationContainer.appendChild(nav);
+}
+
+// Add a special debug function to compare profit calculations for two teams
+function debugCompareProfits() {
+    console.log('DEBUG: Comparing profit calculations for two teams with the same purchase price');
+    
+    // Find two teams with the same purchase price
+    const team1 = auctionTeams.find(t => t.name === 'Alabama');
+    const team2 = auctionTeams.find(t => t.name === 'Akron');
+    
+    if (team1 && team2) {
+        console.log('Team 1:', team1.name, 'Purchase Price:', team1.purchasePrice);
+        console.log('Team 2:', team2.name, 'Purchase Price:', team2.purchasePrice);
+        
+        // Set both teams to have the same purchase price for testing
+        const testPrice = 50;
+        const originalPrice1 = team1.purchasePrice;
+        const originalPrice2 = team2.purchasePrice;
+        
+        team1.purchasePrice = testPrice;
+        team2.purchasePrice = testPrice;
+        
+        console.log('Setting both teams to purchase price:', testPrice);
+        
+        // Calculate profits for both teams
+        console.log('TEAM 1 PROFITS:');
+        const profits1 = calculateRoundProfits(team1);
+        
+        console.log('TEAM 2 PROFITS:');
+        const profits2 = calculateRoundProfits(team2);
+        
+        // Compare profits
+        console.log('PROFIT COMPARISON:');
+        const rounds = ['r32', 's16', 'e8', 'f4', 'f2', 'champ'];
+        rounds.forEach(round => {
+            console.log(`${round}: Team 1: ${profits1[round].toFixed(2)}, Team 2: ${profits2[round].toFixed(2)}, Difference: ${(profits1[round] - profits2[round]).toFixed(2)}`);
+        });
+        
+        // Restore original purchase prices
+        team1.purchasePrice = originalPrice1;
+        team2.purchasePrice = originalPrice2;
+    } else {
+        console.log('Could not find both teams for comparison');
+    }
+}
+
+// Call the debug function when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    initializeApp();
+    
+    // Add a slight delay to ensure teams are loaded
+    setTimeout(debugCompareProfits, 2000);
+});

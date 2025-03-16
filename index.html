@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calcutta Auction Tool</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Custom styles */
+        .team-checkbox {
+            width: 20px;
+            height: 20px;
+        }
+        
+        /* Custom toggle switch styling */
+        .form-check-input:checked {
+            background-color: #0d6efd !important;
+            border-color: #0d6efd !important;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e") !important;
+        }
+        
+        .form-switch .form-check-input {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba%280, 0, 0, 0.25%29'/%3e%3c/svg%3e") !important;
+        }
+        
+        .form-switch .form-check-input:checked {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23ffffff'/%3e%3c/svg%3e") !important;
+        }
+        
+        /* Profit projection styling */
+        .profit-projection {
+            background-color: #f8f9fa;
+            display: table-cell !important;
+            visibility: visible !important;
+            width: auto !important;
+            min-width: 100px !important;
+            opacity: 1 !important;
+            border: 1px solid #dee2e6 !important;
+        }
+        
+        .profit-projection.positive-value {
+            color: #198754;
+            font-weight: bold;
+        }
+        
+        .profit-projection.negative-value {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        /* Profit and ROI styling */
+        .positive-value {
+            color: #198754 !important;
+        }
+        
+        .negative-value {
+            color: #dc3545 !important;
+        }
+
+        /* Card improvements */
+        .auction-tracker .card {
+            transition: transform 0.2s;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+
+        .auction-tracker .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+
+        .auction-tracker .card-header {
+            border-bottom: 2px solid rgba(0, 0, 0, 0.125);
+        }
+
+        .auction-tracker .card-body {
+            padding: 1.25rem;
+        }
+
+        /* Quick Actions styling */
+        .quick-actions .btn {
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            font-weight: 500;
+        }
+
+        .quick-actions .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .quick-actions .btn i {
+            font-size: 1.1em;
+        }
+
+        .quick-actions .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">Calcutta Auction Tool</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="index.html">Auction Tool</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="team-odds.html">Team Odds</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="profile.html">Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="logout(); return false;">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <h1>March Madness Calcutta Auction Tool</h1>
+                <p class="lead">Enter your pool's payout rules, track team purchases, and maximize your auction strategy.</p>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">Payout Rules</h4>
+                    </div>
+                    <div class="card-body">
+                        <h5>Round-By-Round Payouts (% of pot)</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="roundOf64" class="form-label">Round of 64 (32 teams = <span id="r64total">16</span>% total)</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="roundOf64" step="0.01" value="0.50">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="roundOf32" class="form-label">Round of 32 (16 teams = <span id="r32total">16</span>% total)</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="roundOf32" step="0.01" value="1.00">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="sweet16" class="form-label">Sweet 16 (8 teams = <span id="s16total">20</span>% total)</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="sweet16" step="0.01" value="2.50">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="elite8" class="form-label">Elite 8 (4 teams = <span id="e8total">16</span>% total)</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="elite8" step="0.01" value="4.00">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="finalFour" class="form-label">Final Four (2 teams = <span id="f4total">16</span>% total)</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="finalFour" step="0.01" value="8.00">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="champion" class="form-label">Champion (1 team = <span id="champtotal">16</span>% total)</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="champion" step="0.01" value="16.00">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h5 class="mt-4">Special Categories (% of pot)</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="biggestUpset" class="form-label">Biggest Upset (by Spread)</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="biggestUpset" step="0.01" value="0">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="highestSeed" class="form-label">Highest Seed to Final Four</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="highestSeed" step="0.01" value="0">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="largestMargin" class="form-label">Largest Margin of Victory</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="largestMargin" step="0.01" value="0">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="customProp" class="form-label">Custom Prop</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="customProp" step="0.01" value="0">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <div id="totalPayoutValidation" class="alert" style="display: none;">
+                                    Total Payout: <span id="totalPayoutPercentage">0</span>% 
+                                    <span id="totalPayoutMessage"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">Auction Management</h4>
+                    </div>
+                    <div class="card-body p-0">
+                        <!-- Pot Projections Section -->
+                        <div class="p-4">
+                            <h5 class="mb-3">Pot Projections</h5>
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label for="estimatedPotSize" class="form-label">Your Estimated Pot Size</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="estimatedPotSize" value="10000">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="projectedPotSize" class="form-label">Pot Projection Based on Purchases</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="projectedPotSize" value="0" readonly>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="auction-tracker">
+                                <h5>Auction Results Tracker</h5>
+                                <div class="row g-4">
+                                    <div class="col-md-4">
+                                        <div class="card h-100 border-primary">
+                                            <div class="card-header bg-primary text-white">
+                                                <h6 class="mb-0">My Teams</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between">
+                                                    <span class="text-muted">Teams:</span>
+                                                    <span class="fw-bold" id="myTeamsCount">0</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between">
+                                                    <span class="text-muted">Total Paid:</span>
+                                                    <span class="fw-bold">$<span id="myTeamsTotalPaid">0</span></span>
+                                                </div>
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <span class="text-muted">Projected Value:</span>
+                                                    <span class="fw-bold">$<span id="myTeamsProjectedValue">0</span></span>
+                                                </div>
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <span class="text-muted">Expected Profit:</span>
+                                                    <span class="fw-bold" id="myTeamsExpectedProfitWrapper">$<span id="myTeamsExpectedProfit">0</span></span>
+                                                </div>
+                                                <div class="d-flex justify-content-between">
+                                                    <span class="text-muted">ROI:</span>
+                                                    <span class="fw-bold" id="myTeamsROIWrapper"><span id="myTeamsROI">0</span>%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card h-100 border-secondary">
+                                            <div class="card-header bg-secondary text-white">
+                                                <h6 class="mb-0">Opponent's Teams</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <span class="text-muted">Teams:</span>
+                                                    <span class="fw-bold" id="opponentsTeamsCount">0</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <span class="text-muted">Total Paid:</span>
+                                                    <span class="fw-bold">$<span id="opponentsTeamsTotalPaid">0</span></span>
+                                                </div>
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <span class="text-muted">Projected Value:</span>
+                                                    <span class="fw-bold">$<span id="opponentsTeamsProjectedValue">0</span></span>
+                                                </div>
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <span class="text-muted">Expected Profit:</span>
+                                                    <span class="fw-bold" id="opponentsTeamsExpectedProfitWrapper">$<span id="opponentsTeamsExpectedProfit">0</span></span>
+                                                </div>
+                                                <div class="d-flex justify-content-between">
+                                                    <span class="text-muted">ROI:</span>
+                                                    <span class="fw-bold" id="opponentsTeamsROIWrapper"><span id="opponentsTeamsROI">0</span>%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card h-100 border-success">
+                                            <div class="card-header bg-success text-white">
+                                                <h6 class="mb-0">Available Teams</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <span class="text-muted">Teams:</span>
+                                                    <span class="fw-bold" id="availableTeamsCount">68</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between">
+                                                    <span class="text-muted">Projected Value:</span>
+                                                    <span class="fw-bold">$<span id="availableTeamsProjectedValue">10000</span></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">Team Auction Tracker</h4>
+                        <div class="d-flex gap-2">
+                            <button id="resetAuctionBtn" class="btn btn-light btn-sm d-flex align-items-center gap-2">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                                <span>Reset Auction</span>
+                            </button>
+                            <button id="syncTeamOddsBtn" class="btn btn-light btn-sm d-flex align-items-center gap-2">
+                                <i class="bi bi-arrow-repeat"></i>
+                                <span>Sync Team Odds</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label for="regionFilter" class="form-label">Region Filter</label>
+                                <select id="regionFilter" class="form-select">
+                                    <option value="All">All Regions</option>
+                                    <option value="South">South</option>
+                                    <option value="East">East</option>
+                                    <option value="West">West</option>
+                                    <option value="Midwest">Midwest</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="statusFilter" class="form-label">Status Filter</label>
+                                <select id="statusFilter" class="form-select">
+                                    <option value="All">All Teams</option>
+                                    <option value="Available">Available Teams</option>
+                                    <option value="Taken">Taken Teams</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="sortOption" class="form-label">Sort By</label>
+                                <div class="input-group">
+                                    <select id="sortOption" class="form-select">
+                                        <option value="seed" selected>Seed</option>
+                                        <option value="valuePercentage">Champion Odds</option>
+                                        <option value="name">Team Name</option>
+                                        <option value="region">Region</option>
+                                    </select>
+                                    <button class="btn btn-outline-secondary" type="button" id="sortDirection">
+                                        <i id="sortIcon" class="fas fa-sort-up"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="searchInput" class="form-label">Search Teams</label>
+                                <input type="text" id="searchInput" class="form-control" placeholder="Search...">
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover show-profits">
+                                <tbody id="teamTableBody">
+                                    <!-- Team rows will be added here dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="pagination" class="d-flex justify-content-center mt-3">
+                            <!-- Pagination controls will be added here dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQ Section -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5>Auction Strategy FAQ</h5>
+            </div>
+            <div class="card-body">
+                <div class="accordion" id="auctionFAQ">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingOne">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                What's the difference between "Suggested Bid" and "Fair Value"?
+                            </button>
+                        </h2>
+                        <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#auctionFAQ">
+                            <div class="accordion-body">
+                                <p><strong>Fair Value</strong> is what a team is mathematically worth based on their probability of winning. It's calculated by multiplying the team's value percentage by the total pot size.</p>
+                                <p><strong>Suggested Bid</strong> is set at 95% of the Fair Value. This creates a 5% buffer that gives you potential profit if you win the team at that price.</p>
+                                <p>This strategy (known as "bid shading" in auction theory) ensures you don't overpay for teams and can build a profitable portfolio.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingTwo">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                How should I use the Suggested Bid?
+                            </button>
+                        </h2>
+                        <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#auctionFAQ">
+                            <div class="accordion-body">
+                                <p>The Suggested Bid is your target maximum bid for each team. If you can win a team at or below this price, you're getting good value.</p>
+                                <p>In practice:</p>
+                                <ul>
+                                    <li>Start bidding below the Suggested Bid</li>
+                                    <li>Be willing to go up to the Suggested Bid if necessary</li>
+                                    <li>Avoid exceeding the Suggested Bid unless you have strategic reasons</li>
+                                    <li>Remember that winning teams below their Suggested Bid increases your overall profit potential</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingThree">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                Why not just bid at Fair Value?
+                            </button>
+                        </h2>
+                        <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#auctionFAQ">
+                            <div class="accordion-body">
+                                <p>If you consistently bid exactly at Fair Value:</p>
+                                <ul>
+                                    <li>You would theoretically break even in the long run (not accounting for variance)</li>
+                                    <li>You leave no room for profit margin</li>
+                                    <li>Any slight overestimation of a team's chances would result in a loss</li>
+                                </ul>
+                                <p>By bidding below Fair Value, you build in a profit margin that helps ensure positive expected value across your portfolio of teams.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingFour">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                                Calcutta Auction Strategy Tips
+                            </button>
+                        </h2>
+                        <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#auctionFAQ">
+                            <div class="accordion-body">
+                                <h6>Timing Your Bids</h6>
+                                <ul>
+                                    <li><strong>Bid early:</strong> Teams often go for less at the beginning when participants are still feeling out the process. As the auction progresses, people realize they don't have enough teams and may overpay.</li>
+                                    <li><strong>Exception:</strong> If your Calcutta has a spending limit, consider waiting until the end to snatch up value when others are approaching their limits.</li>
+                                </ul>
+                                
+                                <h6>First Team Sets the Market</h6>
+                                <ul>
+                                    <li>The winning bid for the first team sets the relative value for every other team auctioned after it.</li>
+                                    <li>This establishes the projected pot size - if a team worth 2% of the prize pool goes for $100, participants will estimate a $5,000 total pot.</li>
+                                </ul>
+                                
+                                <h6>Strategic Bidding</h6>
+                                <ul>
+                                    <li><strong>Drive up the pot:</strong> Consider bidding up teams you don't necessarily want, especially when there's no spending limit. A higher pot benefits everyone who already owns teams.</li>
+                                    <li><strong>Be careful:</strong> There's always a risk the other bidder will stop and you'll be stuck with your bid.</li>
+                                    <li><strong>Target fan favorites:</strong> If you notice someone is a big fan of a particular team, they may be willing to overpay. This can be an opportunity to drive up the pot.</li>
+                                </ul>
+                                
+                                <h6>Portfolio Management</h6>
+                                <ul>
+                                    <li><strong>Avoid bracket conflicts:</strong> Be strategic about buying teams in the same region. If you have the #1 and #2 seed in the same region, one team is capped at three wins.</li>
+                                    <li><strong>Regional strategy:</strong> Consider "cornering" a region by fading an overvalued top seed and acquiring other strong teams in that bracket.</li>
+                                    <li><strong>Diversify:</strong> Take positions in different regions to minimize the chances of your teams eliminating each other.</li>
+                                </ul>
+                                
+                                <h6>Late Auction Opportunities</h6>
+                                <ul>
+                                    <li><strong>Exploit FOMO:</strong> Participants who haven't won any teams yet may overpay to avoid missing out completely.</li>
+                                    <li><strong>Auction fatigue:</strong> When everyone already has teams, bidding action often decreases, creating value for those still willing to bid.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingFive">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+                                How do the profit projections work?
+                            </button>
+                        </h2>
+                        <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive" data-bs-parent="#auctionFAQ">
+                            <div class="accordion-body">
+                                <p>The profit projections in the table show two different types of information depending on whether a team has been purchased:</p>
+                                <ul>
+                                    <li><strong>For teams without a purchase price:</strong> The values show the raw payout amount that team would earn for reaching each round. This helps you understand the potential earnings before making a bid.</li>
+                                    <li><strong>For teams with a purchase price:</strong> The values show your actual profit (payout minus purchase price) if the team reaches that round. This helps you track your potential returns on purchased teams.</li>
+                                </ul>
+                                <p>Below each profit value, you'll see the team's probability of reaching that round, helping you assess both the potential reward and the likelihood of achieving it.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End FAQ Section -->
+
+        <footer class="bg-dark text-white text-center py-3 mt-5">
+            <div class="container">
+                <p class="mb-0">&copy; 2025 Calcutta Auction Tool. All rights reserved.</p>
+            </div>
+        </footer>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="js/auth.js"></script>
+        <script src="js/team-odds.js"></script>
+        <script src="js/auction-tool.js"></script>
+    </body>
+</html>
