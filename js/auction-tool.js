@@ -38,16 +38,22 @@ async function initializeTeams() {
             auctionTeams = savedTeams;
         } else {
             // If no saved teams, try to get from team-odds
-            const teamOddsData = JSON.parse(localStorage.getItem('teamOddsData'));
-            if (teamOddsData && teamOddsData.length > 0) {
-                console.log('Found team odds data:', teamOddsData.length);
-                auctionTeams = teamOddsData.map(team => ({
-                    ...team,
-                    purchasePrice: 0,
-                    isMyTeam: false,
-                    isOpponentTeam: false
-                }));
-                console.log('Teams initialized from team-odds data:', auctionTeams.length);
+            const teamOddsData = localStorage.getItem('teamOddsData');
+            if (teamOddsData) {
+                const parsedData = JSON.parse(teamOddsData);
+                if (parsedData && parsedData.length > 0) {
+                    console.log('Found team odds data:', parsedData.length);
+                    auctionTeams = parsedData.map(team => ({
+                        ...team,
+                        purchasePrice: team.purchasePrice || 0,
+                        isMyTeam: team.isMyTeam || false,
+                        isOpponentTeam: false
+                    }));
+                    console.log('Teams initialized from team-odds data:', auctionTeams.length);
+                } else {
+                    console.log('No valid team odds data found');
+                    auctionTeams = [];
+                }
             } else {
                 console.log('No team data found');
                 auctionTeams = [];
@@ -692,7 +698,15 @@ function updateUI() {
     }
     
     if (auctionTeams.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="100%" class="text-center">No teams available</td></tr>';
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="100%" class="text-center p-5">
+                    <p class="mb-4">No teams loaded yet</p>
+                    <button onclick="fetchLatestOdds()" class="btn btn-primary btn-lg">
+                        <i class="fas fa-sync-alt me-2"></i>Fetch Teams & Latest Odds
+                    </button>
+                </td>
+            </tr>`;
         return;
     }
     
@@ -1472,3 +1486,79 @@ function updatePagination() {
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
 });
+
+// Add new function to fetch latest odds
+function fetchLatestOdds() {
+    console.log('Fetching latest odds...');
+    isLoading = true;
+    updateUI();
+    
+    // Store current purchase prices and team status
+    const currentTeams = {};
+    if (auctionTeams.length > 0) {
+        auctionTeams.forEach(team => {
+            currentTeams[team.id] = {
+                purchasePrice: team.purchasePrice || 0,
+                isMyTeam: team.isMyTeam || false
+            };
+        });
+    }
+    
+    setTimeout(() => {
+        // Load the default teams with market odds
+        auctionTeams = getDefaultTeams().map(team => ({
+            ...team,
+            purchasePrice: (currentTeams[team.id] ? currentTeams[team.id].purchasePrice : 0) || 0,
+            isMyTeam: (currentTeams[team.id] ? currentTeams[team.id].isMyTeam : false) || false,
+            isOpponentTeam: false,
+            odds: {
+                r32: 0, s16: 0, e8: 0, f4: 0, f2: 0, champ: 0
+            }
+        }));
+
+        // Calculate implied probabilities
+        calculateImpliedProbabilities();
+        
+        // Save teams to storage
+        saveTeamsToStorage();
+        
+        // Update categories
+        myTeams = auctionTeams.filter(team => team.isMyTeam);
+        opponentsTeams = auctionTeams.filter(team => team.isOpponentTeam);
+        availableTeams = auctionTeams.filter(team => !team.isMyTeam && !team.isOpponentTeam);
+        
+        // Calculate team values
+        calculateTeamValues();
+        
+        isLoading = false;
+        
+        // Update the UI
+        updateUI();
+        
+        // Show success message
+        showAlert('success', 'Teams loaded successfully!');
+    }, 1000);
+}
+
+// Add helper function to show alerts
+function showAlert(type, message) {
+    const existingAlert = document.querySelector('.alert');
+    if (existingAlert) {
+        existingAlert.remove();
+    }
+    
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} alert-dismissible fade show`;
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    const container = document.querySelector('.container');
+    if (container) {
+        container.insertBefore(alert, container.firstChild);
+        setTimeout(() => {
+            alert.remove();
+        }, 3000);
+    }
+}
