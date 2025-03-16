@@ -51,12 +51,60 @@ async function initializeTeams() {
                     }));
                     console.log('Teams initialized from team-odds data:', auctionTeams.length);
                 } else {
-                    console.log('No valid team odds data found');
-                    auctionTeams = [];
+                    console.log('No valid team odds data found, using default teams');
+                    // Use default teams with converted odds
+                    auctionTeams = getDefaultTeams().map(team => {
+                        // Convert American odds to probabilities
+                        const odds = {
+                            r32: convertAmericanOddsToProbability(team.americanOdds.r32),
+                            s16: convertAmericanOddsToProbability(team.americanOdds.s16),
+                            e8: convertAmericanOddsToProbability(team.americanOdds.e8),
+                            f4: convertAmericanOddsToProbability(team.americanOdds.f4),
+                            f2: convertAmericanOddsToProbability(team.americanOdds.f2),
+                            champ: convertAmericanOddsToProbability(team.americanOdds.champ)
+                        };
+
+                        // Use championship odds as the win percentage
+                        const winPercentage = odds.champ;
+
+                        return {
+                            ...team,
+                            purchasePrice: 0,
+                            isMyTeam: false,
+                            isOpponentTeam: false,
+                            odds: odds,
+                            winPercentage: winPercentage,
+                            valuePercentage: winPercentage
+                        };
+                    });
                 }
             } else {
-                console.log('No team data found');
-                auctionTeams = [];
+                console.log('No team data found, using default teams');
+                // Use default teams with converted odds
+                auctionTeams = getDefaultTeams().map(team => {
+                    // Convert American odds to probabilities
+                    const odds = {
+                        r32: convertAmericanOddsToProbability(team.americanOdds.r32),
+                        s16: convertAmericanOddsToProbability(team.americanOdds.s16),
+                        e8: convertAmericanOddsToProbability(team.americanOdds.e8),
+                        f4: convertAmericanOddsToProbability(team.americanOdds.f4),
+                        f2: convertAmericanOddsToProbability(team.americanOdds.f2),
+                        champ: convertAmericanOddsToProbability(team.americanOdds.champ)
+                    };
+
+                    // Use championship odds as the win percentage
+                    const winPercentage = odds.champ;
+
+                    return {
+                        ...team,
+                        purchasePrice: 0,
+                        isMyTeam: false,
+                        isOpponentTeam: false,
+                        odds: odds,
+                        winPercentage: winPercentage,
+                        valuePercentage: winPercentage
+                    };
+                });
             }
         }
         
@@ -1506,18 +1554,33 @@ function fetchLatestOdds() {
     
     setTimeout(() => {
         // Load the default teams with market odds
-        auctionTeams = getDefaultTeams().map(team => ({
-            ...team,
-            purchasePrice: (currentTeams[team.id] ? currentTeams[team.id].purchasePrice : 0) || 0,
-            isMyTeam: (currentTeams[team.id] ? currentTeams[team.id].isMyTeam : false) || false,
-            isOpponentTeam: false,
-            odds: {
-                r32: 0, s16: 0, e8: 0, f4: 0, f2: 0, champ: 0
-            }
-        }));
+        auctionTeams = getDefaultTeams().map(team => {
+            // Convert American odds to probabilities
+            const odds = {
+                r32: convertAmericanOddsToProbability(team.americanOdds.r32),
+                s16: convertAmericanOddsToProbability(team.americanOdds.s16),
+                e8: convertAmericanOddsToProbability(team.americanOdds.e8),
+                f4: convertAmericanOddsToProbability(team.americanOdds.f4),
+                f2: convertAmericanOddsToProbability(team.americanOdds.f2),
+                champ: convertAmericanOddsToProbability(team.americanOdds.champ)
+            };
 
-        // Calculate implied probabilities
-        calculateImpliedProbabilities();
+            // Use championship odds as the win percentage
+            const winPercentage = odds.champ;
+
+            return {
+                ...team,
+                purchasePrice: (currentTeams[team.id] ? currentTeams[team.id].purchasePrice : 0) || 0,
+                isMyTeam: (currentTeams[team.id] ? currentTeams[team.id].isMyTeam : false) || false,
+                isOpponentTeam: false,
+                odds: odds,
+                winPercentage: winPercentage,
+                valuePercentage: winPercentage // Initially set to win percentage, will be normalized in calculateTeamValues
+            };
+        });
+
+        // Calculate team values
+        calculateTeamValues();
         
         // Save teams to storage
         saveTeamsToStorage();
@@ -1527,9 +1590,6 @@ function fetchLatestOdds() {
         opponentsTeams = auctionTeams.filter(team => team.isOpponentTeam);
         availableTeams = auctionTeams.filter(team => !team.isMyTeam && !team.isOpponentTeam);
         
-        // Calculate team values
-        calculateTeamValues();
-        
         isLoading = false;
         
         // Update the UI
@@ -1538,6 +1598,20 @@ function fetchLatestOdds() {
         // Show success message
         showAlert('success', 'Teams loaded successfully!');
     }, 1000);
+}
+
+// Helper function to convert American odds to probability
+function convertAmericanOddsToProbability(americanOdds) {
+    if (!americanOdds) return 0;
+    
+    // Convert American odds to probability
+    if (americanOdds > 0) {
+        // For positive American odds: probability = 100 / (americanOdds + 100)
+        return 100 / (americanOdds + 100);
+    } else {
+        // For negative American odds: probability = |americanOdds| / (|americanOdds| + 100)
+        return Math.abs(americanOdds) / (Math.abs(americanOdds) + 100);
+    }
 }
 
 // Add helper function to show alerts
