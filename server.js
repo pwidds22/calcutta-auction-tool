@@ -16,6 +16,8 @@ app.use(cookieParser());
 const allowedOrigins = [
   'http://localhost:5000',  // development
   'https://calcutta-auction-tool.onrender.com',  // production
+  'https://calcuttagenius.com',  // custom domain
+  'http://calcuttagenius.com'  // custom domain without https
 ];
 
 app.use(cors({
@@ -44,9 +46,46 @@ const userDataRoutes = require('./routes/userData');
 app.use('/api/auth', authRoutes);
 app.use('/api/data', userDataRoutes);
 
+// Authentication middleware for protected routes
+const authMiddleware = (req, res, next) => {
+  if (req.path === '/index.html' && !req.cookies.token) {
+    return res.redirect('/home.html');
+  }
+  next();
+};
+
+app.use(authMiddleware);
+
+// Serve home.html for the root route
+app.get('/', (req, res) => {
+  if (req.cookies.token) {
+    res.redirect('/index.html');
+  } else {
+    res.sendFile(path.resolve(__dirname, 'home.html'));
+  }
+});
+
+// Serve home.html for /home route
+app.get('/home.html', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'home.html'));
+});
+
+// Protected route for the main application
+app.get('/index.html', (req, res) => {
+  if (!req.cookies.token) {
+    res.redirect('/home.html');
+  } else {
+    res.sendFile(path.resolve(__dirname, 'index.html'));
+  }
+});
+
 // Serve the main HTML file for any other route
 app.get('*', (req, res) => {
-  res.sendFile(path.resolve(__dirname, 'index.html'));
+  if (!req.cookies.token) {
+    res.redirect('/home.html');
+  } else {
+    res.sendFile(path.resolve(__dirname, 'index.html'));
+  }
 });
 
 // Connect to MongoDB
