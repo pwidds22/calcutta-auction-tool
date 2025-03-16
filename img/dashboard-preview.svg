@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100%" height="100%" fill="#f8f9fa"/>
+    
+    <!-- Header -->
+    <rect width="800" height="60" fill="#0d6efd"/>
+    <text x="30" y="38" fill="white" font-family="Arial" font-size="24" font-weight="bold">Calcutta Genius</text>
+    
+    <!-- Main Content -->
+    <g transform="translate(20,80)">
+        <!-- Left Panel - Payout Rules -->
+        <rect width="370" height="480" fill="white" stroke="#dee2e6" rx="5"/>
+        <text x="20" y="40" font-family="Arial" font-size="20" fill="#212529" font-weight="bold">Payout Rules</text>
+        
+        <!-- Round Payouts -->
+        <g transform="translate(20,70)">
+            <text font-family="Arial" font-size="14" fill="#6c757d">Round of 64</text>
+            <text x="280" y="0" font-family="Arial" font-size="14" fill="#0d6efd" font-weight="bold">0.5%</text>
+            
+            <text y="35" font-family="Arial" font-size="14" fill="#6c757d">Round of 32</text>
+            <text x="280" y="35" font-family="Arial" font-size="14" fill="#0d6efd" font-weight="bold">1%</text>
+            
+            <text y="70" font-family="Arial" font-size="14" fill="#6c757d">Sweet 16</text>
+            <text x="280" y="70" font-family="Arial" font-size="14" fill="#0d6efd" font-weight="bold">2.5%</text>
+            
+            <text y="105" font-family="Arial" font-size="14" fill="#6c757d">Elite 8</text>
+            <text x="280" y="105" font-family="Arial" font-size="14" fill="#0d6efd" font-weight="bold">4%</text>
+            
+            <text y="140" font-family="Arial" font-size="14" fill="#6c757d">Final Four</text>
+            <text x="280" y="140" font-family="Arial" font-size="14" fill="#0d6efd" font-weight="bold">8%</text>
+            
+            <text y="175" font-family="Arial" font-size="14" fill="#6c757d">Winner</text>
+            <text x="280" y="175" font-family="Arial" font-size="14" fill="#0d6efd" font-weight="bold">16%</text>
+        </g>
+        
+        <!-- Special Categories -->
+        <g transform="translate(20,300)">
+            <text font-family="Arial" font-size="16" fill="#212529" font-weight="bold">Special Categories</text>
+            <text y="35" font-family="Arial" font-size="14" fill="#6c757d">Biggest Upset</text>
+            <text x="280" y="35" font-family="Arial" font-size="14" fill="#0d6efd" font-weight="bold">5%</text>
+            
+            <text y="70" font-family="Arial" font-size="14" fill="#6c757d">Highest Seed to Final Four</text>
+            <text x="280" y="70" font-family="Arial" font-size="14" fill="#0d6efd" font-weight="bold">5%</text>
+        </g>
+        
+        <!-- Right Panel - Team Tracker -->
+        <g transform="translate(390,0)">
+            <rect width="370" height="480" fill="white" stroke="#dee2e6" rx="5"/>
+            <text x="20" y="40" font-family="Arial" font-size="20" fill="#212529" font-weight="bold">Team Tracker</text>
+            
+            <!-- Team List -->
+            <g transform="translate(20,70)">
+                <!-- Headers -->
+                <text font-family="Arial" font-size="12" fill="#6c757d">TEAM</text>
+                <text x="140" font-family="Arial" font-size="12" fill="#6c757d">ODDS</text>
+                <text x="190" font-family="Arial" font-size="12" fill="#6c757d">FAIR VALUE</text>
+                
+                <!-- Team 1 -->
+                <g transform="translate(0,35)">
+                    <text font-family="Arial" font-size="14" fill="#212529" font-weight="bold">Auburn</text>
+                    <text x="140" font-family="Arial" font-size="14" fill="#198754">15.8%</text>
+                    <text x="190" font-family="Arial" font-size="14" fill="#212529">$1,580</text>
+                </g>
+                
+                <!-- Team 2 -->
+                <g transform="translate(0,70)">
+                    <text font-family="Arial" font-size="14" fill="#212529" font-weight="bold">Duke</text>
+                    <text x="140" font-family="Arial" font-size="14" fill="#198754">12.4%</text>
+                    <text x="190" font-family="Arial" font-size="14" fill="#212529">$1,240</text>
+                </g>
+                
+                <!-- Team 3 -->
+                <g transform="translate(0,105)">
+                    <text font-family="Arial" font-size="14" fill="#212529" font-weight="bold">Florida</text>
+                    <text x="140" font-family="Arial" font-size="14" fill="#198754">8.6%</text>
+                    <text x="190" font-family="Arial" font-size="14" fill="#212529">$860</text>
+                </g>
+            </g>
+            
+            <!-- Bid Helper Box -->
+            <g transform="translate(20,240)">
+                <rect width="330" height="85" fill="#f8f9fa" stroke="#dee2e6" rx="5"/>
+                <text x="15" y="30" font-family="Arial" font-size="16" fill="#0d6efd" font-weight="bold">Bid Helper: Auburn</text>
+                <text x="15" y="50" font-family="Arial" font-size="14" fill="#6c757d">Fair Value: $1,580 (15.8% win prob)</text>
+                <text x="15" y="70" font-family="Arial" font-size="14" fill="#198754" font-weight="bold">Suggested Bid: Up to $1,501 (5% margin)</text>
+            </g>
+        </g>
+    </g>
+    
+    <!-- Watermark -->
+    <text x="400" y="580" font-family="Arial" font-size="12" fill="#6c757d" text-anchor="middle">
+        Sample Dashboard - Actual interface may vary
+    </text>
+</svg> 
