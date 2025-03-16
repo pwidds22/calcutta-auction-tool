@@ -3,12 +3,17 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const path = require('path');
 const cookieParser = require('cookie-parser');
+const jwt = require('jsonwebtoken');
+const User = require('./models/User');
 require('dotenv').config();
 
 // Initialize express app
 const app = express();
 
-// Middleware
+// Raw body for Stripe webhooks
+app.use('/api/payment/webhook', express.raw({ type: 'application/json' }));
+
+// Regular middleware
 app.use(express.json());
 app.use(cookieParser());
 
@@ -32,42 +37,96 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'stripe-signature']
 }));
 
-// Serve static files from the current directory
+// Payment check middleware
+const checkPayment = async (req, res, next) => {
+  // Skip payment check for these routes
+  const publicPaths = [
+    '/',
+    '/home.html',
+    '/payment.html',
+    '/api/auth/register',
+    '/api/auth/login',
+    '/api/payment/webhook',
+    '/api/payment/create-checkout-session',
+    '/api/payment/status',
+    '/favicon.ico'
+  ];
+
+  if (publicPaths.includes(req.path) || req.path.startsWith('/img/') || req.path.startsWith('/css/')) {
+    return next();
+  }
+
+  // Check if user is authenticated
+  if (!req.cookies.token) {
+    return res.redirect('/home.html');
+  }
+
+  try {
+    const token = req.cookies.token;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (!user) {
+      return res.redirect('/home.html');
+    }
+
+    if (!user.hasPaid) {
+      return res.redirect('/payment.html');
+    }
+
+    req.user = user; // Attach user to request for later use
+    next();
+  } catch (err) {
+    console.error('Payment check error:', err);
+    res.redirect('/home.html');
+  }
+};
+
+// Serve static files AFTER the payment check
+app.use(checkPayment);
 app.use(express.static('./'));
 
 // Import routes
 const authRoutes = require('./routes/auth');
 const userDataRoutes = require('./routes/userData');
+const paymentRoutes = require('./routes/payment');
 
 // Use routes
 app.use('/api/auth', authRoutes);
 app.use('/api/data', userDataRoutes);
-
-// Authentication middleware for protected routes
-const authMiddleware = (req, res, next) => {
-  if (req.path === '/index.html' && !req.cookies.token) {
-    return res.redirect('/home.html');
-  }
-  next();
-};
-
-app.use(authMiddleware);
+app.use('/api/payment', paymentRoutes);
 
 // Serve home.html for the root route
 app.get('/', (req, res) => {
   if (req.cookies.token) {
-    res.redirect('/index.html');
+    const token = req.cookies.token;
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      User.findById(decoded.id).then(user => {
+        if (user && user.hasPaid) {
+          res.redirect('/index.html');
+        } else {
+          res.redirect('/payment.html');
+        }
+      });
+    } catch (err) {
+      res.sendFile(path.resolve(__dirname, 'home.html'));
+    }
   } else {
     res.sendFile(path.resolve(__dirname, 'home.html'));
   }
 });
 
-// Serve home.html for /home route
-app.get('/home.html', (req, res) => {
-  res.sendFile(path.resolve(__dirname, 'home.html'));
+// Serve payment.html for /payment route
+app.get('/payment.html', (req, res) => {
+  if (!req.cookies.token) {
+    res.redirect('/home.html');
+  } else {
+    res.sendFile(path.resolve(__dirname, 'payment.html'));
+  }
 });
 
 // Protected route for the main application
@@ -75,16 +134,40 @@ app.get('/index.html', (req, res) => {
   if (!req.cookies.token) {
     res.redirect('/home.html');
   } else {
-    res.sendFile(path.resolve(__dirname, 'index.html'));
+    const token = req.cookies.token;
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      User.findById(decoded.id).then(user => {
+        if (user && user.hasPaid) {
+          res.sendFile(path.resolve(__dirname, 'index.html'));
+        } else {
+          res.redirect('/payment.html');
+        }
+      });
+    } catch (err) {
+      res.redirect('/home.html');
+    }
   }
 });
 
-// Serve the main HTML file for any other route
+// Catch-all route
 app.get('*', (req, res) => {
   if (!req.cookies.token) {
     res.redirect('/home.html');
   } else {
-    res.sendFile(path.resolve(__dirname, 'index.html'));
+    const token = req.cookies.token;
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      User.findById(decoded.id).then(user => {
+        if (user && user.hasPaid) {
+          res.sendFile(path.resolve(__dirname, 'index.html'));
+        } else {
+          res.redirect('/payment.html');
+        }
+      });
+    } catch (err) {
+      res.redirect('/home.html');
+    }
   }
 });
 
