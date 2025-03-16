@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Your Purchase - Calcutta Genius</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .payment-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .price-box {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .price-amount {
+            font-size: 2.5rem;
+            color: #0d6efd;
+            font-weight: bold;
+        }
+        .feature-list {
+            margin: 20px 0;
+        }
+        .feature-list li {
+            margin: 10px 0;
+            color: #495057;
+        }
+        .feature-list i {
+            color: #198754;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="payment-container">
+            <h1 class="text-center mb-4">Complete Your Purchase</h1>
+            <div class="price-box">
+                <div class="price-amount">$14.99</div>
+                <p class="mb-0">One-time payment for full access</p>
+            </div>
+            <div class="feature-list">
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check"></i> Professional bookmaker odds</li>
+                    <li><i class="fas fa-check"></i> Devigged probability calculations</li>
+                    <li><i class="fas fa-check"></i> Smart bidding suggestions</li>
+                    <li><i class="fas fa-check"></i> Round-by-round payout projections</li>
+                    <li><i class="fas fa-check"></i> 6x cheaper than competitors</li>
+                </ul>
+            </div>
+            <div class="text-center">
+                <button id="checkout-button" class="btn btn-primary btn-lg px-5">
+                    Pay Now
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const stripe = Stripe('pk_live_51uIeiePJwq2QUwIliMg6soA'); // Your live mode publishable key
+        const checkoutButton = document.getElementById('checkout-button');
+
+        checkoutButton.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/payment/create-checkout-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include'
+                });
+
+                const session = await response.json();
+
+                if (session.success) {
+                    // Redirect to Stripe Checkout
+                    window.location.href = session.url;
+                } else {
+                    alert('Error creating checkout session. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error creating checkout session. Please try again.');
+            }
+        });
+
+        // Check payment status on page load (in case user is returning from successful payment)
+        async function checkPaymentStatus() {
+            try {
+                const response = await fetch('/api/payment/status', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                const data = await response.json();
+
+                if (data.success && data.hasPaid) {
+                    window.location.href = '/index.html';
+                }
+            } catch (error) {
+                console.error('Error checking payment status:', error);
+            }
+        }
+
+        checkPaymentStatus();
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+</body>
+</html> 
