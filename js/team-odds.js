@@ -53,55 +53,65 @@ document.addEventListener('DOMContentLoaded', async function() {
 async function loadTeamsData() {
     console.log('Loading teams data...');
     
-    let userTeamsData = null;
-    
-    // First try to load user-specific data from server if logged in
-    if (isLoggedIn()) {
-        try {
+    try {
+        // First try to load purchase prices and team status from auction tool
+        const calcuttaTeams = localStorage.getItem('calcuttaTeams');
+        let purchasePrices = {};
+        let teamStatus = {};
+        
+        if (calcuttaTeams) {
+            const auctionData = JSON.parse(calcuttaTeams);
+            auctionData.forEach(team => {
+                purchasePrices[team.id] = team.purchasePrice || 0;
+                teamStatus[team.id] = team.isMyTeam || false;
+            });
+            console.log('Loaded purchase prices and team status from auction tool');
+        }
+        
+        // Try to load from server first if logged in
+        if (isLoggedIn()) {
             const userData = await loadUserData();
             if (userData && userData.teams && userData.teams.length > 0) {
-                console.log('Loaded user-specific data from server');
-                userTeamsData = userData.teams;
-            }
-        } catch (error) {
-            console.error('Error loading from server:', error);
-        }
-    }
-    
-    // If no server data, try localStorage
-    if (!userTeamsData) {
-        const savedUserData = localStorage.getItem('teamOddsData');
-        if (savedUserData) {
-            try {
-                userTeamsData = JSON.parse(savedUserData);
-                console.log('Loaded user-specific data from localStorage');
-            } catch (error) {
-                console.error('Error loading from localStorage:', error);
+                teams = userData.teams;
+                // Apply purchase prices and team status
+                teams.forEach(team => {
+                    team.purchasePrice = purchasePrices[team.id] || 0;
+                    team.isMyTeam = teamStatus[team.id] || false;
+                });
+                console.log('Teams loaded from server');
+                return;
             }
         }
-    }
-    
-    if (userTeamsData && userTeamsData.length > 0) {
-        // If we have user data, use it as the base and fill in any missing fields
-        teams = userTeamsData.map(savedTeam => {
-            const baseTeam = BASE_TEAMS.find(t => t.id === savedTeam.id) || {};
-            return {
-                ...baseTeam,
-                ...savedTeam,
-                // Ensure americanOdds are from saved data
-                americanOdds: savedTeam.americanOdds || baseTeam.americanOdds,
-                odds: savedTeam.odds || {
-                    r32: 0, s16: 0, e8: 0, f4: 0, f2: 0, champ: 0
-                },
-                purchasePrice: savedTeam.purchasePrice || 0,
-                isMyTeam: savedTeam.isMyTeam || false
-            };
+        
+        // Try to load from localStorage
+        const teamsData = localStorage.getItem('teamOddsData');
+        if (teamsData) {
+            teams = JSON.parse(teamsData);
+            // Apply purchase prices and team status
+            teams.forEach(team => {
+                team.purchasePrice = purchasePrices[team.id] || 0;
+                team.isMyTeam = teamStatus[team.id] || false;
+            });
+            console.log('Teams loaded from localStorage');
+            return;
+        }
+        
+        // If no saved data found, load default teams
+        console.log('No saved team data found, loading defaults');
+        teams = getDefaultTeams();
+        // Apply purchase prices and team status to default teams
+        teams.forEach(team => {
+            team.purchasePrice = purchasePrices[team.id] || 0;
+            team.isMyTeam = teamStatus[team.id] || false;
         });
-        console.log('Successfully loaded saved team data');
-    } else {
-        teams = [];
-        console.log('No saved team data found');
+        
+    } catch (error) {
+        console.error('Error loading teams:', error);
+        teams = getDefaultTeams();
     }
+    
+    // Calculate implied probabilities for initial load
+    calculateImpliedProbabilities();
 }
 
 // Load teams data from localStorage
@@ -730,12 +740,28 @@ function fetchLatestOdds() {
     loadingAlert.textContent = 'Fetching latest odds...';
     document.querySelector('.card-body').prepend(loadingAlert);
     
+    // Store current purchase prices and team status
+    const currentTeams = {};
+    teams.forEach(team => {
+        currentTeams[team.id] = {
+            purchasePrice: team.purchasePrice || 0,
+            isMyTeam: team.isMyTeam || false
+        };
+    });
+    
     setTimeout(() => {
         // Load the default teams with market odds
         teams = getDefaultTeams();
+        
+        // Restore purchase prices and team status
         teams.forEach(team => {
-            team.purchasePrice = 0;
-            team.isMyTeam = false;
+            if (currentTeams[team.id]) {
+                team.purchasePrice = currentTeams[team.id].purchasePrice;
+                team.isMyTeam = currentTeams[team.id].isMyTeam;
+            } else {
+                team.purchasePrice = 0;
+                team.isMyTeam = false;
+            }
         });
         
         // Recalculate implied probabilities
@@ -771,6 +797,9 @@ async function saveOdds() {
     // Create a copy of teams with ONLY the user-specific data
     const teamsToSave = teams.map(team => ({
         id: team.id,  // We need the ID to match with base team data
+        name: team.name,           // Include base team info
+        seed: team.seed,          // Include base team info
+        region: team.region,      // Include base team info
         americanOdds: team.americanOdds,
         odds: team.odds,
         winPercentage: team.odds.champ,
@@ -780,8 +809,9 @@ async function saveOdds() {
     }));
     
     // Save to local storage
+    const userId = getUserId();
+    localStorage.setItem(`teamOddsData_${userId}`, JSON.stringify(teamsToSave));
     localStorage.setItem('teamOddsData', JSON.stringify(teamsToSave));
-    localStorage.setItem('calcuttaTeams', JSON.stringify(teamsToSave));
     
     console.log('Saved team odds data:', teamsToSave.length);
     
@@ -789,7 +819,8 @@ async function saveOdds() {
     if (isLoggedIn()) {
         try {
             const userData = {
-                teams: teamsToSave  // Only save teams data, don't include payout rules
+                teams: teamsToSave,  // Only save teams data, don't include payout rules
+                lastUpdated: new Date().toISOString()
             };
             
             const success = await saveUserData(userData);
@@ -880,6 +911,9 @@ function handleOddsChange(teamId, round, value) {
         // Save the updated odds to localStorage to persist changes
         const teamsToSave = teams.map(t => ({
             id: t.id,
+            name: t.name,           // Include base team info
+            seed: t.seed,          // Include base team info
+            region: t.region,      // Include base team info
             americanOdds: t.americanOdds,
             odds: t.odds,
             winPercentage: t.odds.champ,
@@ -887,6 +921,10 @@ function handleOddsChange(teamId, round, value) {
             purchasePrice: t.purchasePrice || 0,
             isMyTeam: t.isMyTeam || false
         }));
+        
+        // Save to both user-specific and default locations
+        const userId = getUserId();
+        localStorage.setItem(`teamOddsData_${userId}`, JSON.stringify(teamsToSave));
         localStorage.setItem('teamOddsData', JSON.stringify(teamsToSave));
         
         // Recalculate implied probabilities
@@ -1121,4 +1159,19 @@ async function initializeApp() {
     
     // Update the UI
     updateUI();
+}
+
+// Helper function to get user ID
+function getUserId() {
+    // Try to get the user ID from localStorage
+    const userData = localStorage.getItem('userData');
+    if (userData) {
+        try {
+            const parsed = JSON.parse(userData);
+            return parsed.id || 'default';
+        } catch (e) {
+            console.error('Error parsing user data:', e);
+        }
+    }
+    return 'default';
 }

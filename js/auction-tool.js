@@ -29,135 +29,75 @@ const AUCTION_BASE_TEAMS = getDefaultTeams();
 // Initialize teams
 async function initializeTeams() {
     console.log('Initializing teams...');
-    isLoading = true;
-    updateUI();
     
     try {
-        // Start with the base teams data
-        auctionTeams = AUCTION_BASE_TEAMS.map(baseTeam => ({
-            ...baseTeam,
-            purchasePrice: 0,
-            isMyTeam: false,
-            odds: {
-                r32: 0,
-                s16: 0,
-                e8: 0,
-                f4: 0,
-                f2: 0,
-                champ: 0
-            }
-        }));
-        
-        // First try to load teams from team-odds.js data
-        const teamOddsData = localStorage.getItem('teamOddsData');
-        
-        if (teamOddsData) {
-            try {
-                const oddsData = JSON.parse(teamOddsData);
-                console.log('Found team odds data:', oddsData.length);
-                
-                if (oddsData.length > 0) {
-                    // Merge odds data with base teams
-                    oddsData.forEach(userTeam => {
-                        const team = auctionTeams.find(t => t.id === userTeam.id);
-                        if (team) {
-                            team.americanOdds = userTeam.americanOdds;
-                            team.odds = userTeam.odds;
-                            team.winPercentage = userTeam.winPercentage;
-                            team.valuePercentage = userTeam.valuePercentage;
-                            team.purchasePrice = userTeam.purchasePrice || 0;
-                            team.isMyTeam = userTeam.isMyTeam || false;
-                        }
-                    });
-                    console.log('Teams initialized from team-odds data:', auctionTeams.length);
-                    isLoading = false;
-                    updateUI();
-                    return;
-                }
-            } catch (error) {
-                console.error('Error loading team odds data:', error);
-            }
-        }
-        
-        // If no team-odds data, try to load from localStorage or server
+        // First try to load from localStorage
         const savedTeams = await loadTeamsFromStorage();
-        
-        if (savedTeams) {
-            // Merge saved data with base teams
-            savedTeams.forEach(userTeam => {
-                const team = auctionTeams.find(t => t.id === userTeam.id);
-                if (team) {
-                    team.americanOdds = userTeam.americanOdds;
-                    team.odds = userTeam.odds;
-                    team.winPercentage = userTeam.winPercentage;
-                    team.valuePercentage = userTeam.valuePercentage;
-                    team.purchasePrice = userTeam.purchasePrice || 0;
-                    team.isMyTeam = userTeam.isMyTeam || false;
-                }
-            });
-            console.log('Teams loaded:', auctionTeams.length);
+        if (savedTeams && savedTeams.length > 0) {
+            console.log('Found saved teams:', savedTeams.length);
+            auctionTeams = savedTeams;
         } else {
-            // Try to load teams from the server
-            try {
-                const response = await authFetch('/api/data');
-                
-                if (!response.ok) {
-                    console.error(`Server responded with status: ${response.status}`);
-                    const errorText = await response.text();
-                    console.error(`Error response: ${errorText}`);
-                    throw new Error(`Failed to load data: ${response.statusText}`);
-                }
-                
-                const userData = await response.json();
-                if (userData.teams && userData.teams.length > 0) {
-                    // Merge server data with base teams
-                    userData.teams.forEach(userTeam => {
-                        const team = auctionTeams.find(t => t.id === userTeam.id);
-                        if (team) {
-                            team.americanOdds = userTeam.americanOdds;
-                            team.odds = userTeam.odds;
-                            team.winPercentage = userTeam.winPercentage;
-                            team.valuePercentage = userTeam.valuePercentage;
-                            team.purchasePrice = userTeam.purchasePrice || 0;
-                            team.isMyTeam = userTeam.isMyTeam || false;
-                        }
-                    });
-                    console.log('Teams loaded from server:', auctionTeams.length);
-                    
-                    // Update the UI immediately
-                    updateUI();
-                    return;
-                }
-            } catch (error) {
-                console.error('Error loading teams from server:', error.message);
-                // Continue with base teams if server load fails
+            // If no saved teams, try to get from team-odds
+            const teamOddsData = JSON.parse(localStorage.getItem('teamOddsData'));
+            if (teamOddsData && teamOddsData.length > 0) {
+                console.log('Found team odds data:', teamOddsData.length);
+                auctionTeams = teamOddsData.map(team => ({
+                    ...team,
+                    purchasePrice: 0,
+                    isMyTeam: false,
+                    isOpponentTeam: false
+                }));
+                console.log('Teams initialized from team-odds data:', auctionTeams.length);
+            } else {
+                console.log('No team data found');
+                auctionTeams = [];
             }
         }
         
-        // If we get here, we're using base teams
-        console.log('Using base teams:', auctionTeams.length);
+        // Initialize other team arrays
+        myTeams = auctionTeams.filter(team => team.isMyTeam);
+        opponentsTeams = auctionTeams.filter(team => team.isOpponentTeam);
+        availableTeams = auctionTeams.filter(team => !team.isMyTeam && !team.isOpponentTeam);
         
-        // Update the UI
-        updateUI();
-    } catch (error) {
-        console.error('Error initializing teams:', error);
-        const errorMessage = document.getElementById('errorMessage');
-        if (errorMessage) {
-            errorMessage.textContent = 'Error loading teams. Please try refreshing the page.';
-            errorMessage.style.display = 'block';
+        // Load saved settings
+        await loadSavedSettings();
+        
+        // Load projected pot size from localStorage
+        const savedProjectedPotSize = localStorage.getItem('projectedPotSize');
+        if (savedProjectedPotSize !== null) {
+            projectedPotSize = parseFloat(savedProjectedPotSize);
+            // Update the display
+            const projectedPotSizeInput = document.getElementById('projectedPotSize');
+            if (projectedPotSizeInput) {
+                projectedPotSizeInput.value = projectedPotSize.toFixed(2);
+            }
         }
-    } finally {
-        isLoading = false;
+        
+        // Calculate projected pot size based on current purchases
+        calculateProjectedPotSize();
+        
+        // Calculate initial values using the correct pot size
+        calculateTeamValues();
+        
+        // Update UI
         updateUI();
+        
+        console.log('Teams loaded:', auctionTeams.length);
+        console.log('Using pot size for calculations:', (projectedPotSize > 0 ? projectedPotSize : estimatedPotSize));
+    } catch (error) {
+        console.error('Error loading team odds data:', error);
     }
 }
 
 // Save teams data to localStorage and server
 async function saveTeamsToStorage() {
     try {
-        // Create a copy of teams with ONLY the user-specific data
+        // Create a copy of teams with ALL necessary data
         const teamsToSave = auctionTeams.map(team => ({
-            id: team.id,  // We need the ID to match with base team data
+            id: team.id,
+            name: team.name,           // Include base team info
+            seed: team.seed,          // Include base team info
+            region: team.region,      // Include base team info
             americanOdds: team.americanOdds,
             odds: team.odds,
             winPercentage: team.winPercentage,
@@ -168,12 +108,13 @@ async function saveTeamsToStorage() {
         
         // Save to localStorage as a fallback
         localStorage.setItem('calcuttaTeams', JSON.stringify(teamsToSave));
+        localStorage.setItem('teamOddsData', JSON.stringify(teamsToSave)); // Also save to teamOddsData
         console.log('Teams saved to localStorage');
         
         // Save to server if logged in
         if (isLoggedIn()) {
             const userData = {
-                teams: teamsToSave,  // Only saving user-specific data
+                teams: teamsToSave,
                 payoutRules: payoutRules,
                 estimatedPotSize: estimatedPotSize
             };
@@ -230,44 +171,24 @@ async function loadTeamsFromStorage() {
 
 // Initialize the application
 async function initializeApp() {
-    // Reset all session-specific variables
-    auctionTeams = [];
-    myTeams = [];
-    opponentsTeams = [];
-    availableTeams = [];
-    auctionFilteredTeams = [];
-    profitCache = {};
+    console.log('Initializing application...');
     
-    // Check if user is logged in
-    checkAuth();
-    
-    // Initialize teams
-    await initializeTeams();
-    
-    // Load saved settings (this will set payoutRules and estimatedPotSize)
-    await loadSavedSettings();
-    
-    // Set potSize based on estimatedPotSize
-    potSize = estimatedPotSize;
-    
-    // Load projected pot size from localStorage
-    const savedProjectedPotSize = localStorage.getItem('projectedPotSize');
-    if (savedProjectedPotSize !== null) {
-        projectedPotSize = parseFloat(savedProjectedPotSize);
-        document.getElementById('projectedPotSize').value = projectedPotSize.toFixed(2);
+    try {
+        // Initialize teams first
+        await initializeTeams();
+        
+        // Initialize event listeners
+        initializeEventListeners();
+        
+        // Update payout rules
+        updatePayoutRules();
+        
+        // Sync with team odds if available
+        syncWithTeamOdds();
+        
+    } catch (error) {
+        console.error('Error initializing application:', error);
     }
-    
-    // Calculate team values
-    calculateTeamValues();
-    
-    // Update team categories
-    updateTeamCategories();
-    
-    // Initialize event listeners
-    initializeEventListeners();
-    
-    // Update UI
-    updateUI();
 }
 
 // Initialize event listeners
@@ -573,10 +494,10 @@ async function loadSavedSettings() {
         elite8: 4.00,
         finalFour: 8.00,
         champion: 16.00,
-        biggestUpset: 0,
-        highestSeed: 0,
-        largestMargin: 0,
-        customProp: 0
+        biggestUpset: 0.00,
+        highestSeed: 0.00,
+        largestMargin: 0.00,
+        customProp: 0.00
     };
     estimatedPotSize = 10000;
     potSize = 10000;
@@ -608,6 +529,19 @@ async function loadSavedSettings() {
     } else {
         loadFromLocalStorage();
     }
+    
+    // Ensure special categories are set to 0 in the UI
+    const specialCategories = ['biggestUpset', 'highestSeed', 'largestMargin', 'customProp'];
+    specialCategories.forEach(category => {
+        const input = document.getElementById(category);
+        if (input) {
+            input.value = '0';
+            payoutRules[category] = 0;
+        }
+    });
+    
+    // Update payout rules to reflect changes
+    updatePayoutRules();
 }
 
 function loadFromLocalStorage() {
@@ -642,8 +576,9 @@ function calculateTeamValues() {
     console.log('Calculating team values');
     
     try {
-        // Calculate total pot size
+        // Always use projected pot size if available, fall back to estimated pot size
         const potSize = (projectedPotSize > 0 ? projectedPotSize : estimatedPotSize);
+        console.log('Using pot size for value calculations:', potSize);
         
         // Calculate team values based on win percentages
         auctionTeams.forEach(team => {
@@ -719,6 +654,13 @@ function calculateProjectedPotSize() {
     
     // Save projected pot size to localStorage
     localStorage.setItem('projectedPotSize', projectedPotSize.toString());
+    console.log('Calculated projected pot size:', projectedPotSize);
+    
+    // Update the display
+    const projectedPotSizeInput = document.getElementById('projectedPotSize');
+    if (projectedPotSizeInput) {
+        projectedPotSizeInput.value = projectedPotSize.toFixed(2);
+    }
     
     // Reset cache if projected pot size has changed
     if (oldProjectedPotSize !== projectedPotSize) {
@@ -1271,8 +1213,11 @@ function calculateFairValue(team) {
 
 // Synchronize with team odds data
 function syncWithTeamOdds() {
-    // Check if team odds data is available in local storage
-    const teamOddsData = localStorage.getItem('teamOddsData');
+    // Check if user has their own odds data first
+    const userTeamOddsData = localStorage.getItem(`teamOddsData_${getUserId()}`);
+    
+    // If no user-specific odds, use the default odds
+    const teamOddsData = userTeamOddsData || localStorage.getItem('teamOddsData');
     
     if (teamOddsData) {
         try {
@@ -1286,16 +1231,36 @@ function syncWithTeamOdds() {
                     existingTeamsMap[team.id] = team;
                 });
                 
-                // Update teams array with new odds data while preserving purchase prices and isMyTeam status
+                // Get base team data for reference
+                const baseTeams = getDefaultTeams();
+                const baseTeamsMap = {};
+                baseTeams.forEach(team => {
+                    baseTeamsMap[team.id] = team;
+                });
+                
+                // Update teams array with new odds data while preserving purchase prices, isMyTeam status,
+                // and ensuring base team info (name, seed, region) is always present
                 auctionTeams = oddsData.map(oddsTeam => {
                     const existingTeam = existingTeamsMap[oddsTeam.id];
+                    const baseTeam = baseTeamsMap[oddsTeam.id];
+                    
+                    if (!baseTeam) {
+                        console.warn(`No base team found for ID ${oddsTeam.id}`);
+                        return null;
+                    }
                     
                     return {
-                        ...oddsTeam,
+                        ...baseTeam, // Start with base team info (name, seed, region)
+                        ...oddsTeam, // Add odds data
+                        // Preserve or set purchase price and team status
                         purchasePrice: existingTeam ? existingTeam.purchasePrice : (oddsTeam.purchasePrice || 0),
-                        isMyTeam: existingTeam ? existingTeam.isMyTeam : (oddsTeam.isMyTeam || false)
+                        isMyTeam: existingTeam ? existingTeam.isMyTeam : (oddsTeam.isMyTeam || false),
+                        // Ensure name, seed, and region are from base team data
+                        name: baseTeam.name,
+                        seed: baseTeam.seed,
+                        region: baseTeam.region
                     };
-                });
+                }).filter(team => team !== null); // Remove any null entries
                 
                 // Recalculate team values
                 calculateTeamValues();
@@ -1328,6 +1293,21 @@ function syncWithTeamOdds() {
     if (table) {
         table.classList.add('show-profits');
     }
+}
+
+// Helper function to get user ID
+function getUserId() {
+    // Try to get the user ID from localStorage
+    const userData = localStorage.getItem('userData');
+    if (userData) {
+        try {
+            const parsed = JSON.parse(userData);
+            return parsed.id || 'default';
+        } catch (e) {
+            console.error('Error parsing user data:', e);
+        }
+    }
+    return 'default';
 }
 
 // Check for team odds updates periodically
@@ -1488,54 +1468,7 @@ function updatePagination() {
     paginationContainer.appendChild(nav);
 }
 
-// Add a special debug function to compare profit calculations for two teams
-function debugCompareProfits() {
-    console.log('DEBUG: Comparing profit calculations for two teams with the same purchase price');
-    
-    // Find two teams with the same purchase price
-    const team1 = auctionTeams.find(t => t.name === 'Alabama');
-    const team2 = auctionTeams.find(t => t.name === 'Akron');
-    
-    if (team1 && team2) {
-        console.log('Team 1:', team1.name, 'Purchase Price:', team1.purchasePrice);
-        console.log('Team 2:', team2.name, 'Purchase Price:', team2.purchasePrice);
-        
-        // Set both teams to have the same purchase price for testing
-        const testPrice = 50;
-        const originalPrice1 = team1.purchasePrice;
-        const originalPrice2 = team2.purchasePrice;
-        
-        team1.purchasePrice = testPrice;
-        team2.purchasePrice = testPrice;
-        
-        console.log('Setting both teams to purchase price:', testPrice);
-        
-        // Calculate profits for both teams
-        console.log('TEAM 1 PROFITS:');
-        const profits1 = calculateRoundProfits(team1);
-        
-        console.log('TEAM 2 PROFITS:');
-        const profits2 = calculateRoundProfits(team2);
-        
-        // Compare profits
-        console.log('PROFIT COMPARISON:');
-        const rounds = ['r32', 's16', 'e8', 'f4', 'f2', 'champ'];
-        rounds.forEach(round => {
-            console.log(`${round}: Team 1: ${profits1[round].toFixed(2)}, Team 2: ${profits2[round].toFixed(2)}, Difference: ${(profits1[round] - profits2[round]).toFixed(2)}`);
-        });
-        
-        // Restore original purchase prices
-        team1.purchasePrice = originalPrice1;
-        team2.purchasePrice = originalPrice2;
-    } else {
-        console.log('Could not find both teams for comparison');
-    }
-}
-
-// Call the debug function when the page loads
+// Initialize when the DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
-    
-    // Add a slight delay to ensure teams are loaded
-    setTimeout(debugCompareProfits, 2000);
 });
