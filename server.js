@@ -13,16 +13,25 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Configure CORS
-const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://your-render-domain.onrender.com', 'https://your-custom-domain.com'] 
-    : 'http://localhost:5000',
+const allowedOrigins = [
+  'http://localhost:5000',  // development
+  'https://calcutta-auction-tool.onrender.com',  // production
+];
+
+app.use(cors({
+  origin: function(origin, callback) {
+    // allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
-};
-
-app.use(cors(corsOptions));
+}));
 
 // Serve static files from the current directory
 app.use(express.static('./'));
@@ -46,8 +55,8 @@ mongoose.connect(process.env.MONGO_URI)
     console.log('MongoDB Connected');
     
     // Start server
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    const PORT = process.env.NODE_ENV === 'production' ? 10000 : 5000;
+    app.listen(PORT, () => console.log(`Server running on port ${PORT} in ${process.env.NODE_ENV} mode`));
   })
   .catch(err => {
     console.error('MongoDB connection error:', err.message);
