@@ -166,14 +166,19 @@ const checkPayment = async (req, res, next) => {
     return next();
   }
 
+  // Get the token from cookies or authorization header
+  let token = req.cookies?.token;
+  if (!token && req.headers.authorization?.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+
   // Check if user is authenticated
-  if (!req.cookies.token) {
-    console.log('No token found in cookies, redirecting to login');
+  if (!token) {
+    console.log('No token found in cookies or headers, redirecting to login');
     return res.redirect('/login.html');
   }
 
   try {
-    const token = req.cookies.token;
     console.log('Token found:', token.substring(0, 20) + '...');
     
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -196,6 +201,30 @@ const checkPayment = async (req, res, next) => {
       console.log('User has not paid, redirecting to payment');
       return res.redirect('/payment.html');
     }
+
+    // Generate a new token to refresh the expiry
+    const newToken = user.getSignedJwtToken();
+    
+    // Set cookie options
+    const options = {
+      expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+      httpOnly: true,
+      secure: true,
+      sameSite: 'Lax',
+      path: '/'
+    };
+
+    // Get the domain from the request host
+    const host = req.get('host');
+    if (host) {
+      // If it's a custom domain, include the domain in cookie options
+      if (host.includes('calcuttagenius.com')) {
+        options.domain = '.calcuttagenius.com';
+      }
+    }
+
+    // Set the refreshed token
+    res.cookie('token', newToken, options);
 
     console.log('Payment check passed, proceeding to next middleware');
     req.user = user;
