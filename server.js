@@ -79,27 +79,10 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Serve only public assets (css, images, etc)
-app.use(express.static('./', {
-  setHeaders: function (res, path) {
-    if (path.endsWith('.html')) {
-      res.set('Content-Type', 'text/plain');
-    }
-  }
-}));
-
-// Serve public HTML files
-app.get('/home.html', (req, res) => {
-  res.sendFile(path.resolve(__dirname, 'home.html'));
-});
-
-app.get('/login.html', (req, res) => {
-  res.sendFile(path.resolve(__dirname, 'login.html'));
-});
-
-app.get('/register.html', (req, res) => {
-  res.sendFile(path.resolve(__dirname, 'register.html'));
-});
+// Serve static assets (css, images, js)
+app.use('/css', express.static('css'));
+app.use('/img', express.static('img'));
+app.use('/js', express.static('js'));
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -112,6 +95,19 @@ app.use('/api/data', userDataRoutes);
 // Root route handler
 app.get('/', (req, res) => {
   res.sendFile(path.resolve(__dirname, 'home.html'));
+});
+
+// Serve public HTML files
+app.get('/home.html', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'home.html'));
+});
+
+app.get('/login.html', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'login.html'));
+});
+
+app.get('/register.html', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'register.html'));
 });
 
 // Payment check middleware
@@ -127,10 +123,13 @@ const checkPayment = async (req, res, next) => {
     '/api/auth/register',
     '/api/auth/login',
     '/api/payment/webhook',
-    '/favicon.ico'
+    '/favicon.ico',
+    '/css',
+    '/img',
+    '/js'
   ];
 
-  if (publicPaths.includes(req.path) || req.path.startsWith('/img/') || req.path.startsWith('/css/')) {
+  if (publicPaths.some(path => req.path.startsWith(path))) {
     return next();
   }
 
