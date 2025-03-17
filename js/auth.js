@@ -1,42 +1,52 @@
 // Authentication utilities
 
-// Check if user is logged in
-function isLoggedIn() {
-    // Check for token in cookies
-    const cookies = document.cookie.split(';');
-    const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('token='));
-    return tokenCookie !== undefined;
+// Check if user is logged in by making a request to the server
+async function isLoggedIn() {
+    try {
+        const response = await fetch('/api/auth/me', {
+            credentials: 'include'  // Important: include cookies
+        });
+        return response.ok;
+    } catch (error) {
+        console.error('Auth check failed:', error);
+        return false;
+    }
 }
 
-// Get token
+// Get token from localStorage (backup only)
 function getToken() {
-    // Get token from cookies
-    const cookies = document.cookie.split(';');
-    const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('token='));
-    if (tokenCookie) {
-        return tokenCookie.split('=')[1];
-    }
-    return null;
+    return localStorage.getItem('token');
 }
 
 // Logout user
-function logout() {
-    // Clear token cookie by setting it to expire in the past
-    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+async function logout() {
+    try {
+        // Call logout endpoint
+        await fetch('/api/auth/logout', {
+            method: 'POST',
+            credentials: 'include'
+        });
+    } catch (error) {
+        console.error('Logout error:', error);
+    }
+    
+    // Clear localStorage
+    localStorage.removeItem('token');
+    
+    // Redirect to login
     window.location.href = 'login.html';
 }
 
 // Check authentication status and redirect if not logged in
-function checkAuth() {
-    if (!isLoggedIn()) {
+async function checkAuth() {
+    const loggedIn = await isLoggedIn();
+    if (!loggedIn) {
         window.location.href = 'login.html';
     }
 }
 
 // Add authentication header to fetch requests
 function authFetch(url, options = {}) {
-    const token = getToken();
-    
     // Add credentials and merge with existing options
     const authOptions = {
         ...options,
@@ -47,16 +57,17 @@ function authFetch(url, options = {}) {
         }
     };
     
-    // Only add Authorization header if we have a token
+    // Add backup token from localStorage if available
+    const token = getToken();
     if (token) {
         authOptions.headers['Authorization'] = `Bearer ${token}`;
     }
     
     return fetch(url, authOptions).then(response => {
         if (response.status === 401) {
-            // Clear token and redirect to login on unauthorized
-            console.error('Token expired or invalid, redirecting to login');
-            logout();
+            // Redirect to login on unauthorized
+            console.error('Unauthorized, redirecting to login');
+            window.location.href = 'login.html';
         }
         return response;
     });

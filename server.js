@@ -60,6 +60,9 @@ app.use(cookieParser());
 // Configure CORS
 const allowedOrigins = [
   'http://localhost:5000',  // development
+  'http://localhost:3000',  // development alternative port
+  'http://127.0.0.1:5000',  // development
+  'http://127.0.0.1:3000',  // development alternative port
   'https://calcutta-auction-tool.onrender.com',  // production
   'https://calcuttagenius.com',  // custom domain
   'http://calcuttagenius.com'  // custom domain without https
@@ -67,7 +70,9 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function(origin, callback) {
-    if (!origin) return callback(null, true);
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin || process.env.NODE_ENV === 'development') return callback(null, true);
+    
     if (allowedOrigins.indexOf(origin) === -1) {
       const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
       return callback(new Error(msg), false);
@@ -84,16 +89,55 @@ app.use(cors({
 app.use((req, res, next) => {
   const originalCookie = res.cookie.bind(res);
   res.cookie = function(name, value, options = {}) {
+    const isLocalhost = req.get('host')?.includes('localhost') || req.get('host')?.includes('127.0.0.1');
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    
     const defaultOptions = {
       httpOnly: true,
-      secure: true,
-      sameSite: 'Lax',
-      path: '/',
-      domain: '.calcuttagenius.com'
+      secure: !isLocalhost, // Only false for localhost
+      sameSite: 'Lax', // Use Lax for all environments for better compatibility
+      path: '/'
     };
+
+    // Set domain only for production with custom domain
+    if (req.get('host')?.includes('calcuttagenius.com')) {
+      defaultOptions.domain = '.calcuttagenius.com';
+    }
+
+    // Log cookie settings in development
+    if (isDevelopment) {
+      console.log('Cookie settings:', {
+        name,
+        host: req.get('host'),
+        isDevelopment,
+        isLocalhost,
+        options: { ...defaultOptions, ...options }
+      });
+    }
+
     return originalCookie(name, value, { ...defaultOptions, ...options });
   };
   res.clearCookie = res.clearCookie.bind(res);
+  next();
+});
+
+// Add after other middleware setup, before routes
+app.use((req, res, next) => {
+  // Clear unrelated cookies
+  const cookiesToClear = [
+    'BGSGuillotineSession',
+    'GuillotineMembership', 
+    'guillotine_session',
+    'guillotine_membership'
+  ];
+  
+  cookiesToClear.forEach(cookieName => {
+    if (req.cookies[cookieName]) {
+      res.clearCookie(cookieName, { path: '/' });
+      console.log(`Cleared unrelated cookie: ${cookieName}`);
+    }
+  });
+  
   next();
 });
 
@@ -166,15 +210,18 @@ const checkPayment = async (req, res, next) => {
     return next();
   }
 
-  // Get the token from cookies or authorization header
+  // Get the token from cookies, authorization header, or query parameter
   let token = req.cookies?.token;
   if (!token && req.headers.authorization?.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
   }
+  if (!token && req.query?.token) {
+    token = req.query.token;
+  }
 
   // Check if user is authenticated
   if (!token) {
-    console.log('No token found in cookies or headers, redirecting to login');
+    console.log('No token found in cookies, headers, or query, redirecting to login');
     return res.redirect('/login.html');
   }
 
@@ -205,26 +252,8 @@ const checkPayment = async (req, res, next) => {
     // Generate a new token to refresh the expiry
     const newToken = user.getSignedJwtToken();
     
-    // Set cookie options
-    const options = {
-      expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-      httpOnly: true,
-      secure: true,
-      sameSite: 'Lax',
-      path: '/'
-    };
-
-    // Get the domain from the request host
-    const host = req.get('host');
-    if (host) {
-      // If it's a custom domain, include the domain in cookie options
-      if (host.includes('calcuttagenius.com')) {
-        options.domain = '.calcuttagenius.com';
-      }
-    }
-
-    // Set the refreshed token
-    res.cookie('token', newToken, options);
+    // Let the global cookie middleware handle cookie settings
+    res.cookie('token', newToken);
 
     console.log('Payment check passed, proceeding to next middleware');
     req.user = user;
@@ -257,21 +286,28 @@ protectedPages.forEach(page => {
     try {
       const filePath = path.join(__dirname, page.substring(1));
       console.log('Attempting to serve file:', filePath);
-      if (!res.headersSent) {
-        res.set('Content-Type', 'text/html');
-        res.sendFile(filePath, (err) => {
-          if (err) {
-            console.error('Error serving file:', err);
-            if (!res.headersSent) {
-              res.status(500).send('Error serving file');
-            }
-          }
-        });
+      
+      // Check if file exists
+      if (!require('fs').existsSync(filePath)) {
+        console.error('File does not exist:', filePath);
+        return res.status(404).send('File not found');
       }
+
+      // Try to serve the file
+      res.sendFile(filePath, (err) => {
+        if (err) {
+          console.error('Error serving file:', err);
+          if (!res.headersSent) {
+            res.status(500).send('Error serving file: ' + err.message);
+          }
+        } else {
+          console.log('File served successfully:', filePath);
+        }
+      });
     } catch (err) {
       console.error('Error in protected page route:', err);
       if (!res.headersSent) {
-        res.status(500).send('Server error');
+        res.status(500).send('Server error: ' + err.message);
       }
     }
   });

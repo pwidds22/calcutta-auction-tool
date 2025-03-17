@@ -66,7 +66,10 @@
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    // Redirect to index.html (main application page)
+                    // Store the token in localStorage as backup
+                    localStorage.setItem('token', data.token);
+                    
+                    // Redirect to index page - the server will handle session verification
                     window.location.href = '/index.html';
                 } else {
                     alert(data.message || 'Login failed. Please try again.');

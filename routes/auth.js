@@ -142,30 +142,10 @@ router.post(
         const token = user.getSignedJwtToken();
         console.log('Token generated:', token.substring(0, 20) + '...');
 
-        // Set cookie options
-        const options = {
-          expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-          httpOnly: true,
-          secure: true,
-          sameSite: 'Lax',
-          path: '/'
-        };
-
-        // Get the domain from the request host
-        const host = req.get('host');
-        if (host) {
-          // If it's a custom domain, include the domain in cookie options
-          if (host.includes('calcuttagenius.com')) {
-            options.domain = '.calcuttagenius.com';
-          }
-        }
-
-        console.log('Setting cookie with options:', options);
-
-        // Send response
+        // Let the global cookie middleware handle the cookie settings
         return res
           .status(200)
-          .cookie('token', token, options)
+          .cookie('token', token)
           .json({
             success: true,
             token,
