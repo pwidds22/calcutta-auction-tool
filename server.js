@@ -109,48 +109,6 @@ app.use('/api/auth', (req, res, next) => {
 
 app.use('/api/data', userDataRoutes);
 
-// Root route handler
-app.get('/', (req, res) => {
-  res.set('Content-Type', 'text/html');
-  res.sendFile(path.resolve(__dirname, 'home.html'));
-});
-
-// Serve public HTML files
-app.get('/home.html', (req, res) => {
-  res.set('Content-Type', 'text/html');
-  res.sendFile(path.resolve(__dirname, 'home.html'));
-});
-
-app.get('/login.html', (req, res) => {
-  res.set('Content-Type', 'text/html');
-  res.sendFile(path.resolve(__dirname, 'login.html'));
-});
-
-app.get('/register.html', (req, res) => {
-  res.set('Content-Type', 'text/html');
-  res.sendFile(path.resolve(__dirname, 'register.html'));
-});
-
-// Serve payment pages
-app.get('/payment.html', (req, res) => {
-  if (!req.cookies.token) {
-    res.redirect('/home.html');
-  } else {
-    res.set('Content-Type', 'text/html');
-    res.sendFile(path.resolve(__dirname, 'payment.html'));
-  }
-});
-
-app.get('/payment-success.html', (req, res) => {
-  res.set('Content-Type', 'text/html');
-  res.sendFile(path.resolve(__dirname, 'payment-success.html'));
-});
-
-app.get('/payment-cancel.html', (req, res) => {
-  res.set('Content-Type', 'text/html');
-  res.sendFile(path.resolve(__dirname, 'payment-cancel.html'));
-});
-
 // Payment check middleware
 const checkPayment = async (req, res, next) => {
   console.log('\nPayment check middleware:', {
@@ -161,6 +119,7 @@ const checkPayment = async (req, res, next) => {
 
   // Skip payment check for these routes
   const publicPaths = [
+    '/',
     '/home.html',
     '/login.html',
     '/register.html',
@@ -221,8 +180,69 @@ const checkPayment = async (req, res, next) => {
   }
 };
 
-// Apply payment check middleware BEFORE protected routes
+// Apply payment check middleware BEFORE any route handlers
 app.use(checkPayment);
+
+// Root route handler
+app.get('/', (req, res) => {
+  res.set('Content-Type', 'text/html');
+  res.sendFile(path.resolve(__dirname, 'home.html'));
+});
+
+// Serve public HTML files
+app.get('/home.html', (req, res) => {
+  res.set('Content-Type', 'text/html');
+  res.sendFile(path.resolve(__dirname, 'home.html'));
+});
+
+app.get('/login.html', (req, res) => {
+  res.set('Content-Type', 'text/html');
+  res.sendFile(path.resolve(__dirname, 'login.html'));
+});
+
+app.get('/register.html', (req, res) => {
+  res.set('Content-Type', 'text/html');
+  res.sendFile(path.resolve(__dirname, 'register.html'));
+});
+
+// Serve payment pages
+app.get('/payment.html', async (req, res) => {
+  if (!req.cookies.token) {
+    return res.redirect('/home.html');
+  }
+
+  try {
+    const token = req.cookies.token;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (!user) {
+      return res.redirect('/home.html');
+    }
+
+    // If user has already paid, redirect to index
+    if (user.hasPaid) {
+      console.log('User already paid, redirecting to index:', user.email);
+      return res.redirect('/index.html');
+    }
+
+    res.set('Content-Type', 'text/html');
+    res.sendFile(path.resolve(__dirname, 'payment.html'));
+  } catch (err) {
+    console.error('Payment page error:', err);
+    res.redirect('/home.html');
+  }
+});
+
+app.get('/payment-success.html', (req, res) => {
+  res.set('Content-Type', 'text/html');
+  res.sendFile(path.resolve(__dirname, 'payment-success.html'));
+});
+
+app.get('/payment-cancel.html', (req, res) => {
+  res.set('Content-Type', 'text/html');
+  res.sendFile(path.resolve(__dirname, 'payment-cancel.html'));
+});
 
 // Protected HTML routes
 const protectedPages = [
