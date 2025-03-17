@@ -119,6 +119,32 @@ app.use('/api/auth', (req, res, next) => {
 
 app.use('/api/data', userDataRoutes);
 
+// Define public and protected paths at the top level
+const publicPaths = [
+  '/home.html',
+  '/login.html',
+  '/register.html',
+  '/payment.html',
+  '/payment-success.html',
+  '/payment-cancel.html',
+  '/api/auth/register',
+  '/api/auth/login',
+  '/api/payment/webhook',
+  '/favicon.ico',
+  '/css',
+  '/img',
+  '/js'
+];
+
+const protectedPages = [
+  'index.html',
+  'auction.html',
+  'teams.html',
+  'profile.html',
+  'dashboard.html',
+  'team-odds.html'
+];
+
 // Payment check middleware
 const checkPayment = async (req, res, next) => {
   console.log('\nPayment check middleware:', {
@@ -127,24 +153,8 @@ const checkPayment = async (req, res, next) => {
     headers: req.headers
   });
 
-  // Skip payment check for these routes
-  const publicPaths = [
-    '/home.html',  // Remove '/' to prevent matching /index.html
-    '/login.html',
-    '/register.html',
-    '/payment.html',
-    '/payment-success.html',
-    '/payment-cancel.html',
-    '/api/auth/register',
-    '/api/auth/login',
-    '/api/payment/webhook',
-    '/favicon.ico',
-    '/css',
-    '/img',
-    '/js'
-  ];
-
-  if (publicPaths.some(path => req.path === path || req.path.startsWith('/api/') && publicPaths.includes(req.path))) {
+  // Skip payment check for public paths
+  if (publicPaths.some(path => req.path === path || (req.path.startsWith('/api/') && publicPaths.includes(req.path)))) {
     console.log('Skipping payment check for public path:', req.path);
     return next();
   }
@@ -194,20 +204,10 @@ app.get('/', (req, res) => {
   res.redirect('/home.html');
 });
 
-// Protected HTML routes
-const protectedPages = [
-  'index.html',
-  'auction.html',
-  'teams.html',
-  'profile.html',
-  'dashboard.html',
-  'team-odds.html'
-];
-
 // Apply payment check middleware to ALL routes except public ones
 app.use(async (req, res, next) => {
   // Skip if it's a public path
-  if (publicPaths.some(path => req.path === path || req.path.startsWith('/api/') && publicPaths.includes(req.path))) {
+  if (publicPaths.some(path => req.path === path || (req.path.startsWith('/api/') && publicPaths.includes(req.path)))) {
     return next();
   }
   
