@@ -1,26 +1,14 @@
 // Check authentication on page load
 document.addEventListener('DOMContentLoaded', async () => {
-    // Check if user is logged in
-    if (!isLoggedIn()) {
-        window.location.href = 'login.html';
-        return;
-    }
-
-    // Load user data
-    await loadUserProfile();
-});
-
-// Load user profile data
-async function loadUserProfile() {
     try {
+        // Try to load user profile data first
         const response = await authFetch('/api/auth/me');
         
-        if (response.status === 401) {
-            logout();
-            return;
-        }
-
         if (!response.ok) {
+            if (response.status === 401) {
+                window.location.href = 'login.html';
+                return;
+            }
             throw new Error('Failed to load user data');
         }
 
@@ -31,9 +19,9 @@ async function loadUserProfile() {
 
     } catch (error) {
         console.error('Error loading profile:', error);
-        showError('Failed to load profile data');
+        window.location.href = 'login.html';
     }
-}
+});
 
 // Handle form submission
 document.getElementById('profileForm').addEventListener('submit', async (e) => {

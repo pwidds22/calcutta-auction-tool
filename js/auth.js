@@ -37,19 +37,20 @@ function checkAuth() {
 function authFetch(url, options = {}) {
     const token = getToken();
     
-    if (!token) {
-        console.warn('No authentication token found');
-        return fetch(url, options);
-    }
-    
-    // Add authorization header
+    // Add credentials and merge with existing options
     const authOptions = {
         ...options,
+        credentials: 'include',  // Always include credentials
         headers: {
             ...options.headers,
-            'Authorization': `Bearer ${token}`
+            'Content-Type': 'application/json'
         }
     };
+    
+    // Only add Authorization header if we have a token
+    if (token) {
+        authOptions.headers['Authorization'] = `Bearer ${token}`;
+    }
     
     return fetch(url, authOptions).then(response => {
         if (response.status === 401) {
