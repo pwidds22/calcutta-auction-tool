@@ -69,13 +69,39 @@
                 </ul>
             </div>
             <div class="text-center">
-                <a href="https://buy.stripe.com/bIYdSv0I83XwbQY7ss" class="btn btn-primary btn-lg px-5">
+                <div class="mb-3">
+                    <input type="text" id="promoCode" class="form-control" placeholder="Enter promo code (optional)">
+                </div>
+                <button id="payButton" class="btn btn-primary btn-lg px-5">
                     Pay Now
-                </a>
+                </button>
             </div>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <script>
+        document.getElementById('payButton').addEventListener('click', async () => {
+            const promoCode = document.getElementById('promoCode').value.trim();
+            try {
+                const response = await fetch('/api/payment/create-checkout-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ promoCode })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    window.location.href = data.url;
+                } else {
+                    alert(data.message || 'Error creating payment session');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            }
+        });
+    </script>
 </body>
 </html> 

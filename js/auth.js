@@ -30,8 +30,9 @@ async function logout() {
         console.error('Logout error:', error);
     }
     
-    // Clear localStorage
+    // Only remove auth-related items from localStorage
     localStorage.removeItem('token');
+    localStorage.removeItem('userEmail');
     
     // Redirect to login
     window.location.href = 'login.html';

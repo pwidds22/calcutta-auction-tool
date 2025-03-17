@@ -448,10 +448,27 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="headingOne">
                             <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                                What's the difference between "Suggested Bid" and "Fair Value"?
+                                What do the percentages in the table mean?
                             </button>
                         </h2>
                         <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#auctionFAQ">
+                            <div class="accordion-body">
+                                <p>In the team table, each round shows two percentages:</p>
+                                <ul>
+                                    <li><strong>First percentage:</strong> This is the team's probability of reaching that round, calculated from devigged odds. For example, if a team has a 75% chance to make the Round of 32, this number would be 75.00%.</li>
+                                    <li><strong>Second percentage (in parentheses):</strong> This is the team's value percentage for that round, calculated by multiplying their probability by the round's payout percentage. For example, if a team has a 75% chance to make the Round of 32 and the Round of 32 pays 0.5% of the pot, this number would be 0.375% (75% × 0.5%).</li>
+                                </ul>
+                                <p>These percentages help you understand both the likelihood of success and the potential value at each stage of the tournament.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingTwo">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                What's the difference between "Suggested Bid" and "Fair Value"?
+                            </button>
+                        </h2>
+                        <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#auctionFAQ">
                             <div class="accordion-body">
                                 <p><strong>Fair Value</strong> is what a team is mathematically worth based on their probability of winning. It's calculated by multiplying the team's value percentage by the total pot size.</p>
                                 <p><strong>Suggested Bid</strong> is set at 95% of the Fair Value. This creates a 5% buffer that gives you potential profit if you win the team at that price.</p>
@@ -460,12 +477,12 @@
                         </div>
                     </div>
                     <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingTwo">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                        <h2 class="accordion-header" id="headingThree">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
                                 How should I use the Suggested Bid?
                             </button>
                         </h2>
-                        <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#auctionFAQ">
+                        <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#auctionFAQ">
                             <div class="accordion-body">
                                 <p>The Suggested Bid is your target maximum bid for each team. If you can win a team at or below this price, you're getting good value.</p>
                                 <p>In practice:</p>
@@ -479,12 +496,12 @@
                         </div>
                     </div>
                     <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingThree">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                        <h2 class="accordion-header" id="headingFour">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
                                 Why not just bid at Fair Value?
                             </button>
                         </h2>
-                        <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#auctionFAQ">
+                        <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#auctionFAQ">
                             <div class="accordion-body">
                                 <p>If you consistently bid exactly at Fair Value:</p>
                                 <ul>
@@ -497,12 +514,34 @@
                         </div>
                     </div>
                     <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingFour">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                        <h2 class="accordion-header" id="headingFive">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+                                How do the profit projections work?
+                            </button>
+                        </h2>
+                        <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive" data-bs-parent="#auctionFAQ">
+                            <div class="accordion-body">
+                                <p>The profit projections in the table show two different types of information depending on whether a team has been purchased:</p>
+                                <ul>
+                                    <li><strong>For teams without a purchase price:</strong> The values show the raw payout amount that team would earn for reaching each round. This helps you understand the potential earnings before making a bid.</li>
+                                    <li><strong>For teams with a purchase price:</strong> The values show your actual profit (payout minus purchase price) if the team reaches that round. This helps you track your potential returns on purchased teams.</li>
+                                </ul>
+                                <p>Below each profit value, you'll see two percentages:</p>
+                                <ul>
+                                    <li><strong>First percentage:</strong> The team's probability of reaching that round (based on devigged odds)</li>
+                                    <li><strong>Second percentage (in parentheses):</strong> The team's value percentage for that round (probability × payout percentage)</li>
+                                </ul>
+                                <p>These percentages help you assess both the likelihood of success and the potential value at each stage of the tournament.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingSix">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
                                 Calcutta Auction Strategy Tips
                             </button>
                         </h2>
-                        <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#auctionFAQ">
+                        <div id="collapseSix" class="accordion-collapse collapse" aria-labelledby="headingSix" data-bs-parent="#auctionFAQ">
                             <div class="accordion-body">
                                 <h6>Timing Your Bids</h6>
                                 <ul>
@@ -535,23 +574,6 @@
                                     <li><strong>Exploit FOMO:</strong> Participants who haven't won any teams yet may overpay to avoid missing out completely.</li>
                                     <li><strong>Auction fatigue:</strong> When everyone already has teams, bidding action often decreases, creating value for those still willing to bid.</li>
                                 </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingFive">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
-                                How do the profit projections work?
-                            </button>
-                        </h2>
-                        <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive" data-bs-parent="#auctionFAQ">
-                            <div class="accordion-body">
-                                <p>The profit projections in the table show two different types of information depending on whether a team has been purchased:</p>
-                                <ul>
-                                    <li><strong>For teams without a purchase price:</strong> The values show the raw payout amount that team would earn for reaching each round. This helps you understand the potential earnings before making a bid.</li>
-                                    <li><strong>For teams with a purchase price:</strong> The values show your actual profit (payout minus purchase price) if the team reaches that round. This helps you track your potential returns on purchased teams.</li>
-                                </ul>
-                                <p>Below each profit value, you'll see the team's probability of reaching that round, helping you assess both the potential reward and the likelihood of achieving it.</p>
                             </div>
                         </div>
                     </div>

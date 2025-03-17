@@ -81,6 +81,26 @@
                     // Store the token in localStorage as backup
                     localStorage.setItem('token', data.token);
                     
+                    // Load saved team data from localStorage before redirecting
+                    const savedTeams = localStorage.getItem('calcuttaTeams');
+                    if (!savedTeams) {
+                        // If no saved teams in localStorage, try to load from server
+                        try {
+                            const userDataResponse = await fetch('/api/data', {
+                                credentials: 'include',
+                                headers: {
+                                    'Authorization': `Bearer ${data.token}`
+                                }
+                            });
+                            const userData = await userDataResponse.json();
+                            if (userData && userData.data && userData.data.teams) {
+                                localStorage.setItem('calcuttaTeams', JSON.stringify(userData.data.teams));
+                            }
+                        } catch (error) {
+                            console.error('Error loading team data:', error);
+                        }
+                    }
+                    
                     // Redirect based on payment status
                     if (data.user.hasPaid) {
                         window.location.href = '/auction';

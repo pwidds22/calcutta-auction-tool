@@ -55,7 +55,13 @@ router.post('/create-checkout-session', protect, async (req, res) => {
       cancel_url: `${process.env.FRONTEND_URL}/payment-cancel`,
       metadata: {
         userId: user.id
-      }
+      },
+      // Add promo code if provided
+      ...(req.body.promoCode && {
+        discounts: [{
+          coupon: req.body.promoCode
+        }]
+      })
     });
 
     res.json({
@@ -67,7 +73,7 @@ router.post('/create-checkout-session', protect, async (req, res) => {
     console.error('Payment session error:', err);
     res.status(500).json({
       success: false,
-      message: 'Error creating payment session'
+      message: err.message || 'Error creating payment session'
     });
   }
 });

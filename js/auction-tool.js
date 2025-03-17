@@ -30,77 +30,77 @@ const AUCTION_BASE_TEAMS = getDefaultTeams();
 function getDefaultTeams() {
     return [
         // East Region
-        { id: 1, name: "Duke", seed: 1, region: "East", americanOdds: { r32: -33233, s16: -740, e8: -288, f4: -125, f2: +172, champ: +310 } },
-        { id: 2, name: "Alabama", seed: 2, region: "East", americanOdds: { r32: -3126, s16: -260, e8: +110, f4: +410, f2: +860, champ: +1900 } },
-        { id: 3, name: "Wisconsin", seed: 3, region: "East", americanOdds: { r32: -1513, s16: -115, e8: +350, f4: +1000, f2: +3100, champ: +6000 } },
-        { id: 4, name: "Arizona", seed: 4, region: "East", americanOdds: { r32: -1049, s16: +205, e8: +510, f4: +800, f2: +3700, champ: +3700 } },
-        { id: 5, name: "Oregon", seed: 5, region: "East", americanOdds: { r32: -180, s16: +350, e8: +2600, f4: +3000, f2: +14000, champ: +19000 } },
-        { id: 6, name: "BYU", seed: 6, region: "East", americanOdds: { r32: -99, s16: +335, e8: +1050, f4: +2000, f2: +14000, champ: +10000 } },
-        { id: 7, name: "Saint Mary's", seed: 7, region: "East", americanOdds: { r32: -230, s16: +350, e8: +875, f4: +2300, f2: +9900, champ: +13000 } },
-        { id: 8, name: "Mississippi State", seed: 8, region: "East", americanOdds: { r32: -361, s16: +282, e8: +450, f4: +850, f2: +2300, champ: +4300 } },
-        { id: 9, name: "Baylor", seed: 9, region: "East", americanOdds: { r32: +101, s16: +1200, e8: +2700, f4: +3600, f2: +9000, champ: +23000 } },
-        { id: 10, name: "Vanderbilt", seed: 10, region: "East", americanOdds: { r32: +230, s16: +1900, e8: +2900, f4: +8000, f2: +40000, champ: +100000 } },
-        { id: 11, name: "VCU", seed: 11, region: "East", americanOdds: { r32: +302, s16: +1400, e8: +2000, f4: +10000, f2: +40000, champ: +100000 } },
-        { id: 12, name: "Liberty", seed: 12, region: "East", americanOdds: { r32: +180, s16: +1200, e8: +12000, f4: +25000, f2: +50000, champ: +100000 } },
-        { id: 13, name: "Akron", seed: 13, region: "East", americanOdds: { r32: +1049, s16: +2500, e8: +8000, f4: +25000, f2: +50000, champ: +100000 } },
-        { id: 14, name: "Montana", seed: 14, region: "East", americanOdds: { r32: +1513, s16: +4000, e8: +8000, f4: +25000, f2: +50000, champ: +100000 } },
-        { id: 15, name: "Robert Morris", seed: 15, region: "East", americanOdds: { r32: +3126, s16: +5000, e8: +10000, f4: +25000, f2: +50000, champ: +100000 } },
-        { id: 16, name: "American", seed: 16, region: "East", americanOdds: { r32: +49900, s16: +8000, e8: +15000, f4: +25000, f2: +50000, champ: +100000 } },
-        { id: 17, name: "Mount St. Mary's", seed: 16, region: "East", americanOdds: { r32: +49900, s16: +8000, e8: +15000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 1, name: "Duke", seed: 1, region: "East", americanOdds: { r32: -33233, s16: -700, e8: -240, f4: -130, f2: +172, champ: +478 } },
+        { id: 2, name: "Alabama", seed: 2, region: "East", americanOdds: { r32: -2319.59, s16: -240, e8: +120, f4: +420, f2: +860, champ: +2356 } },
+        { id: 3, name: "Wisconsin", seed: 3, region: "East", americanOdds: { r32: -1513, s16: -116, e8: +310, f4: +1100, f2: +3100, champ: +7267 } },
+        { id: 4, name: "Arizona", seed: 4, region: "East", americanOdds: { r32: -771.28, s16: -192, e8: +390, f4: +750, f2: +3700, champ: +3656 } },
+        { id: 5, name: "Oregon", seed: 5, region: "East", americanOdds: { r32: -248.95, s16: +230, e8: +1360, f4: +3100, f2: +14000, champ: +36156 } },
+        { id: 6, name: "BYU", seed: 6, region: "East", americanOdds: { r32: -150.06, s16: +215, e8: +600, f4: +1900, f2: +14000, champ: +14489 } },
+        { id: 7, name: "Saint Mary's", seed: 7, region: "East", americanOdds: { r32: -156.52, s16: +300, e8: +680, f4: +2300, f2: +9900, champ: +14489 } },
+        { id: 8, name: "Mississippi State", seed: 8, region: "East", americanOdds: { r32: -122.55, s16: +900, e8: +1750, f4: +3800, f2: +2300, champ: +28934 } },
+        { id: 9, name: "Baylor", seed: 9, region: "East", americanOdds: { r32: +122.55, s16: +960, e8: +1700, f4: +3900, f2: +9000, champ: +25323 } },
+        { id: 10, name: "Vanderbilt", seed: 10, region: "East", americanOdds: { r32: +156.52, s16: +770, e8: +1800, f4: +7500, f2: +40000, champ: +144492 } },
+        { id: 11, name: "VCU", seed: 11, region: "East", americanOdds: { r32: +150.06, s16: +380, e8: +1060, f4: +3500, f2: +40000, champ: +28934 } },
+        { id: 12, name: "Liberty", seed: 12, region: "East", americanOdds: { r32: +248.95, s16: +1220, e8: +10000, f4: +25000, f2: +50000, champ: +144492 } },
+        { id: 13, name: "Akron", seed: 13, region: "East", americanOdds: { r32: +771.28, s16: +2100, e8: +25000, f4: +25000, f2: +50000, champ: +144492 } },
+        { id: 14, name: "Montana", seed: 14, region: "East", americanOdds: { r32: +1513, s16: +10000, e8: +8000, f4: +25000, f2: +50000, champ: +144492 } },
+        { id: 15, name: "Robert Morris", seed: 15, region: "East", americanOdds: { r32: +2319.59, s16: +15000, e8: +10000, f4: +25000, f2: +50000, champ: +144492 } },
+        { id: 16, name: "American", seed: 16, region: "East", americanOdds: { r32: +49900, s16: +8000, e8: +15000, f4: +25000, f2: +50000, champ: +144492 } },
+        { id: 17, name: "Mount St. Mary's", seed: 16, region: "East", americanOdds: { r32: +49900, s16: +8000, e8: +15000, f4: +25000, f2: +50000, champ: +144492 } },
 
         // Midwest Region
-        { id: 33, name: "Houston", seed: 1, region: "Midwest", americanOdds: { r32: -16567, s16: -260, e8: -133, f4: +140, f2: +317, champ: +700 } },
-        { id: 34, name: "SIU Edwardsville", seed: 16, region: "Midwest", americanOdds: { r32: +16567, s16: +8000, e8: +15000, f4: +25000, f2: +50000, champ: +100000 } },
-        { id: 35, name: "Gonzaga", seed: 8, region: "Midwest", americanOdds: { r32: -361, s16: +282, e8: +450, f4: +850, f2: +2300, champ: +4300 } },
-        { id: 36, name: "Georgia", seed: 9, region: "Midwest", americanOdds: { r32: +361, s16: +1200, e8: +2700, f4: +9500, f2: +40000, champ: +100000 } },
-        { id: 37, name: "Clemson", seed: 5, region: "Midwest", americanOdds: { r32: -253, s16: +147, e8: +790, f4: +1500, f2: +3900, champ: +10000 } },
-        { id: 38, name: "McNeese", seed: 12, region: "Midwest", americanOdds: { r32: +253, s16: +2000, e8: +4000, f4: +10000, f2: +40000, champ: +100000 } },
-        { id: 39, name: "Purdue", seed: 4, region: "Midwest", americanOdds: { r32: -337, s16: +132, e8: +780, f4: +1200, f2: +6500, champ: +8500 } },
-        { id: 40, name: "High Point", seed: 13, region: "Midwest", americanOdds: { r32: +337, s16: +1350, e8: +16000, f4: +25000, f2: +50000, champ: +100000 } },
-        { id: 41, name: "Illinois", seed: 6, region: "Midwest", americanOdds: { r32: -148, s16: +165, e8: +700, f4: +900, f2: +19000, champ: +5500 } },
-        { id: 42, name: "Texas/Xavier", seed: 11, region: "Midwest", americanOdds: { r32: +302, s16: +1400, e8: +2000, f4: +10000, f2: +40000, champ: +100000 } },
-        { id: 43, name: "Kentucky", seed: 3, region: "Midwest", americanOdds: { r32: -405, s16: -168, e8: +90, f4: +900, f2: +2000, champ: +5500 } },
-        { id: 44, name: "Troy", seed: 14, region: "Midwest", americanOdds: { r32: +405, s16: +4000, e8: +8000, f4: +25000, f2: +50000, champ: +100000 } },
-        { id: 45, name: "UCLA", seed: 7, region: "Midwest", americanOdds: { r32: -242, s16: +350, e8: +710, f4: +2100, f2: +11000, champ: +14000 } },
-        { id: 46, name: "Utah State", seed: 10, region: "Midwest", americanOdds: { r32: +242, s16: +1200, e8: +2900, f4: +11000, f2: +40000, champ: +100000 } },
-        { id: 47, name: "Tennessee", seed: 2, region: "Midwest", americanOdds: { r32: -1943, s16: -251, e8: -111, f4: +370, f2: +880, champ: +2100 } },
-        { id: 48, name: "Wofford", seed: 15, region: "Midwest", americanOdds: { r32: +1943, s16: +5000, e8: +10000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 33, name: "Houston", seed: 1, region: "Midwest", americanOdds: { r32: -16567, s16: -310, e8: -144, f4: +130, f2: +317, champ: +1056 } },
+        { id: 34, name: "SIU Edwardsville", seed: 16, region: "Midwest", americanOdds: { r32: +16567, s16: +8000, e8: +15000, f4: +25000, f2: +50000, champ: +144492 } },
+        { id: 35, name: "Gonzaga", seed: 8, region: "Midwest", americanOdds: { r32: -237.40, s16: +280, e8: +450, f4: +850, f2: +2300, champ: +4811 } },
+        { id: 36, name: "Georgia", seed: 9, region: "Midwest", americanOdds: { r32: +237.40, s16: +1550, e8: +3400, f4: +9500, f2: +40000, champ: +36156 } },
+        { id: 37, name: "Clemson", seed: 5, region: "Midwest", americanOdds: { r32: -285.12, s16: +118, e8: +620, f4: +1400, f2: +3900, champ: +10878 } },
+        { id: 38, name: "McNeese", seed: 12, region: "Midwest", americanOdds: { r32: +285.12, s16: +720, e8: +3600, f4: +10000, f2: +40000, champ: +144492 } },
+        { id: 39, name: "Purdue", seed: 4, region: "Midwest", americanOdds: { r32: -337, s16: +134, e8: +690, f4: +1400, f2: +6500, champ: +9578 } },
+        { id: 40, name: "High Point", seed: 13, region: "Midwest", americanOdds: { r32: +337, s16: +1300, e8: +13000, f4: +25000, f2: +50000, champ: +144492 } },
+        { id: 41, name: "Illinois", seed: 6, region: "Midwest", americanOdds: { r32: -148, s16: +144, e8: +390, f4: +1000, f2: +19000, champ: +7267 } },
+        { id: 42, name: "Texas/Xavier", seed: 11, region: "Midwest", americanOdds: { r32: +302, s16: +1160, e8: +3100, f4: +9000, f2: +40000, champ: +144492 } },
+        { id: 43, name: "Kentucky", seed: 3, region: "Midwest", americanOdds: { r32: -518.90, s16: +106, e8: +320, f4: +900, f2: +2000, champ: +7267 } },
+        { id: 44, name: "Troy", seed: 14, region: "Midwest", americanOdds: { r32: +518.90, s16: +2100, e8: +13000, f4: +25000, f2: +50000, champ: +144492 } },
+        { id: 45, name: "UCLA", seed: 7, region: "Midwest", americanOdds: { r32: -209.31, s16: +290, e8: +720, f4: +2100, f2: +11000, champ: +18100 } },
+        { id: 46, name: "Utah State", seed: 10, region: "Midwest", americanOdds: { r32: +209.31, s16: +1020, e8: +2900, f4: +10000, f2: +40000, champ: +144492 } },
+        { id: 47, name: "Tennessee", seed: 2, region: "Midwest", americanOdds: { r32: -1540.77, s16: -260, e8: +124, f4: +360, f2: +880, champ: +2356 } },
+        { id: 48, name: "Wofford", seed: 15, region: "Midwest", americanOdds: { r32: +1540.77, s16: +7500, e8: +10000, f4: +25000, f2: +50000, champ: +144492 } },
 
         // South Region
-        { id: 65, name: "Florida", seed: 1, region: "South", americanOdds: { r32: -2678, s16: -335, e8: -170, f4: +100, f2: +257, champ: +500 } },
-        { id: 66, name: "Norfolk St.", seed: 16, region: "South", americanOdds: { r32: +2678, s16: +8000, e8: +15000, f4: +25000, f2: +50000, champ: +100000 } },
-        { id: 67, name: "Connecticut", seed: 8, region: "South", americanOdds: { r32: -199, s16: +1900, e8: +1150, f4: +1900, f2: +7500, champ: +11000 } },
-        { id: 68, name: "Oklahoma", seed: 9, region: "South", americanOdds: { r32: +199, s16: +1100, e8: +2100, f4: +3100, f2: +10000, champ: +23000 } },
-        { id: 69, name: "Memphis", seed: 5, region: "South", americanOdds: { r32: -88, s16: +450, e8: +1450, f4: +2300, f2: +12000, champ: +19000 } },
-        { id: 70, name: "Colorado State", seed: 12, region: "South", americanOdds: { r32: +88, s16: +405, e8: +2200, f4: +5000, f2: +40000, champ: +95000 } },
-        { id: 71, name: "Maryland", seed: 4, region: "South", americanOdds: { r32: -376, s16: +126, e8: +700, f4: +1300, f2: +7200, champ: +10000 } },
-        { id: 72, name: "Grand Canyon", seed: 13, region: "South", americanOdds: { r32: +376, s16: +780, e8: +5400, f4: +17000, f2: +50000, champ: +100000 } },
-        { id: 73, name: "Missouri", seed: 6, region: "South", americanOdds: { r32: -154, s16: +375, e8: +1120, f4: +2100, f2: +14000, champ: +15000 } },
-        { id: 74, name: "Drake", seed: 11, region: "South", americanOdds: { r32: +154, s16: +1200, e8: +2900, f4: +4100, f2: +12000, champ: +28000 } },
-        { id: 75, name: "Texas Tech", seed: 3, region: "South", americanOdds: { r32: -793, s16: -128, e8: +238, f4: +500, f2: +2000, champ: +3000 } },
-        { id: 76, name: "UNCW", seed: 14, region: "South", americanOdds: { r32: +793, s16: +4000, e8: +8000, f4: +25000, f2: +50000, champ: +100000 } },
-        { id: 77, name: "Kansas", seed: 7, region: "South", americanOdds: { r32: -241, s16: +350, e8: +865, f4: +2300, f2: +8200, champ: +16000 } },
-        { id: 78, name: "Arkansas", seed: 10, region: "South", americanOdds: { r32: +241, s16: +1200, e8: +1330, f4: +7000, f2: +40000, champ: +100000 } },
-        { id: 79, name: "Saint John's", seed: 2, region: "South", americanOdds: { r32: -2469, s16: -260, e8: +113, f4: +490, f2: +860, champ: +3000 } },
-        { id: 80, name: "Omaha", seed: 15, region: "South", americanOdds: { r32: +2469, s16: +5000, e8: +10000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 65, name: "Florida", seed: 1, region: "South", americanOdds: { r32: -3874.44, s16: -700, e8: -260, f4: -125, f2: +257, champ: +550 } },
+        { id: 66, name: "Norfolk St.", seed: 16, region: "South", americanOdds: { r32: +3874.44, s16: +8000, e8: +15000, f4: +25000, f2: +50000, champ: +144492 } },
+        { id: 67, name: "Connecticut", seed: 8, region: "South", americanOdds: { r32: -175.17, s16: +640, e8: +1120, f4: +2600, f2: +7500, champ: +7267 } },
+        { id: 68, name: "Oklahoma", seed: 9, region: "South", americanOdds: { r32: +175.17, s16: +1480, e8: +3100, f4: +8000, f2: +10000, champ: +43379 } },
+        { id: 69, name: "Memphis", seed: 5, region: "South", americanOdds: { r32: +130.64, s16: +500, e8: +3100, f4: +9000, f2: +12000, champ: +14489 } },
+        { id: 70, name: "Colorado State", seed: 12, region: "South", americanOdds: { r32: -130.64, s16: +360, e8: +2000, f4: +6000, f2: +40000, champ: +144492 } },
+        { id: 71, name: "Maryland", seed: 4, region: "South", americanOdds: { r32: -466.01, s16: -168, e8: +450, f4: +1000, f2: +7200, champ: +7267 } },
+        { id: 72, name: "Grand Canyon", seed: 13, region: "South", americanOdds: { r32: +466.01, s16: +1280, e8: +10000, f4: +25000, f2: +50000, champ: +144492 } },
+        { id: 73, name: "Missouri", seed: 6, region: "South", americanOdds: { r32: -240.53, s16: +196, e8: +480, f4: +1400, f2: +14000, champ: +9578 } },
+        { id: 74, name: "Drake", seed: 11, region: "South", americanOdds: { r32: +240.53, s16: +1160, e8: +4000, f4: +15000, f2: +12000, champ: +36156 } },
+        { id: 75, name: "Texas Tech", seed: 3, region: "South", americanOdds: { r32: -1093.17, s16: -174, e8: +178, f4: +550, f2: +2000, champ: +4089 } },
+        { id: 76, name: "UNCW", seed: 14, region: "South", americanOdds: { r32: +1093.17, s16: +3800, e8: +20000, f4: +25000, f2: +50000, champ: +144492 } },
+        { id: 77, name: "Kansas", seed: 7, region: "South", americanOdds: { r32: -181.26, s16: +205, e8: +500, f4: +1400, f2: +8200, champ: +9578 } },
+        { id: 78, name: "Arkansas", seed: 10, region: "South", americanOdds: { r32: +181.26, s16: +630, e8: +1700, f4: +6000, f2: +40000, champ: +108380 } },
+        { id: 79, name: "Saint John's", seed: 2, region: "South", americanOdds: { r32: -1548.03, s16: -152, e8: +210, f4: +650, f2: +860, champ: +2933 } },
+        { id: 80, name: "Omaha", seed: 15, region: "South", americanOdds: { r32: +1548.03, s16: +13000, e8: +10000, f4: +25000, f2: +50000, champ: +144492 } },
 
         // West Region
-        { id: 49, name: "Auburn", seed: 1, region: "West", americanOdds: { r32: -99900, s16: -335, e8: -170, f4: -120, f2: +257, champ: +400 } },
-        { id: 50, name: "Alabama State/St. Francis (PA)", seed: 16, region: "West", americanOdds: { r32: +99900, s16: +8000, e8: +15000, f4: +25000, f2: +50000, champ: +100000 } },
-        { id: 51, name: "Louisville", seed: 8, region: "West", americanOdds: { r32: +130, s16: +1200, e8: +2800, f4: +2500, f2: +7600, champ: +13000 } },
-        { id: 52, name: "Creighton", seed: 9, region: "West", americanOdds: { r32: -130, s16: +1200, e8: +2700, f4: +7500, f2: +30000, champ: +80000 } },
-        { id: 53, name: "Michigan", seed: 5, region: "West", americanOdds: { r32: +122, s16: +147, e8: +700, f4: +7500, f2: +30000, champ: +80000 } },
-        { id: 54, name: "UC San Diego", seed: 12, region: "West", americanOdds: { r32: -122, s16: +405, e8: +2300, f4: +6000, f2: +30000, champ: +70000 } },
-        { id: 55, name: "Texas A&M", seed: 4, region: "West", americanOdds: { r32: -233, s16: +126, e8: +700, f4: +1000, f2: +3000, champ: +7000 } },
-        { id: 56, name: "Yale", seed: 13, region: "West", americanOdds: { r32: +233, s16: +1200, e8: +2700, f4: +25000, f2: +50000, champ: +100000 } },
-        { id: 57, name: "Ole Miss", seed: 6, region: "West", americanOdds: { r32: +102, s16: +360, e8: +1100, f4: +1400, f2: +12500, champ: +8000 } },
-        { id: 58, name: "San Diego State/UNC", seed: 11, region: "West", americanOdds: { r32: -102, s16: +785, e8: +3000, f4: +16000, f2: +50000, champ: +100000 } },
-        { id: 59, name: "Iowa State", seed: 3, region: "West", americanOdds: { r32: -792, s16: -162, e8: +233, f4: +480, f2: +1750, champ: +2400 } },
-        { id: 60, name: "Lipscomb", seed: 14, region: "West", americanOdds: { r32: +792, s16: +4000, e8: +8000, f4: +25000, f2: +50000, champ: +100000 } },
-        { id: 61, name: "Marquette", seed: 7, region: "West", americanOdds: { r32: +129, s16: +350, e8: +1550, f4: +1400, f2: +4000, champ: +8000 } },
-        { id: 62, name: "New Mexico", seed: 10, region: "West", americanOdds: { r32: -129, s16: +1200, e8: +4000, f4: +8000, f2: +40000, champ: +100000 } },
-        { id: 63, name: "Michigan State", seed: 2, region: "West", americanOdds: { r32: -1657, s16: -260, e8: +113, f4: +650, f2: +860, champ: +3200 } },
-        { id: 64, name: "Bryant", seed: 15, region: "West", americanOdds: { r32: +1657, s16: +5000, e8: +10000, f4: +25000, f2: +50000, champ: +100000 } }
+        { id: 49, name: "Auburn", seed: 1, region: "West", americanOdds: { r32: -99900, s16: -430, e8: -190, f4: +100, f2: +257, champ: +622 } },
+        { id: 50, name: "Alabama State/St. Francis (PA)", seed: 16, region: "West", americanOdds: { r32: +99900, s16: +15000, e8: +25000, f4: +25000, f2: +50000, champ: +144492 } },
+        { id: 51, name: "Louisville", seed: 8, region: "West", americanOdds: { r32: -133.54, s16: +540, e8: +900, f4: +1800, f2: +7600, champ: +14489 } },
+        { id: 52, name: "Creighton", seed: 9, region: "West", americanOdds: { r32: +133.54, s16: +840, e8: +1420, f4: +3100, f2: +30000, champ: +28934 } },
+        { id: 53, name: "Michigan", seed: 5, region: "West", americanOdds: { r32: -129.68, s16: +210, e8: +1000, f4: +2200, f2: +30000, champ: +18100 } },
+        { id: 54, name: "UC San Diego", seed: 12, region: "West", americanOdds: { r32: +129.68, s16: +390, e8: +1950, f4: +5000, f2: +30000, champ: +43379 } },
+        { id: 55, name: "Texas A&M", seed: 4, region: "West", americanOdds: { r32: -274.84, s16: +118, e8: +620, f4: +1300, f2: +3000, champ: +11600 } },
+        { id: 56, name: "Yale", seed: 13, region: "West", americanOdds: { r32: +274.84, s16: +920, e8: +6500, f4: +18000, f2: +50000, champ: +144492 } },
+        { id: 57, name: "Ole Miss", seed: 6, region: "West", americanOdds: { r32: +102, s16: +280, e8: +690, f4: +2100, f2: +12500, champ: +14489 } },
+        { id: 58, name: "San Diego State/UNC", seed: 11, region: "West", americanOdds: { r32: -102, s16: +1900, e8: +6000, f4: +18000, f2: +50000, champ: +36156 } },
+        { id: 59, name: "Iowa State", seed: 3, region: "West", americanOdds: { r32: -813.88, s16: -160, e8: +188, f4: +550, f2: +1750, champ: +5822 } },
+        { id: 60, name: "Lipscomb", seed: 14, region: "West", americanOdds: { r32: +813.88, s16: +3400, e8: +20000, f4: +25000, f2: +50000, champ: +144492 } },
+        { id: 61, name: "Marquette", seed: 7, region: "West", americanOdds: { r32: -160.71, s16: +290, e8: +750, f4: +2200, f2: +4000, champ: +21712 } },
+        { id: 62, name: "New Mexico", seed: 10, region: "West", americanOdds: { r32: +160.71, s16: +660, e8: +1850, f4: +7500, f2: +40000, champ: +36156 } },
+        { id: 63, name: "Michigan State", seed: 2, region: "West", americanOdds: { r32: -1342.45, s16: -210, e8: +160, f4: +480, f2: +860, champ: +3656 } },
+        { id: 64, name: "Bryant", seed: 15, region: "West", americanOdds: { r32: +1342.45, s16: +9000, e8: +25000, f4: +25000, f2: +50000, champ: +144492 } }
     ];
 }
 
@@ -701,11 +701,26 @@ function calculateTeamValues() {
     const totalWinPercentage = auctionTeams.reduce((sum, team) => sum + team.odds.champ, 0);
     console.log('Total win percentage:', totalWinPercentage);
     
-    // Calculate fair value for each team based on their championship probability
+    // Calculate fair value for each team based on their probabilities for each round
     auctionTeams.forEach(team => {
-        // Use devigged championship odds for value calculation
-        team.valuePercentage = team.odds.champ;
+        // Calculate expected value for each round
+        const roundValues = {
+            r32: team.odds.r32 * (payoutRules.roundOf64 / 100),
+            s16: team.odds.s16 * (payoutRules.roundOf32 / 100),
+            e8: team.odds.e8 * (payoutRules.sweet16 / 100),
+            f4: team.odds.f4 * (payoutRules.elite8 / 100),
+            f2: team.odds.f2 * (payoutRules.finalFour / 100),
+            champ: team.odds.champ * (payoutRules.champion / 100)
+        };
+        
+        // Sum all round values to get total value percentage
+        team.valuePercentage = Object.values(roundValues).reduce((sum, value) => sum + value, 0);
+        
+        // Calculate fair value based on total value percentage
         team.fairValue = potSize * team.valuePercentage;
+        
+        // Store individual round values for reference
+        team.roundValues = roundValues;
     });
     
     // Calculate value metrics
@@ -1070,7 +1085,8 @@ function updateTeamTable() {
             // Create a div for the probability
             const probabilityDiv = document.createElement('div');
             probabilityDiv.className = 'text-center small text-muted';
-            probabilityDiv.textContent = `${(team.odds[round] * 100).toFixed(2)}%`;
+            const roundValue = team.roundValues[round];
+            probabilityDiv.textContent = `${(team.odds[round] * 100).toFixed(2)}% (${(roundValue * 100).toFixed(2)}%)`;
             
             // Add both divs to the cell
             profitCell.appendChild(profitDiv);
@@ -1426,7 +1442,8 @@ function updateTeamPurchasePrice(teamId, price) {
                                  profitValue < 0 ? ' negative-value' : '');
                         }
                         if (probabilityDiv) {
-                            probabilityDiv.textContent = `${(team.odds[round] * 100).toFixed(2)}%`;
+                            const roundValue = team.roundValues[round];
+                            probabilityDiv.textContent = `${(team.odds[round] * 100).toFixed(2)}% (${(roundValue * 100).toFixed(2)}%)`;
                         }
                     }
                 });
