@@ -29,24 +29,31 @@ const UserDataSchema = new mongoose.Schema({
 const User = mongoose.model('User', UserSchema);
 const UserData = mongoose.model('UserData', UserDataSchema);
 
-async function deleteAllUsers() {
+async function deleteUserByEmail(email) {
     try {
         // Connect to MongoDB
         await mongoose.connect(mongoURI);
         console.log('Connected to MongoDB');
 
+        // Find the user first
+        const user = await User.findOne({ email });
+        if (!user) {
+            console.log(`No user found with email: ${email}`);
+            return;
+        }
+
         // Ask for confirmation
-        rl.question('Are you sure you want to delete ALL users and their data? (yes/no): ', async (answer) => {
+        rl.question(`Are you sure you want to delete user ${email} and their data? (yes/no): `, async (answer) => {
             if (answer.toLowerCase() === 'yes') {
-                // Delete all user data first (to maintain referential integrity)
-                const userDataResult = await UserData.deleteMany({});
-                console.log(`Deleted ${userDataResult.deletedCount} user data records`);
+                // Delete user data first (to maintain referential integrity)
+                const userDataResult = await UserData.deleteOne({ userId: user._id });
+                console.log(`Deleted user data for ${email}`);
 
-                // Delete all users
-                const userResult = await User.deleteMany({});
-                console.log(`Deleted ${userResult.deletedCount} users`);
+                // Delete the user
+                const userResult = await User.deleteOne({ email });
+                console.log(`Deleted user ${email}`);
 
-                console.log('All users and their data have been deleted successfully');
+                console.log('User and their data have been deleted successfully');
             } else {
                 console.log('Operation cancelled');
             }
@@ -64,4 +71,4 @@ async function deleteAllUsers() {
 }
 
 // Run the deletion script
-deleteAllUsers(); 
+deleteUserByEmail('pwiddoss22@gmail.com'); 
