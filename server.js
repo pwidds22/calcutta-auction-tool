@@ -79,12 +79,17 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+// Serve static files BEFORE the payment check
+app.use(express.static('./'));
+
 // Payment check middleware
 const checkPayment = async (req, res, next) => {
   // Skip payment check for these routes
   const publicPaths = [
     '/',
     '/home.html',
+    '/login.html',
+    '/register.html',
     '/payment.html',
     '/payment-success.html',
     '/payment-cancel.html',
@@ -124,9 +129,8 @@ const checkPayment = async (req, res, next) => {
   }
 };
 
-// Serve static files AFTER the payment check
+// Apply payment check middleware AFTER static files
 app.use(checkPayment);
-app.use(express.static('./'));
 
 // Import routes
 const authRoutes = require('./routes/auth');
