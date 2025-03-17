@@ -1631,8 +1631,35 @@ function devigRoundOdds() {
     regions.forEach(region => {
         const teamsInRegion = auctionTeams.filter(team => team.region === region);
         
-        // Devig R32, S16, and E8 within regions
-        ['r32', 's16', 'e8'].forEach(round => {
+        // Sort teams by seed for proper matchups
+        teamsInRegion.sort((a, b) => a.seed - b.seed);
+        
+        // Process Round of 32 matchups (1v16, 8v9, 5v12, 4v13, 6v11, 3v14, 7v10, 2v15)
+        const r32Matchups = [
+            [1, 16], [8, 9], [5, 12], [4, 13], [6, 11], [3, 14], [7, 10], [2, 15]
+        ];
+        
+        // Handle each R32 matchup separately
+        r32Matchups.forEach(seedPair => {
+            // Find teams with these seeds in this region
+            const matchupTeams = teamsInRegion.filter(team => 
+                seedPair.includes(team.seed)
+            );
+            
+            if (matchupTeams.length >= 2) {
+                // Calculate overround for just this matchup
+                const r32Probs = matchupTeams.map(team => team.rawImpliedProbabilities.r32);
+                const r32Overround = r32Probs.reduce((sum, prob) => sum + prob, 0);
+                
+                // Devig just this matchup
+                matchupTeams.forEach(team => {
+                    team.odds.r32 = team.rawImpliedProbabilities.r32 / r32Overround;
+                });
+            }
+        });
+        
+        // Process other rounds
+        ['s16', 'e8'].forEach(round => {
             devigRegionalRoundOdds(teamsInRegion, round);
         });
     });
