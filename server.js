@@ -137,12 +137,12 @@ const publicPaths = [
 ];
 
 const protectedPages = [
-  'index.html',
-  'auction.html',
-  'teams.html',
-  'profile.html',
-  'dashboard.html',
-  'team-odds.html'
+  '/index.html',
+  '/auction.html',
+  '/teams.html',
+  '/profile.html',
+  '/dashboard.html',
+  '/team-odds.html'
 ];
 
 // Payment check middleware
@@ -154,7 +154,13 @@ const checkPayment = async (req, res, next) => {
   });
 
   // Skip payment check for public paths
-  if (publicPaths.some(path => req.path === path || (req.path.startsWith('/api/') && publicPaths.includes(req.path)))) {
+  const isPublicPath = publicPaths.some(path => 
+    req.path === path || 
+    (req.path.startsWith('/api/') && publicPaths.includes(req.path)) ||
+    publicPaths.some(p => req.path.startsWith(p + '/'))
+  );
+
+  if (isPublicPath) {
     console.log('Skipping payment check for public path:', req.path);
     return next();
   }
@@ -206,21 +212,25 @@ app.get('/', (req, res) => {
 
 // Apply payment check middleware to ALL routes except public ones
 app.use(async (req, res, next) => {
-  // Skip if it's a public path
-  if (publicPaths.some(path => req.path === path || (req.path.startsWith('/api/') && publicPaths.includes(req.path)))) {
+  const isPublicPath = publicPaths.some(path => 
+    req.path === path || 
+    (req.path.startsWith('/api/') && publicPaths.includes(req.path)) ||
+    publicPaths.some(p => req.path.startsWith(p + '/'))
+  );
+
+  if (isPublicPath) {
     return next();
   }
   
-  // Apply payment check to everything else
   return checkPayment(req, res, next);
 });
 
 // Serve protected pages
 protectedPages.forEach(page => {
-  app.get(`/${page}`, (req, res) => {
+  app.get(page, (req, res) => {
     console.log('Serving protected page:', page);
     res.set('Content-Type', 'text/html');
-    res.sendFile(path.resolve(__dirname, page));
+    res.sendFile(path.resolve(__dirname, page.substring(1)));
   });
 });
 
