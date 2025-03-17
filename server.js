@@ -187,6 +187,7 @@ app.use('/js', express.static(path.join(__dirname, 'js')));
 // Import routes
 const authRoutes = require('./routes/auth');
 const userDataRoutes = require('./routes/userData');
+const blogRoutes = require('./routes/blog');
 
 // Use routes
 app.use('/api/auth', (req, res, next) => {
@@ -200,6 +201,7 @@ app.use('/api/auth', (req, res, next) => {
 }, authRoutes);
 
 app.use('/api/data', userDataRoutes);
+app.use('/blog', blogRoutes);
 
 // Define public and protected paths at the top level
 const publicPaths = [
