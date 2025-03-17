@@ -36,9 +36,17 @@ UserSchema.pre('save', async function(next) {
 
 // Sign JWT and return
 UserSchema.methods.getSignedJwtToken = function() {
-  return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE
-  });
+  try {
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET is not defined in environment variables');
+    }
+    return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRE || '30d'
+    });
+  } catch (err) {
+    console.error('Error generating JWT token:', err);
+    throw err;
+  }
 };
 
 // Match user entered password to hashed password in database

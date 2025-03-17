@@ -85,88 +85,99 @@ router.post(
     check('password', 'Password is required').exists()
   ],
   async (req, res) => {
-    console.log('\nLogin attempt:', {
-      email: req.body.email,
-      headers: req.headers
-    });
-
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      console.log('Login validation failed:', errors.array());
-      return res.status(400).json({ 
-        success: false,
-        message: 'Invalid input',
-        errors: errors.array() 
-      });
-    }
-
-    const { email, password } = req.body;
-
     try {
-      // Check for user
-      const user = await User.findOne({ email }).select('+password');
-
-      if (!user) {
-        console.log('Login failed: User not found -', email);
-        return res.status(401).json({ 
-          success: false,
-          message: 'Invalid credentials' 
-        });
-      }
-
-      console.log('User found:', {
-        id: user._id,
-        email: user.email,
-        hasPaid: user.hasPaid,
-        paymentDate: user.paymentDate
+      console.log('\nLogin attempt:', {
+        email: req.body.email,
+        headers: req.headers,
+        cookies: req.cookies
       });
 
-      // Check if password matches
-      const isMatch = await user.matchPassword(password);
-
-      if (!isMatch) {
-        console.log('Login failed: Password mismatch -', email);
-        return res.status(401).json({ 
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        console.log('Login validation failed:', errors.array());
+        return res.status(400).json({ 
           success: false,
-          message: 'Invalid credentials' 
+          message: 'Invalid input',
+          errors: errors.array() 
         });
       }
 
-      // Create token
-      const token = user.getSignedJwtToken();
-      console.log('Token generated:', token.substring(0, 20) + '...');
+      const { email, password } = req.body;
 
-      // Set cookie options
-      const options = {
-        expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-        httpOnly: true,
-        secure: true, // Always use secure in production
-        sameSite: 'Lax',
-        path: '/',
-        domain: '.calcuttagenius.com' // Add the domain
-      };
+      try {
+        // Check for user
+        const user = await User.findOne({ email }).select('+password');
 
-      // Send response with cookie
-      console.log('Setting cookie with options:', options);
-      res
-        .status(200)
-        .cookie('token', token, options)
-        .json({
-          success: true,
-          token,
-          user: {
-            id: user._id,
-            email: user.email,
-            hasPaid: user.hasPaid,
-            paymentDate: user.paymentDate
-          }
+        if (!user) {
+          console.log('Login failed: User not found -', email);
+          return res.status(401).json({ 
+            success: false,
+            message: 'Invalid credentials' 
+          });
+        }
+
+        console.log('User found:', {
+          id: user._id,
+          email: user.email,
+          hasPaid: user.hasPaid
         });
 
+        // Check if password matches
+        const isMatch = await user.matchPassword(password);
+
+        if (!isMatch) {
+          console.log('Login failed: Password mismatch -', email);
+          return res.status(401).json({ 
+            success: false,
+            message: 'Invalid credentials' 
+          });
+        }
+
+        // Create token
+        const token = user.getSignedJwtToken();
+        console.log('Token generated:', token.substring(0, 20) + '...');
+
+        // Set cookie options
+        const options = {
+          expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+          httpOnly: true,
+          secure: true,
+          sameSite: 'Lax',
+          path: '/',
+          domain: '.calcuttagenius.com'
+        };
+
+        console.log('Setting cookie with options:', options);
+
+        // Send response
+        return res
+          .status(200)
+          .cookie('token', token, options)
+          .json({
+            success: true,
+            token,
+            user: {
+              id: user._id,
+              email: user.email,
+              hasPaid: user.hasPaid,
+              paymentDate: user.paymentDate
+            }
+          });
+
+      } catch (err) {
+        console.error('Database or token error:', err);
+        return res.status(500).json({
+          success: false,
+          message: 'Error during authentication',
+          error: err.message
+        });
+      }
     } catch (err) {
-      console.error('Login error:', err);
-      res.status(500).json({ 
+      console.error('Outer error handler:', err);
+      return res.status(500).json({
         success: false,
-        message: 'Server error during login' 
+        message: 'Server error during login',
+        error: err.message
       });
     }
   }
