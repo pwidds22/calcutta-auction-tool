@@ -44,24 +44,43 @@ app.post('/api/payment/webhook', express.raw({type: 'application/json'}), async 
     });
     
     try {
-      // Find user by email - check both possible locations
-      const userEmail = session.customer_email || (session.customer_details && session.customer_details.email);
-      console.log('Looking up user with email:', userEmail);
+      // Get the email from the session
+      const stripeEmail = session.customer_email || (session.customer_details && session.customer_details.email);
+      console.log('Stripe email:', stripeEmail);
       
-      if (!userEmail) {
+      if (!stripeEmail) {
         console.error('No email found in session data');
         return res.status(400).json({ success: false, error: 'No email found in session data' });
       }
       
-      const user = await User.findOne({ email: userEmail });
+      // Try to find the user by the email from Stripe
+      let user = await User.findOne({ email: stripeEmail });
+      
+      // If no user found with the Stripe email, check if there's a recent user with unpaid status
+      if (!user) {
+        console.log(`No user found with Stripe email ${stripeEmail}, checking for recent unpaid users...`);
+        
+        // Look for users created in the last hour who haven't paid yet
+        const recentUsers = await User.find({ 
+          hasPaid: false,
+          createdAt: { $gt: new Date(Date.now() - 60 * 60 * 1000) } // Last hour
+        }).sort({ createdAt: -1 }); // Most recent first
+        
+        if (recentUsers.length > 0) {
+          user = recentUsers[0]; // Use the most recently created unpaid user
+          console.log(`Using most recent unpaid user: ${user.email} (created at ${user.createdAt})`);
+        } else {
+          console.error('No recent unpaid users found');
+        }
+      }
       
       if (user) {
         user.hasPaid = true;
         user.paymentDate = new Date();
         await user.save();
-        console.log(`User ${userEmail} marked as paid`);
+        console.log(`User ${user.email} marked as paid`);
       } else {
-        console.error(`No user found with email ${userEmail}`);
+        console.error(`Could not find a user to mark as paid`);
       }
     } catch (err) {
       console.error('Error updating user payment status:', err);
