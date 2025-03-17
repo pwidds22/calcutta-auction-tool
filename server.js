@@ -13,6 +13,11 @@ const app = express();
 
 // Raw body for Stripe webhooks
 app.post('/api/payment/webhook', express.raw({type: 'application/json'}), async (req, res) => {
+  console.log('\nWebhook received:', {
+    headers: req.headers,
+    body: req.body.toString().substring(0, 200) // Log first 200 chars of body
+  });
+
   const sig = req.headers['stripe-signature'];
   let event;
 
@@ -22,6 +27,7 @@ app.post('/api/payment/webhook', express.raw({type: 'application/json'}), async 
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
+    console.log('Webhook event constructed successfully:', event.type);
   } catch (err) {
     console.error('Webhook signature verification failed:', err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
@@ -30,11 +36,17 @@ app.post('/api/payment/webhook', express.raw({type: 'application/json'}), async 
   // Handle successful payment
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
+    console.log('\nProcessing checkout session:', {
+      id: session.id,
+      customerEmail: session.customer_email,
+      customerDetails: session.customer_details,
+      metadata: session.metadata
+    });
     
     try {
       // Find user by email
       const userEmail = session.customer_email;
-      console.log('Processing payment for email:', userEmail);
+      console.log('Looking up user with email:', userEmail);
       
       const user = await User.findOne({ email: userEmail });
       
