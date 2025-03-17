@@ -10,10 +10,7 @@ require('dotenv').config();
 // Initialize express app
 const app = express();
 
-// Raw body for Stripe webhooks
-app.use('/api/payment/webhook', express.raw({ type: 'application/json' }));
-
-// Regular middleware
+// Middleware
 app.use(express.json());
 app.use(cookieParser());
 
@@ -27,7 +24,6 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function(origin, callback) {
-    // allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) === -1) {
       const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
@@ -37,7 +33,7 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'stripe-signature']
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Payment check middleware
@@ -47,11 +43,10 @@ const checkPayment = async (req, res, next) => {
     '/',
     '/home.html',
     '/payment.html',
+    '/payment-success.html',
+    '/payment-cancel.html',
     '/api/auth/register',
     '/api/auth/login',
-    '/api/payment/webhook',
-    '/api/payment/create-checkout-session',
-    '/api/payment/status',
     '/favicon.ico'
   ];
 
@@ -77,7 +72,7 @@ const checkPayment = async (req, res, next) => {
       return res.redirect('/payment.html');
     }
 
-    req.user = user; // Attach user to request for later use
+    req.user = user;
     next();
   } catch (err) {
     console.error('Payment check error:', err);
@@ -92,12 +87,10 @@ app.use(express.static('./'));
 // Import routes
 const authRoutes = require('./routes/auth');
 const userDataRoutes = require('./routes/userData');
-const paymentRoutes = require('./routes/payment');
 
 // Use routes
 app.use('/api/auth', authRoutes);
 app.use('/api/data', userDataRoutes);
-app.use('/api/payment', paymentRoutes);
 
 // Serve home.html for the root route
 app.get('/', (req, res) => {
