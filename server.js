@@ -82,7 +82,16 @@ app.use(cors({
 
 // Set cookie options
 app.use((req, res, next) => {
-  res.cookie = res.cookie.bind(res);
+  res.cookie = function(name, value, options = {}) {
+    const defaultOptions = {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'Lax',
+      path: '/',
+      domain: '.calcuttagenius.com'
+    };
+    return res.cookie.bind(res)(name, value, { ...defaultOptions, ...options });
+  };
   res.clearCookie = res.clearCookie.bind(res);
   next();
 });

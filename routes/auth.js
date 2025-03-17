@@ -140,9 +140,10 @@ router.post(
       const options = {
         expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: true, // Always use secure in production
         sameSite: 'Lax',
-        path: '/'
+        path: '/',
+        domain: '.calcuttagenius.com' // Add the domain
       };
 
       // Send response with cookie
