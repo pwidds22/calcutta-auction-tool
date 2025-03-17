@@ -156,6 +156,7 @@ const checkPayment = async (req, res, next) => {
 
   // Check if user is authenticated
   if (!req.cookies.token) {
+    console.log('No token found, redirecting to home');
     return res.redirect('/home.html');
   }
 
@@ -164,11 +165,20 @@ const checkPayment = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id);
 
+    console.log('Payment check for user:', {
+      path: req.path,
+      userId: decoded.id,
+      userFound: !!user,
+      hasPaid: user?.hasPaid
+    });
+
     if (!user) {
+      console.log('User not found, redirecting to home');
       return res.redirect('/home.html');
     }
 
     if (!user.hasPaid) {
+      console.log('User has not paid, redirecting to payment');
       return res.redirect('/payment.html');
     }
 
