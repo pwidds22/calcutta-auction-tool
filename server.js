@@ -131,6 +131,26 @@ app.get('/register.html', (req, res) => {
   res.sendFile(path.resolve(__dirname, 'register.html'));
 });
 
+// Serve payment pages
+app.get('/payment.html', (req, res) => {
+  if (!req.cookies.token) {
+    res.redirect('/home.html');
+  } else {
+    res.set('Content-Type', 'text/html');
+    res.sendFile(path.resolve(__dirname, 'payment.html'));
+  }
+});
+
+app.get('/payment-success.html', (req, res) => {
+  res.set('Content-Type', 'text/html');
+  res.sendFile(path.resolve(__dirname, 'payment-success.html'));
+});
+
+app.get('/payment-cancel.html', (req, res) => {
+  res.set('Content-Type', 'text/html');
+  res.sendFile(path.resolve(__dirname, 'payment-cancel.html'));
+});
+
 // Payment check middleware
 const checkPayment = async (req, res, next) => {
   console.log('\nPayment check middleware:', {
@@ -201,7 +221,7 @@ const checkPayment = async (req, res, next) => {
   }
 };
 
-// Apply payment check middleware
+// Apply payment check middleware BEFORE protected routes
 app.use(checkPayment);
 
 // Protected HTML routes
@@ -218,26 +238,6 @@ protectedPages.forEach(page => {
     res.set('Content-Type', 'text/html');
     res.sendFile(path.resolve(__dirname, page));
   });
-});
-
-// Serve payment pages
-app.get('/payment.html', (req, res) => {
-  if (!req.cookies.token) {
-    res.redirect('/home.html');
-  } else {
-    res.set('Content-Type', 'text/html');
-    res.sendFile(path.resolve(__dirname, 'payment.html'));
-  }
-});
-
-app.get('/payment-success.html', (req, res) => {
-  res.set('Content-Type', 'text/html');
-  res.sendFile(path.resolve(__dirname, 'payment-success.html'));
-});
-
-app.get('/payment-cancel.html', (req, res) => {
-  res.set('Content-Type', 'text/html');
-  res.sendFile(path.resolve(__dirname, 'payment-cancel.html'));
 });
 
 // Catch-all route - MUST be last
