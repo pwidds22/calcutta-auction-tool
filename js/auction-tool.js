@@ -110,7 +110,7 @@ async function initializeTeams() {
     
     try {
         // Try to load from localStorage first (only for purchase prices and team status)
-        const savedTeams = loadTeamsFromStorage();
+        const savedTeams = await loadTeamsFromStorage();
         
         // Create a map of existing teams to preserve purchase prices and team status
         const existingTeamsMap = {};
@@ -118,7 +118,8 @@ async function initializeTeams() {
             savedTeams.forEach(team => {
                 existingTeamsMap[team.id] = {
                     purchasePrice: team.purchasePrice || 0,
-                    isMyTeam: team.isMyTeam || false
+                    isMyTeam: team.isMyTeam || false,
+                    isOpponentTeam: team.isOpponentTeam || false
                 };
             });
         }
@@ -130,7 +131,7 @@ async function initializeTeams() {
                 ...team,
                 purchasePrice: existingTeam ? existingTeam.purchasePrice : 0,
                 isMyTeam: existingTeam ? existingTeam.isMyTeam : false,
-                isOpponentTeam: false,
+                isOpponentTeam: existingTeam ? existingTeam.isOpponentTeam : false,
                 odds: {
                     r32: 0, s16: 0, e8: 0, f4: 0, f2: 0, champ: 0
                 },
@@ -166,6 +167,9 @@ async function initializeTeams() {
         
         // Calculate initial values using the correct pot size
         calculateTeamValues();
+        
+        // Save teams to storage to ensure server is up to date
+        await saveTeamsToStorage();
         
         // Update UI
         updateUI();
@@ -214,35 +218,76 @@ async function saveTeamsToStorage() {
 // Load teams data from localStorage or server
 async function loadTeamsFromStorage() {
     try {
+        let teams = null;
+        let source = 'none';
+        
         // Try to load from server first if logged in
         if (isLoggedIn()) {
-            const userData = await loadUserData();
-            
-            if (userData && userData.teams && userData.teams.length > 0) {
-                console.log('Teams loaded from server');
-                
-                // Also update payout rules and pot size
-                if (userData.payoutRules) {
-                    payoutRules = userData.payoutRules;
+            try {
+                const userData = await loadUserData();
+                if (userData && userData.teams && userData.teams.length > 0) {
+                    console.log('Teams loaded from server');
+                    teams = userData.teams;
+                    source = 'server';
+                    
+                    // Also update payout rules and pot size
+                    if (userData.payoutRules) {
+                        payoutRules = userData.payoutRules;
+                    }
+                    
+                    if (userData.estimatedPotSize) {
+                        estimatedPotSize = userData.estimatedPotSize;
+                    }
                 }
-                
-                if (userData.estimatedPotSize) {
-                    estimatedPotSize = userData.estimatedPotSize;
-                }
-                
-                return userData.teams;
+            } catch (serverError) {
+                console.error('Error loading from server:', serverError);
             }
         }
         
-        // Fallback to localStorage
-        const savedTeams = localStorage.getItem('calcuttaTeams');
-        if (savedTeams) {
-            console.log('Found saved teams in localStorage');
-            return JSON.parse(savedTeams);
+        // Try localStorage if server data not available
+        if (!teams) {
+            const savedTeams = localStorage.getItem('calcuttaTeams');
+            if (savedTeams) {
+                console.log('Found saved teams in localStorage');
+                teams = JSON.parse(savedTeams);
+                source = 'localStorage';
+            }
         }
         
-        console.log('No saved teams found');
-        return null;
+        // If we loaded from server, update localStorage
+        if (source === 'server') {
+            localStorage.setItem('calcuttaTeams', JSON.stringify(teams));
+            console.log('Updated localStorage with server data');
+        }
+        // If we loaded from localStorage and are logged in, update server
+        else if (source === 'localStorage' && isLoggedIn()) {
+            const userData = {
+                teams: teams,
+                payoutRules: payoutRules,
+                estimatedPotSize: estimatedPotSize
+            };
+            try {
+                await saveUserData(userData);
+                console.log('Updated server with localStorage data');
+            } catch (error) {
+                console.error('Failed to sync localStorage data to server:', error);
+            }
+        }
+        
+        if (!teams) {
+            console.log('No saved teams found');
+            return null;
+        }
+        
+        // Ensure all teams have the required properties
+        teams = teams.map(team => ({
+            id: team.id,
+            purchasePrice: team.purchasePrice || 0,
+            isMyTeam: team.isMyTeam || false,
+            isOpponentTeam: team.isOpponentTeam || false
+        }));
+        
+        return teams;
     } catch (error) {
         console.error('Error loading teams:', error);
         return null;
@@ -262,6 +307,15 @@ async function initializeApp() {
         
         // Update payout rules
         updatePayoutRules();
+        
+        // Explicitly update the auction results tracker
+        updateAuctionResultsTracker();
+        
+        // Update team categories
+        updateTeamCategories();
+        
+        // Update the UI
+        updateUI();
         
     } catch (error) {
         console.error('Error initializing application:', error);
@@ -1121,16 +1175,24 @@ function updateAuctionResultsTracker() {
     
     console.log('Purchased teams count:', purchasedTeams.length);
     
-    // Sort purchased teams by purchase price (descending)
-    const sortedPurchasedTeams = [...purchasedTeams].sort((a, b) => b.purchasePrice - a.purchasePrice);
+    // Sort purchased teams by owner first (My Teams first), then by purchase price (descending)
+    const sortedPurchasedTeams = [...purchasedTeams].sort((a, b) => {
+        // First sort by owner (My Teams first)
+        if (a.isMyTeam !== b.isMyTeam) {
+            return b.isMyTeam ? 1 : -1;
+        }
+        // Then by purchase price (descending)
+        return b.purchasePrice - a.purchasePrice;
+    });
     
     // Add each purchased team to the table
     sortedPurchasedTeams.forEach(team => {
         const row = document.createElement('tr');
+        row.className = team.isMyTeam ? 'table-primary' : ''; // Highlight my teams
         
-        // Add team name
+        // Add team name with seed
         const nameCell = document.createElement('td');
-        nameCell.textContent = team.name;
+        nameCell.innerHTML = `${team.name} <small class="text-muted">(${team.seed})</small>`;
         row.appendChild(nameCell);
         
         // Add region
@@ -1138,24 +1200,89 @@ function updateAuctionResultsTracker() {
         regionCell.textContent = team.region;
         row.appendChild(regionCell);
         
-        // Add seed
-        const seedCell = document.createElement('td');
-        seedCell.textContent = team.seed;
-        row.appendChild(seedCell);
-        
         // Add purchase price
         const priceCell = document.createElement('td');
         priceCell.textContent = formatCurrency(team.purchasePrice);
+        priceCell.className = 'text-end'; // Right-align price
         row.appendChild(priceCell);
+        
+        // Add fair value
+        const fairValueCell = document.createElement('td');
+        const fairValue = calculateFairValue(team);
+        fairValueCell.textContent = formatCurrency(fairValue);
+        fairValueCell.className = 'text-end'; // Right-align value
+        row.appendChild(fairValueCell);
+        
+        // Add value gap
+        const valueGapCell = document.createElement('td');
+        const valueGap = fairValue - team.purchasePrice;
+        valueGapCell.textContent = formatCurrency(valueGap);
+        valueGapCell.className = `text-end ${valueGap > 0 ? 'text-success' : valueGap < 0 ? 'text-danger' : ''}`;
+        row.appendChild(valueGapCell);
         
         // Add owner (My Team or not)
         const ownerCell = document.createElement('td');
         ownerCell.textContent = team.isMyTeam ? 'Me' : 'Opponent';
+        ownerCell.className = team.isMyTeam ? 'text-primary' : 'text-secondary';
         row.appendChild(ownerCell);
+        
+        // Add championship odds
+        const oddsCell = document.createElement('td');
+        oddsCell.textContent = `${(team.odds.champ * 100).toFixed(2)}%`;
+        oddsCell.className = 'text-end'; // Right-align odds
+        row.appendChild(oddsCell);
         
         // Add the row to the table
         auctionResultsBody.appendChild(row);
     });
+    
+    // Add a summary row if there are purchased teams
+    if (sortedPurchasedTeams.length > 0) {
+        const summaryRow = document.createElement('tr');
+        summaryRow.className = 'table-secondary fw-bold';
+        
+        // Add summary cells
+        const summaryNameCell = document.createElement('td');
+        summaryNameCell.textContent = 'TOTALS';
+        summaryRow.appendChild(summaryNameCell);
+        
+        // Empty region cell
+        summaryRow.appendChild(document.createElement('td'));
+        
+        // Total purchase price
+        const totalPriceCell = document.createElement('td');
+        const totalPrice = sortedPurchasedTeams.reduce((sum, team) => sum + team.purchasePrice, 0);
+        totalPriceCell.textContent = formatCurrency(totalPrice);
+        totalPriceCell.className = 'text-end';
+        summaryRow.appendChild(totalPriceCell);
+        
+        // Total fair value
+        const totalValueCell = document.createElement('td');
+        const totalValue = sortedPurchasedTeams.reduce((sum, team) => sum + calculateFairValue(team), 0);
+        totalValueCell.textContent = formatCurrency(totalValue);
+        totalValueCell.className = 'text-end';
+        summaryRow.appendChild(totalValueCell);
+        
+        // Total value gap
+        const totalGapCell = document.createElement('td');
+        const totalGap = totalValue - totalPrice;
+        totalGapCell.textContent = formatCurrency(totalGap);
+        totalGapCell.className = `text-end ${totalGap > 0 ? 'text-success' : totalGap < 0 ? 'text-danger' : ''}`;
+        summaryRow.appendChild(totalGapCell);
+        
+        // Empty owner cell
+        summaryRow.appendChild(document.createElement('td'));
+        
+        // Total championship odds
+        const totalOddsCell = document.createElement('td');
+        const totalOdds = sortedPurchasedTeams.reduce((sum, team) => sum + team.odds.champ, 0);
+        totalOddsCell.textContent = `${(totalOdds * 100).toFixed(2)}%`;
+        totalOddsCell.className = 'text-end';
+        summaryRow.appendChild(totalOddsCell);
+        
+        // Add summary row to table
+        auctionResultsBody.appendChild(summaryRow);
+    }
     
     // Update summary statistics
     updateSummaryStatistics();
