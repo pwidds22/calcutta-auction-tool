@@ -12,7 +12,7 @@ require('dotenv').config();
 const app = express();
 
 // Raw body for Stripe webhooks
-app.post('/webhook', express.raw({type: 'application/json'}), async (req, res) => {
+app.post('/api/payment/webhook', express.raw({type: 'application/json'}), async (req, res) => {
   const sig = req.headers['stripe-signature'];
   let event;
 
@@ -90,6 +90,7 @@ const checkPayment = async (req, res, next) => {
     '/payment-cancel.html',
     '/api/auth/register',
     '/api/auth/login',
+    '/api/payment/webhook',
     '/favicon.ico'
   ];
 
