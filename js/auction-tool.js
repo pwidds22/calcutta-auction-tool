@@ -30,20 +30,23 @@ const AUCTION_BASE_TEAMS = getDefaultTeams();
 function getDefaultTeams() {
     return [
         // East Region
-        { id: 17, name: "Duke", seed: 1, region: "East", americanOdds: { r32: -33233, s16: -740, e8: -288, f4: -125, f2: +172, champ: +310 } },
-        { id: 18, name: "American/Mount St. Mary's", seed: 16, region: "East", americanOdds: { r32: +49900, s16: +8000, e8: +15000, f4: +25000, f2: +50000, champ: +100000 } },
-        { id: 19, name: "BYU", seed: 6, region: "East", americanOdds: { r32: -99, s16: +335, e8: +1050, f4: +2000, f2: +14000, champ: +10000 } },
-        { id: 20, name: "Baylor", seed: 9, region: "East", americanOdds: { r32: +101, s16: +1200, e8: +2700, f4: +3600, f2: +9000, champ: +23000 } },
-        { id: 21, name: "Oregon", seed: 5, region: "East", americanOdds: { r32: -180, s16: +350, e8: +2600, f4: +3000, f2: +14000, champ: +19000 } },
-        { id: 22, name: "Liberty", seed: 12, region: "East", americanOdds: { r32: +180, s16: +1200, e8: +12000, f4: +25000, f2: +50000, champ: +100000 } },
-        { id: 23, name: "Arizona", seed: 4, region: "East", americanOdds: { r32: -1049, s16: +205, e8: +510, f4: +800, f2: +3700, champ: +3700 } },
-        { id: 24, name: "Akron", seed: 13, region: "East", americanOdds: { r32: +1049, s16: +2500, e8: +8000, f4: +25000, f2: +50000, champ: +100000 } },
-        { id: 25, name: "Wisconsin", seed: 3, region: "East", americanOdds: { r32: -1513, s16: -115, e8: +350, f4: +1000, f2: +3100, champ: +6000 } },
-        { id: 26, name: "Montana", seed: 14, region: "East", americanOdds: { r32: +1513, s16: +4000, e8: +8000, f4: +25000, f2: +50000, champ: +100000 } },
-        { id: 27, name: "Saint Mary's", seed: 7, region: "East", americanOdds: { r32: -230, s16: +350, e8: +875, f4: +2300, f2: +9900, champ: +13000 } },
-        { id: 28, name: "Vanderbilt", seed: 10, region: "East", americanOdds: { r32: +230, s16: +1900, e8: +2900, f4: +8000, f2: +40000, champ: +100000 } },
-        { id: 29, name: "Alabama", seed: 2, region: "East", americanOdds: { r32: -3126, s16: -260, e8: +110, f4: +410, f2: +860, champ: +1900 } },
-        { id: 30, name: "Robert Morris", seed: 15, region: "East", americanOdds: { r32: +3126, s16: +5000, e8: +10000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 1, name: "Duke", seed: 1, region: "East", americanOdds: { r32: -33233, s16: -740, e8: -288, f4: -125, f2: +172, champ: +310 } },
+        { id: 2, name: "Alabama", seed: 2, region: "East", americanOdds: { r32: -3126, s16: -260, e8: +110, f4: +410, f2: +860, champ: +1900 } },
+        { id: 3, name: "Wisconsin", seed: 3, region: "East", americanOdds: { r32: -1513, s16: -115, e8: +350, f4: +1000, f2: +3100, champ: +6000 } },
+        { id: 4, name: "Arizona", seed: 4, region: "East", americanOdds: { r32: -1049, s16: +205, e8: +510, f4: +800, f2: +3700, champ: +3700 } },
+        { id: 5, name: "Oregon", seed: 5, region: "East", americanOdds: { r32: -180, s16: +350, e8: +2600, f4: +3000, f2: +14000, champ: +19000 } },
+        { id: 6, name: "BYU", seed: 6, region: "East", americanOdds: { r32: -99, s16: +335, e8: +1050, f4: +2000, f2: +14000, champ: +10000 } },
+        { id: 7, name: "Saint Mary's", seed: 7, region: "East", americanOdds: { r32: -230, s16: +350, e8: +875, f4: +2300, f2: +9900, champ: +13000 } },
+        { id: 8, name: "Mississippi State", seed: 8, region: "East", americanOdds: { r32: -361, s16: +282, e8: +450, f4: +850, f2: +2300, champ: +4300 } },
+        { id: 9, name: "Baylor", seed: 9, region: "East", americanOdds: { r32: +101, s16: +1200, e8: +2700, f4: +3600, f2: +9000, champ: +23000 } },
+        { id: 10, name: "Vanderbilt", seed: 10, region: "East", americanOdds: { r32: +230, s16: +1900, e8: +2900, f4: +8000, f2: +40000, champ: +100000 } },
+        { id: 11, name: "VCU", seed: 11, region: "East", americanOdds: { r32: +302, s16: +1400, e8: +2000, f4: +10000, f2: +40000, champ: +100000 } },
+        { id: 12, name: "Liberty", seed: 12, region: "East", americanOdds: { r32: +180, s16: +1200, e8: +12000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 13, name: "Akron", seed: 13, region: "East", americanOdds: { r32: +1049, s16: +2500, e8: +8000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 14, name: "Montana", seed: 14, region: "East", americanOdds: { r32: +1513, s16: +4000, e8: +8000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 15, name: "Robert Morris", seed: 15, region: "East", americanOdds: { r32: +3126, s16: +5000, e8: +10000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 16, name: "American", seed: 16, region: "East", americanOdds: { r32: +49900, s16: +8000, e8: +15000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 17, name: "Mount St. Mary's", seed: 16, region: "East", americanOdds: { r32: +49900, s16: +8000, e8: +15000, f4: +25000, f2: +50000, champ: +100000 } },
 
         // Midwest Region
         { id: 33, name: "Houston", seed: 1, region: "Midwest", americanOdds: { r32: -16567, s16: -260, e8: -133, f4: +140, f2: +317, champ: +700 } },
@@ -1540,7 +1543,7 @@ function devigRegionalRoundOdds(teamsInRegion, round) {
 function devigRoundOdds() {
     const regions = ['East', 'West', 'South', 'Midwest'];
     
-    // Process each region separately for early rounds
+    // Process each region separately
     regions.forEach(region => {
         const teamsInRegion = auctionTeams.filter(team => team.region === region);
         
@@ -1571,15 +1574,94 @@ function devigRoundOdds() {
             }
         });
         
-        // Process other rounds
-        ['s16', 'e8'].forEach(round => {
-            devigRegionalRoundOdds(teamsInRegion, round);
+        // Process Sweet 16 by quadrants (4 teams each)
+        const s16Quadrants = [
+            [1, 16, 8, 9], // Top quadrant seeds
+            [5, 12, 4, 13], // Second quadrant seeds
+            [6, 11, 3, 14], // Third quadrant seeds
+            [7, 10, 2, 15]  // Bottom quadrant seeds
+        ];
+        
+        s16Quadrants.forEach(quadrantSeeds => {
+            const quadrantTeams = teamsInRegion.filter(team => 
+                quadrantSeeds.includes(team.seed)
+            );
+            
+            // Calculate overround for this quadrant
+            const s16Probs = quadrantTeams.map(team => team.rawImpliedProbabilities.s16);
+            const s16Overround = s16Probs.reduce((sum, prob) => sum + prob, 0);
+            
+            // Devig the quadrant
+            quadrantTeams.forEach(team => {
+                team.odds.s16 = team.rawImpliedProbabilities.s16 / s16Overround;
+                // Cap at R32 probability
+                team.odds.s16 = Math.min(team.odds.s16, team.odds.r32);
+            });
+        });
+        
+        // Process Elite 8 by halves (8 teams each)
+        const e8Halves = [
+            [1, 16, 8, 9, 5, 12, 4, 13], // Top half seeds
+            [6, 11, 3, 14, 7, 10, 2, 15]  // Bottom half seeds
+        ];
+        
+        e8Halves.forEach(halfSeeds => {
+            const halfTeams = teamsInRegion.filter(team => 
+                halfSeeds.includes(team.seed)
+            );
+            
+            // Calculate overround for this half
+            const e8Probs = halfTeams.map(team => team.rawImpliedProbabilities.e8);
+            const e8Overround = e8Probs.reduce((sum, prob) => sum + prob, 0);
+            
+            // Devig the half
+            halfTeams.forEach(team => {
+                team.odds.e8 = team.rawImpliedProbabilities.e8 / e8Overround;
+                // Cap at S16 probability
+                team.odds.e8 = Math.min(team.odds.e8, team.odds.s16);
+            });
+        });
+        
+        // Process Final Four for the entire region
+        const f4Probs = teamsInRegion.map(team => team.rawImpliedProbabilities.f4);
+        const f4Overround = f4Probs.reduce((sum, prob) => sum + prob, 0);
+        
+        teamsInRegion.forEach(team => {
+            team.odds.f4 = team.rawImpliedProbabilities.f4 / f4Overround;
+            // Cap at E8 probability
+            team.odds.f4 = Math.min(team.odds.f4, team.odds.e8);
         });
     });
     
-    // Process F4 and Championship rounds across all teams
-    ['f4', 'f2', 'champ'].forEach(round => {
-        devigRegionalRoundOdds(auctionTeams, round);
+    // Process Final 2 across all teams that could meet in the championship
+    // For F2, we need to consider teams from opposite sides of the bracket
+    const leftSideRegions = ['East', 'West'];
+    const rightSideRegions = ['South', 'Midwest'];
+    
+    // Get teams from each side
+    const leftSideTeams = auctionTeams.filter(team => leftSideRegions.includes(team.region));
+    const rightSideTeams = auctionTeams.filter(team => rightSideRegions.includes(team.region));
+    
+    // Calculate F2 probabilities for each side separately
+    [leftSideTeams, rightSideTeams].forEach(sideTeams => {
+        const f2Probs = sideTeams.map(team => team.rawImpliedProbabilities.f2);
+        const f2Overround = f2Probs.reduce((sum, prob) => sum + prob, 0);
+        
+        sideTeams.forEach(team => {
+            team.odds.f2 = team.rawImpliedProbabilities.f2 / f2Overround;
+            // Cap at F4 probability
+            team.odds.f2 = Math.min(team.odds.f2, team.odds.f4);
+        });
+    });
+    
+    // Process Championship across all teams
+    const champProbs = auctionTeams.map(team => team.rawImpliedProbabilities.champ);
+    const champOverround = champProbs.reduce((sum, prob) => sum + prob, 0);
+    
+    auctionTeams.forEach(team => {
+        team.odds.champ = team.rawImpliedProbabilities.champ / champOverround;
+        // Cap at F2 probability
+        team.odds.champ = Math.min(team.odds.champ, team.odds.f2);
     });
 }
 
