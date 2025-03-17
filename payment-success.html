@@ -44,16 +44,16 @@
             <h1 class="mb-4">Payment Successful!</h1>
             <p class="lead mb-4">Thank you for your purchase. You now have full access to Calcutta Genius.</p>
             <p class="mb-4">You will be redirected to the application in a few seconds...</p>
-            <a href="/index.html" class="btn btn-primary">Go to Dashboard</a>
+            <a href="/auction" class="btn btn-primary">Go to Dashboard</a>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
     <script>
-        // Redirect to the main app after 3 seconds
+        // Redirect to the auction tool after 5 seconds to ensure webhook processing
         setTimeout(() => {
-            window.location.href = '/index.html';
-        }, 3000);
+            window.location.href = '/auction';
+        }, 5000);
     </script>
 </body>
 </html> 

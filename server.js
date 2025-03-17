@@ -44,9 +44,14 @@ app.post('/api/payment/webhook', express.raw({type: 'application/json'}), async 
     });
     
     try {
-      // Find user by email
-      const userEmail = session.customer_email;
+      // Find user by email - check both possible locations
+      const userEmail = session.customer_email || (session.customer_details && session.customer_details.email);
       console.log('Looking up user with email:', userEmail);
+      
+      if (!userEmail) {
+        console.error('No email found in session data');
+        return res.status(400).json({ success: false, error: 'No email found in session data' });
+      }
       
       const user = await User.findOne({ email: userEmail });
       
