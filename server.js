@@ -33,7 +33,9 @@ app.post('/api/payment/webhook', express.raw({type: 'application/json'}), async 
     
     try {
       // Find user by email
-      const userEmail = session.customer_details.email;
+      const userEmail = session.customer_email;
+      console.log('Processing payment for email:', userEmail);
+      
       const user = await User.findOne({ email: userEmail });
       
       if (user) {
