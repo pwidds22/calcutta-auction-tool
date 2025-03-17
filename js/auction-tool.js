@@ -67,22 +67,22 @@ function getDefaultTeams() {
         { id: 48, name: "Wofford", seed: 15, region: "Midwest", americanOdds: { r32: +1943, s16: +5000, e8: +10000, f4: +25000, f2: +50000, champ: +100000 } },
 
         // South Region
-        { id: 1, name: "Florida", seed: 1, region: "South", americanOdds: { r32: -2678, s16: -335, e8: -170, f4: +100, f2: +257, champ: +500 } },
-        { id: 2, name: "Norfolk St.", seed: 16, region: "South", americanOdds: { r32: +2678, s16: +8000, e8: +15000, f4: +25000, f2: +50000, champ: +100000 } },
-        { id: 3, name: "Connecticut", seed: 8, region: "South", americanOdds: { r32: -199, s16: +1900, e8: +1150, f4: +1900, f2: +7500, champ: +11000 } },
-        { id: 4, name: "Oklahoma", seed: 9, region: "South", americanOdds: { r32: +199, s16: +1100, e8: +2100, f4: +3100, f2: +10000, champ: +23000 } },
-        { id: 5, name: "Memphis", seed: 5, region: "South", americanOdds: { r32: -88, s16: +450, e8: +1450, f4: +2300, f2: +12000, champ: +19000 } },
-        { id: 6, name: "Colorado State", seed: 12, region: "South", americanOdds: { r32: +88, s16: +405, e8: +2200, f4: +5000, f2: +40000, champ: +95000 } },
-        { id: 7, name: "Maryland", seed: 4, region: "South", americanOdds: { r32: -376, s16: +126, e8: +700, f4: +1300, f2: +7200, champ: +10000 } },
-        { id: 8, name: "Grand Canyon", seed: 13, region: "South", americanOdds: { r32: +376, s16: +780, e8: +5400, f4: +17000, f2: +50000, champ: +100000 } },
-        { id: 9, name: "Missouri", seed: 6, region: "South", americanOdds: { r32: -154, s16: +375, e8: +1120, f4: +2100, f2: +14000, champ: +15000 } },
-        { id: 10, name: "Drake", seed: 11, region: "South", americanOdds: { r32: +154, s16: +1200, e8: +2900, f4: +4100, f2: +12000, champ: +28000 } },
-        { id: 11, name: "Texas Tech", seed: 3, region: "South", americanOdds: { r32: -793, s16: -128, e8: +238, f4: +500, f2: +2000, champ: +3000 } },
-        { id: 12, name: "UNCW", seed: 14, region: "South", americanOdds: { r32: +793, s16: +4000, e8: +8000, f4: +25000, f2: +50000, champ: +100000 } },
-        { id: 13, name: "Kansas", seed: 7, region: "South", americanOdds: { r32: -241, s16: +350, e8: +865, f4: +2300, f2: +8200, champ: +16000 } },
-        { id: 14, name: "Arkansas", seed: 10, region: "South", americanOdds: { r32: +241, s16: +1200, e8: +1330, f4: +7000, f2: +40000, champ: +100000 } },
-        { id: 15, name: "Saint John's", seed: 2, region: "South", americanOdds: { r32: -2469, s16: -260, e8: +113, f4: +490, f2: +860, champ: +3000 } },
-        { id: 16, name: "Omaha", seed: 15, region: "South", americanOdds: { r32: +2469, s16: +5000, e8: +10000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 65, name: "Florida", seed: 1, region: "South", americanOdds: { r32: -2678, s16: -335, e8: -170, f4: +100, f2: +257, champ: +500 } },
+        { id: 66, name: "Norfolk St.", seed: 16, region: "South", americanOdds: { r32: +2678, s16: +8000, e8: +15000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 67, name: "Connecticut", seed: 8, region: "South", americanOdds: { r32: -199, s16: +1900, e8: +1150, f4: +1900, f2: +7500, champ: +11000 } },
+        { id: 68, name: "Oklahoma", seed: 9, region: "South", americanOdds: { r32: +199, s16: +1100, e8: +2100, f4: +3100, f2: +10000, champ: +23000 } },
+        { id: 69, name: "Memphis", seed: 5, region: "South", americanOdds: { r32: -88, s16: +450, e8: +1450, f4: +2300, f2: +12000, champ: +19000 } },
+        { id: 70, name: "Colorado State", seed: 12, region: "South", americanOdds: { r32: +88, s16: +405, e8: +2200, f4: +5000, f2: +40000, champ: +95000 } },
+        { id: 71, name: "Maryland", seed: 4, region: "South", americanOdds: { r32: -376, s16: +126, e8: +700, f4: +1300, f2: +7200, champ: +10000 } },
+        { id: 72, name: "Grand Canyon", seed: 13, region: "South", americanOdds: { r32: +376, s16: +780, e8: +5400, f4: +17000, f2: +50000, champ: +100000 } },
+        { id: 73, name: "Missouri", seed: 6, region: "South", americanOdds: { r32: -154, s16: +375, e8: +1120, f4: +2100, f2: +14000, champ: +15000 } },
+        { id: 74, name: "Drake", seed: 11, region: "South", americanOdds: { r32: +154, s16: +1200, e8: +2900, f4: +4100, f2: +12000, champ: +28000 } },
+        { id: 75, name: "Texas Tech", seed: 3, region: "South", americanOdds: { r32: -793, s16: -128, e8: +238, f4: +500, f2: +2000, champ: +3000 } },
+        { id: 76, name: "UNCW", seed: 14, region: "South", americanOdds: { r32: +793, s16: +4000, e8: +8000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 77, name: "Kansas", seed: 7, region: "South", americanOdds: { r32: -241, s16: +350, e8: +865, f4: +2300, f2: +8200, champ: +16000 } },
+        { id: 78, name: "Arkansas", seed: 10, region: "South", americanOdds: { r32: +241, s16: +1200, e8: +1330, f4: +7000, f2: +40000, champ: +100000 } },
+        { id: 79, name: "Saint John's", seed: 2, region: "South", americanOdds: { r32: -2469, s16: -260, e8: +113, f4: +490, f2: +860, champ: +3000 } },
+        { id: 80, name: "Omaha", seed: 15, region: "South", americanOdds: { r32: +2469, s16: +5000, e8: +10000, f4: +25000, f2: +50000, champ: +100000 } },
 
         // West Region
         { id: 49, name: "Auburn", seed: 1, region: "West", americanOdds: { r32: -99900, s16: -335, e8: -170, f4: -120, f2: +257, champ: +400 } },
@@ -975,7 +975,7 @@ function updateTeamTable() {
     const teamsToDisplay = [...auctionFilteredTeams];
     
     // Add each team to the table
-    teamsToDisplay.forEach(team => {
+    teamsToDisplay.forEach((team, index) => {
         const row = document.createElement('tr');
         
         // Add region, seed, and team name
@@ -994,13 +994,10 @@ function updateTeamTable() {
         nameCell.setAttribute('data-column', 'name');
         row.appendChild(nameCell);
         
-        // Always add profit projections (removed conditional)
-        // Calculate profit projections
-        const profits = calculateRoundProfits(team);
-        console.log(`Profit projections for ${team.name}:`, profits);
-        
         // Add profit cells for each round
         const profitRounds = ['r32', 's16', 'e8', 'f4', 'f2', 'champ'];
+        const profits = calculateRoundProfits(team);
+        
         profitRounds.forEach(round => {
             const profitCell = document.createElement('td');
             profitCell.setAttribute('data-column', round);
@@ -1027,10 +1024,9 @@ function updateTeamTable() {
             profitCell.classList.add('profit-projection');
             
             row.appendChild(profitCell);
-            console.log(`Added profit cell for ${team.name} ${round}: ${formatCurrency(profitValue)} (${(team.odds[round] * 100).toFixed(2)}%)`);
         });
         
-        // Add suggested bid, fair value, and purchase price
+        // Add suggested bid and fair value
         const suggestedBidCell = document.createElement('td');
         suggestedBidCell.textContent = formatCurrency(calculateSuggestedBid(team));
         suggestedBidCell.setAttribute('data-column', 'suggBid');
@@ -1041,6 +1037,7 @@ function updateTeamTable() {
         fairValueCell.setAttribute('data-column', 'fairValue');
         row.appendChild(fairValueCell);
         
+        // Add purchase price input with sequential tabindex
         const purchasePriceCell = document.createElement('td');
         purchasePriceCell.setAttribute('data-column', 'price');
         const purchasePriceInput = document.createElement('input');
@@ -1050,34 +1047,44 @@ function updateTeamTable() {
         purchasePriceInput.value = team.purchasePrice || '';
         purchasePriceInput.className = 'form-control purchase-price-input';
         purchasePriceInput.dataset.teamId = team.id;
+        purchasePriceInput.tabIndex = index * 2 + 1; // Odd numbers for price inputs
         
-        // Add multiple event listeners to maintain focus behavior
+        // Add event listeners
         purchasePriceInput.addEventListener('change', function() {
             updateTeamPurchasePrice(team.id, parseFloat(this.value) || 0);
         });
         
-        // Handle blur event (when input loses focus)
         purchasePriceInput.addEventListener('blur', function() {
             updateTeamPurchasePrice(team.id, parseFloat(this.value) || 0);
         });
         
-        // Handle keydown event for tab key
         purchasePriceInput.addEventListener('keydown', function(e) {
             if (e.key === 'Tab') {
+                e.preventDefault(); // Prevent default tab behavior
                 updateTeamPurchasePrice(team.id, parseFloat(this.value) || 0);
+                
+                // Find the next input to focus
+                const nextInput = e.shiftKey ? 
+                    document.querySelector(`[tabindex="${this.tabIndex - 1}"]`) :
+                    document.querySelector(`[tabindex="${this.tabIndex + 1}"]`);
+                
+                if (nextInput) {
+                    nextInput.focus();
+                }
             }
         });
         
         purchasePriceCell.appendChild(purchasePriceInput);
         row.appendChild(purchasePriceCell);
         
-        // Add "My Team" checkbox
+        // Add "My Team" checkbox with sequential tabindex
         const myTeamCell = document.createElement('td');
         const myTeamCheckbox = document.createElement('input');
         myTeamCheckbox.type = 'checkbox';
         myTeamCheckbox.className = 'form-check-input team-checkbox';
         myTeamCheckbox.checked = team.isMyTeam || false;
         myTeamCheckbox.dataset.teamId = team.id;
+        myTeamCheckbox.tabIndex = index * 2 + 2; // Even numbers for checkboxes
         myTeamCheckbox.addEventListener('change', function() {
             updateMyTeam(team.id, this.checked);
         });
@@ -1254,9 +1261,55 @@ function updateTeamPurchasePrice(teamId, price) {
     // Save teams to localStorage
     saveTeamsToStorage();
     
-    // Update UI
+    // Update UI without sorting
     updateTeamCategories();
     calculateProjectedPotSize();
+    calculateTeamValues();
+    
+    // Update only the specific team's row in the table
+    const tableBody = document.getElementById('teamTableBody');
+    if (tableBody) {
+        const rows = tableBody.getElementsByTagName('tr');
+        for (let row of rows) {
+            const priceInput = row.querySelector(`input[data-team-id="${teamId}"]`);
+            if (priceInput) {
+                // Update the price input value
+                priceInput.value = price || '';
+                
+                // Update the suggested bid and fair value cells
+                const suggBidCell = row.querySelector('[data-column="suggBid"]');
+                const fairValueCell = row.querySelector('[data-column="fairValue"]');
+                if (suggBidCell) suggBidCell.textContent = formatCurrency(calculateSuggestedBid(team));
+                if (fairValueCell) fairValueCell.textContent = formatCurrency(calculateFairValue(team));
+                
+                // Update profit projections
+                const profits = calculateRoundProfits(team);
+                const profitRounds = ['r32', 's16', 'e8', 'f4', 'f2', 'champ'];
+                profitRounds.forEach(round => {
+                    const profitCell = row.querySelector(`[data-column="${round}"]`);
+                    if (profitCell) {
+                        const profitValue = profits[round];
+                        const profitDiv = profitCell.querySelector('.profit-projection');
+                        const probabilityDiv = profitCell.querySelector('.text-muted');
+                        
+                        if (profitDiv) {
+                            profitDiv.textContent = formatCurrency(profitValue);
+                            profitDiv.className = 'profit-projection' + 
+                                (profitValue > 0 ? ' positive-value' : 
+                                 profitValue < 0 ? ' negative-value' : '');
+                        }
+                        if (probabilityDiv) {
+                            probabilityDiv.textContent = `${(team.odds[round] * 100).toFixed(2)}%`;
+                        }
+                    }
+                });
+                
+                break;
+            }
+        }
+    }
+    
+    // Update auction results tracker
     updateAuctionResultsTracker();
 }
 
@@ -1335,7 +1388,12 @@ function sortTeams() {
                 result = a.name.localeCompare(b.name);
                 break;
             case 'seed':
+                // First compare seeds
                 result = a.seed - b.seed;
+                // If seeds are equal, sort by region
+                if (result === 0) {
+                    result = a.region.localeCompare(b.region);
+                }
                 break;
             case 'valuePercentage':
                 const valueA = parseFloat(a.valuePercentage) || 0;
@@ -1463,24 +1521,40 @@ function fetchLatestOdds() {
         auctionTeams.forEach(team => {
             currentTeams[team.id] = {
                 purchasePrice: team.purchasePrice || 0,
-                isMyTeam: team.isMyTeam || false
+                isMyTeam: team.isMyTeam || false,
+                isOpponentTeam: team.isOpponentTeam || false
             };
         });
+    } else {
+        // If no teams exist, try to load from localStorage
+        const savedTeams = loadTeamsFromStorage();
+        if (savedTeams) {
+            savedTeams.forEach(team => {
+                currentTeams[team.id] = {
+                    purchasePrice: team.purchasePrice || 0,
+                    isMyTeam: team.isMyTeam || false,
+                    isOpponentTeam: team.isOpponentTeam || false
+                };
+            });
+        }
     }
     
     setTimeout(() => {
         // Load the default teams
-        auctionTeams = getDefaultTeams().map(team => ({
-            ...team,
-            purchasePrice: (currentTeams[team.id] ? currentTeams[team.id].purchasePrice : 0) || 0,
-            isMyTeam: (currentTeams[team.id] ? currentTeams[team.id].isMyTeam : false) || false,
-            isOpponentTeam: false,
-            odds: {
-                r32: 0, s16: 0, e8: 0, f4: 0, f2: 0, champ: 0
-            },
-            winPercentage: 0,
-            valuePercentage: 0
-        }));
+        auctionTeams = getDefaultTeams().map(team => {
+            const existingTeam = currentTeams[team.id] || {};
+            return {
+                ...team,
+                purchasePrice: existingTeam.purchasePrice || 0,
+                isMyTeam: existingTeam.isMyTeam || false,
+                isOpponentTeam: existingTeam.isOpponentTeam || false,
+                odds: {
+                    r32: 0, s16: 0, e8: 0, f4: 0, f2: 0, champ: 0
+                },
+                winPercentage: 0,
+                valuePercentage: 0
+            };
+        });
 
         // Calculate implied probabilities and devig odds
         calculateImpliedProbabilities();
@@ -1489,9 +1563,13 @@ function fetchLatestOdds() {
         saveTeamsToStorage();
         
         // Update categories
-        myTeams = auctionTeams.filter(team => team.isMyTeam);
-        opponentsTeams = auctionTeams.filter(team => team.isOpponentTeam);
-        availableTeams = auctionTeams.filter(team => !team.isMyTeam && !team.isOpponentTeam);
+        updateTeamCategories();
+        
+        // Calculate projected pot size
+        calculateProjectedPotSize();
+        
+        // Calculate team values
+        calculateTeamValues();
         
         isLoading = false;
         
