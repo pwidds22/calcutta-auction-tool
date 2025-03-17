@@ -98,9 +98,9 @@ app.use((req, res, next) => {
 });
 
 // Serve static assets (css, images, js)
-app.use('/css', express.static('css'));
-app.use('/img', express.static('img'));
-app.use('/js', express.static('js'));
+app.use('/css', express.static(path.join(__dirname, 'css')));
+app.use('/img', express.static(path.join(__dirname, 'img')));
+app.use('/js', express.static(path.join(__dirname, 'js')));
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -133,7 +133,8 @@ const publicPaths = [
   '/favicon.ico',
   '/css',
   '/img',
-  '/js'
+  '/js',
+  '/robots.txt'
 ];
 
 const protectedPages = [
@@ -156,8 +157,8 @@ const checkPayment = async (req, res, next) => {
   // Skip payment check for public paths
   const isPublicPath = publicPaths.some(path => 
     req.path === path || 
-    (req.path.startsWith('/api/') && publicPaths.includes(req.path)) ||
-    publicPaths.some(p => req.path.startsWith(p + '/'))
+    req.path.startsWith(path + '/') ||
+    (req.path.startsWith('/api/') && publicPaths.includes(req.path))
   );
 
   if (isPublicPath) {
@@ -167,8 +168,8 @@ const checkPayment = async (req, res, next) => {
 
   // Check if user is authenticated
   if (!req.cookies.token) {
-    console.log('No token found in cookies, redirecting to home');
-    return res.redirect('/home.html');
+    console.log('No token found in cookies, redirecting to login');
+    return res.redirect('/login.html');
   }
 
   try {
@@ -187,8 +188,8 @@ const checkPayment = async (req, res, next) => {
     });
 
     if (!user) {
-      console.log('User not found in database, redirecting to home');
-      return res.redirect('/home.html');
+      console.log('User not found in database, redirecting to login');
+      return res.redirect('/login.html');
     }
 
     if (!user.hasPaid) {
@@ -201,7 +202,7 @@ const checkPayment = async (req, res, next) => {
     next();
   } catch (err) {
     console.error('Payment check error:', err);
-    res.redirect('/home.html');
+    res.redirect('/login.html');
   }
 };
 
@@ -209,8 +210,8 @@ const checkPayment = async (req, res, next) => {
 app.use(async (req, res, next) => {
   const isPublicPath = publicPaths.some(path => 
     req.path === path || 
-    (req.path.startsWith('/api/') && publicPaths.includes(req.path)) ||
-    publicPaths.some(p => req.path.startsWith(p + '/'))
+    req.path.startsWith(path + '/') ||
+    (req.path.startsWith('/api/') && publicPaths.includes(req.path))
   );
 
   if (isPublicPath) {
@@ -224,8 +225,26 @@ app.use(async (req, res, next) => {
 protectedPages.forEach(page => {
   app.get(page, (req, res) => {
     console.log('Serving protected page:', page);
-    res.set('Content-Type', 'text/html');
-    res.sendFile(path.resolve(__dirname, page.substring(1)));
+    try {
+      const filePath = path.join(__dirname, page.substring(1));
+      console.log('Attempting to serve file:', filePath);
+      if (!res.headersSent) {
+        res.set('Content-Type', 'text/html');
+        res.sendFile(filePath, (err) => {
+          if (err) {
+            console.error('Error serving file:', err);
+            if (!res.headersSent) {
+              res.status(500).send('Error serving file');
+            }
+          }
+        });
+      }
+    } catch (err) {
+      console.error('Error in protected page route:', err);
+      if (!res.headersSent) {
+        res.status(500).send('Server error');
+      }
+    }
   });
 });
 
