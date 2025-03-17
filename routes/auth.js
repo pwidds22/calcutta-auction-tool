@@ -253,12 +253,12 @@ const sendTokenResponse = (user, statusCode, res) => {
   const token = user.getSignedJwtToken();
 
   const options = {
-    expires: new Date(
-      Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000
-    ),
+    expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'Lax'
+    secure: true, // Always use secure in production
+    sameSite: 'Lax',
+    path: '/',
+    domain: '.calcuttagenius.com'
   };
 
   res
@@ -266,7 +266,13 @@ const sendTokenResponse = (user, statusCode, res) => {
     .cookie('token', token, options)
     .json({
       success: true,
-      token
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        hasPaid: user.hasPaid,
+        paymentDate: user.paymentDate
+      }
     });
 };
 
