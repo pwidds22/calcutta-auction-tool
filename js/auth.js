@@ -2,17 +2,27 @@
 
 // Check if user is logged in
 function isLoggedIn() {
-    return localStorage.getItem('token') !== null;
+    // Check for token in cookies
+    const cookies = document.cookie.split(';');
+    const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('token='));
+    return tokenCookie !== undefined;
 }
 
 // Get token
 function getToken() {
-    return localStorage.getItem('token');
+    // Get token from cookies
+    const cookies = document.cookie.split(';');
+    const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('token='));
+    if (tokenCookie) {
+        return tokenCookie.split('=')[1];
+    }
+    return null;
 }
 
 // Logout user
 function logout() {
-    localStorage.removeItem('token');
+    // Clear token cookie by setting it to expire in the past
+    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     window.location.href = 'login.html';
 }
 

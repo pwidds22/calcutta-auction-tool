@@ -66,9 +66,6 @@
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    // Store email for display purposes
-                    localStorage.setItem('userEmail', email);
-                    
                     // Redirect to index.html (main application page)
                     window.location.href = '/index.html';
                 } else {
