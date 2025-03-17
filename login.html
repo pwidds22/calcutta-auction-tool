@@ -59,13 +59,19 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    credentials: 'include',
                     body: JSON.stringify({ email, password })
                 });
 
-                if (response.ok) {
-                    window.location.href = '/dashboard.html';
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    // Store email for display purposes
+                    localStorage.setItem('userEmail', email);
+                    
+                    // Redirect to index.html (main application page)
+                    window.location.href = '/index.html';
                 } else {
-                    const data = await response.json();
                     alert(data.message || 'Login failed. Please try again.');
                 }
             } catch (error) {
