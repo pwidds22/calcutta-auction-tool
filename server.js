@@ -79,8 +79,27 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Serve static files BEFORE the payment check
-app.use(express.static('./'));
+// Serve only public assets (css, images, etc)
+app.use(express.static('./', {
+  setHeaders: function (res, path) {
+    if (path.endsWith('.html')) {
+      res.set('Content-Type', 'text/plain');
+    }
+  }
+}));
+
+// Serve public HTML files
+app.get('/home.html', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'home.html'));
+});
+
+app.get('/login.html', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'login.html'));
+});
+
+app.get('/register.html', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'register.html'));
+});
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -90,7 +109,7 @@ const userDataRoutes = require('./routes/userData');
 app.use('/api/auth', authRoutes);
 app.use('/api/data', userDataRoutes);
 
-// Root route handler - MUST come before the catch-all route
+// Root route handler
 app.get('/', (req, res) => {
   res.sendFile(path.resolve(__dirname, 'home.html'));
 });
@@ -144,34 +163,36 @@ const checkPayment = async (req, res, next) => {
 // Apply payment check middleware
 app.use(checkPayment);
 
-// Protected route for the main application
-app.get('/index.html', (req, res) => {
-  if (!req.cookies.token) {
-    res.redirect('/home.html');
-  } else {
-    const token = req.cookies.token;
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      User.findById(decoded.id).then(user => {
-        if (user && user.hasPaid) {
-          res.sendFile(path.resolve(__dirname, 'index.html'));
-        } else {
-          res.redirect('/payment.html');
-        }
-      });
-    } catch (err) {
-      res.redirect('/home.html');
-    }
-  }
+// Protected HTML routes
+const protectedPages = [
+  'index.html',
+  'auction.html',
+  'teams.html',
+  'profile.html',
+  'dashboard.html'
+];
+
+protectedPages.forEach(page => {
+  app.get(`/${page}`, (req, res) => {
+    res.sendFile(path.resolve(__dirname, page));
+  });
 });
 
-// Serve payment.html for /payment route
+// Serve payment pages
 app.get('/payment.html', (req, res) => {
   if (!req.cookies.token) {
     res.redirect('/home.html');
   } else {
     res.sendFile(path.resolve(__dirname, 'payment.html'));
   }
+});
+
+app.get('/payment-success.html', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'payment-success.html'));
+});
+
+app.get('/payment-cancel.html', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'payment-cancel.html'));
 });
 
 // Catch-all route - MUST be last
