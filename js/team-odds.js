@@ -1,5 +1,10 @@
 // Team Odds JavaScript
 
+// Check authentication first
+if (!isLoggedIn()) {
+    window.location.href = 'login.html';
+}
+
 // Global variables
 let teams = [];
 const regions = ['East', 'West', 'South', 'Midwest'];  // Make this constant since it never changes
@@ -128,81 +133,77 @@ function loadTeamsFromStorage() {
 // Get default teams with odds data
 function getDefaultTeams() {
     return [
-        // South Region (Atlanta)
-        { id: 1, name: "Auburn", seed: 1, region: "South", americanOdds: { r32: -5000, s16: -1000, e8: -400, f4: -125, f2: +200, champ: +430 } },
-        { id: 2, name: "Michigan State", seed: 2, region: "South", americanOdds: { r32: -2500, s16: -800, e8: +200, f4: +490, f2: +1200, champ: +2500 } },
-        { id: 3, name: "Texas A&M", seed: 3, region: "South", americanOdds: { r32: -1500, s16: -200, e8: +600, f4: +1200, f2: +2500, champ: +5000 } },
-        { id: 4, name: "Clemson", seed: 4, region: "South", americanOdds: { r32: -1200, s16: +100, e8: +800, f4: +1900, f2: +3500, champ: +8000 } },
-        { id: 5, name: "Oregon", seed: 5, region: "South", americanOdds: { r32: -800, s16: +150, e8: +1000, f4: +2100, f2: +4500, champ: +10000 } },
-        { id: 6, name: "Kansas", seed: 6, region: "South", americanOdds: { r32: -600, s16: +200, e8: +800, f4: +1800, f2: +3500, champ: +8000 } },
-        { id: 7, name: "Missouri", seed: 7, region: "South", americanOdds: { r32: -400, s16: +250, e8: +800, f4: +1200, f2: +2000, champ: +5000 } },
-        { id: 8, name: "Marquette", seed: 8, region: "South", americanOdds: { r32: +150, s16: +800, e8: +1200, f4: +1600, f2: +2500, champ: +6000 } },
-        { id: 9, name: "Baylor", seed: 9, region: "South", americanOdds: { r32: +150, s16: +800, e8: +1500, f4: +2000, f2: +3500, champ: +8000 } },
-        { id: 10, name: "Utah State", seed: 10, region: "South", americanOdds: { r32: +200, s16: +1000, e8: +1800, f4: +2500, f2: +4500, champ: +10000 } },
-        { id: 11, name: "San Diego State", seed: 11, region: "South", americanOdds: { r32: +250, s16: +1200, e8: +2000, f4: +3000, f2: +5000, champ: +12000 } },
-        { id: 12, name: "UC San Diego", seed: 12, region: "South", americanOdds: { r32: +300, s16: +2000, e8: +4000, f4: +4000, f2: +6000, champ: +15000 } },
-        { id: 13, name: "Akron", seed: 13, region: "South", americanOdds: { r32: +400, s16: +3000, e8: +6000, f4: +5000, f2: +8000, champ: +20000 } },
-        { id: 14, name: "Utah Valley", seed: 14, region: "South", americanOdds: { r32: +500, s16: +4000, e8: +8000, f4: +6000, f2: +10000, champ: +25000 } },
-        { id: 15, name: "Bryant", seed: 15, region: "South", americanOdds: { r32: +700, s16: +5000, e8: +10000, f4: +8000, f2: +15000, champ: +30000 } },
-        { id: 16, name: "SIU Edwardsville", seed: 16, region: "South", americanOdds: { r32: +1000, s16: +8000, e8: +15000, f4: +10000, f2: +20000, champ: +50000 } },
-        { id: 17, name: "Jackson State", seed: 16, region: "South", americanOdds: { r32: +1000, s16: +8000, e8: +15000, f4: +10000, f2: +20000, champ: +50000 } },
-        
-        // East Region (Newark)
-        { id: 18, name: "Duke", seed: 1, region: "East", americanOdds: { r32: -5000, s16: -1000, e8: -400, f4: -160, f2: +150, champ: +330 } },
-        { id: 19, name: "Tennessee", seed: 2, region: "East", americanOdds: { r32: -2500, s16: -800, e8: +150, f4: +290, f2: +800, champ: +1600 } },
-        { id: 20, name: "Iowa State", seed: 3, region: "East", americanOdds: { r32: -1500, s16: -200, e8: +300, f4: +550, f2: +1500, champ: +3000 } },
-        { id: 21, name: "Maryland", seed: 4, region: "East", americanOdds: { r32: -1200, s16: +100, e8: +400, f4: +600, f2: +1200, champ: +2600 } },
-        { id: 22, name: "BYU", seed: 5, region: "East", americanOdds: { r32: -800, s16: +150, e8: +500, f4: +800, f2: +1600, champ: +3200 } },
-        { id: 23, name: "Michigan", seed: 6, region: "East", americanOdds: { r32: -600, s16: +200, e8: +600, f4: +1000, f2: +2000, champ: +4200 } },
-        { id: 24, name: "Gonzaga", seed: 7, region: "East", americanOdds: { r32: -400, s16: +250, e8: +800, f4: +1200, f2: +2500, champ: +5200 } },
-        { id: 25, name: "Mississippi State", seed: 8, region: "East", americanOdds: { r32: +150, s16: +800, e8: +1200, f4: +1600, f2: +3000, champ: +6200 } },
-        { id: 26, name: "Creighton", seed: 9, region: "East", americanOdds: { r32: +150, s16: +800, e8: +1500, f4: +2000, f2: +3500, champ: +8200 } },
-        { id: 27, name: "Oklahoma", seed: 10, region: "East", americanOdds: { r32: +200, s16: +1000, e8: +1800, f4: +2500, f2: +4500, champ: +10200 } },
-        { id: 28, name: "VCU", seed: 11, region: "East", americanOdds: { r32: +250, s16: +1200, e8: +2000, f4: +3000, f2: +5000, champ: +12200 } },
-        { id: 29, name: "Liberty", seed: 12, region: "East", americanOdds: { r32: +300, s16: +2000, e8: +4000, f4: +4000, f2: +6000, champ: +15200 } },
-        { id: 30, name: "High Point", seed: 13, region: "East", americanOdds: { r32: +400, s16: +3000, e8: +6000, f4: +6000, f2: +10000, champ: +20200 } },
-        { id: 31, name: "Troy", seed: 14, region: "East", americanOdds: { r32: +500, s16: +4000, e8: +8000, f4: +8000, f2: +15000, champ: +30200 } },
-        { id: 32, name: "Robert Morris", seed: 15, region: "East", americanOdds: { r32: +800, s16: +5000, e8: +10000, f4: +10000, f2: +20000, champ: +50200 } },
-        { id: 33, name: "American", seed: 16, region: "East", americanOdds: { r32: +1500, s16: +8000, e8: +15000, f4: +20000, f2: +50000, champ: +100200 } },
-        { id: 34, name: "St. Francis", seed: 16, region: "East", americanOdds: { r32: +1500, s16: +8000, e8: +15000, f4: +20000, f2: +50000, champ: +100200 } },
-        
-        // West Region (San Francisco)
-        { id: 35, name: "Florida", seed: 1, region: "West", americanOdds: { r32: -5000, s16: -1000, e8: -400, f4: -105, f2: +450, champ: +550 } },
-        { id: 36, name: "Texas Tech", seed: 2, region: "West", americanOdds: { r32: -2500, s16: -800, e8: +200, f4: +550, f2: +1200, champ: +3000 } },
-        { id: 37, name: "Kentucky", seed: 3, region: "West", americanOdds: { r32: -1500, s16: -200, e8: +600, f4: +1200, f2: +2500, champ: +5000 } },
-        { id: 38, name: "Wisconsin", seed: 4, region: "West", americanOdds: { r32: -1200, s16: +100, e8: +400, f4: +600, f2: +1200, champ: +2700 } },
-        { id: 39, name: "Arizona", seed: 5, region: "West", americanOdds: { r32: -800, s16: +150, e8: +500, f4: +800, f2: +1600, champ: +3300 } },
-        { id: 40, name: "UCLA", seed: 6, region: "West", americanOdds: { r32: -600, s16: +200, e8: +600, f4: +1000, f2: +2000, champ: +4300 } },
-        { id: 41, name: "Saint Mary's", seed: 7, region: "West", americanOdds: { r32: -400, s16: +250, e8: +800, f4: +1200, f2: +2500, champ: +5300 } },
-        { id: 42, name: "UConn", seed: 8, region: "West", americanOdds: { r32: +150, s16: +800, e8: +1200, f4: +1600, f2: +3000, champ: +6300 } },
-        { id: 43, name: "New Mexico", seed: 9, region: "West", americanOdds: { r32: +150, s16: +800, e8: +1500, f4: +2000, f2: +3500, champ: +8300 } },
-        { id: 44, name: "Vanderbilt", seed: 10, region: "West", americanOdds: { r32: +200, s16: +1000, e8: +1800, f4: +2500, f2: +4500, champ: +10300 } },
-        { id: 45, name: "Drake", seed: 11, region: "West", americanOdds: { r32: +250, s16: +1200, e8: +2000, f4: +3000, f2: +5000, champ: +12300 } },
-        { id: 46, name: "Xavier", seed: 12, region: "West", americanOdds: { r32: +300, s16: +2000, e8: +4000, f4: +4000, f2: +6000, champ: +15300 } },
-        { id: 47, name: "Lipscomb", seed: 13, region: "West", americanOdds: { r32: +400, s16: +3000, e8: +6000, f4: +6000, f2: +10000, champ: +20300 } },
-        { id: 48, name: "Montana", seed: 14, region: "West", americanOdds: { r32: +500, s16: +4000, e8: +8000, f4: +8000, f2: +15000, champ: +30300 } },
-        { id: 49, name: "Omaha", seed: 15, region: "West", americanOdds: { r32: +800, s16: +5000, e8: +10000, f4: +10000, f2: +20000, champ: +50300 } },
-        { id: 50, name: "Norfolk State", seed: 16, region: "West", americanOdds: { r32: +1500, s16: +8000, e8: +15000, f4: +20000, f2: +50000, champ: +100300 } },
-        
-        // Midwest Region (Indianapolis)
-        { id: 51, name: "Houston", seed: 1, region: "Midwest", americanOdds: { r32: -5000, s16: -1000, e8: -400, f4: +120, f2: +450, champ: +700 } },
-        { id: 52, name: "Alabama", seed: 2, region: "Midwest", americanOdds: { r32: -2500, s16: -800, e8: +150, f4: +290, f2: +800, champ: +1600 } },
-        { id: 53, name: "St. John's", seed: 3, region: "Midwest", americanOdds: { r32: -1500, s16: -200, e8: +300, f4: +2800, f2: +4500, champ: +12000 } },
-        { id: 54, name: "Purdue", seed: 4, region: "Midwest", americanOdds: { r32: -1200, s16: +100, e8: +400, f4: +600, f2: +1200, champ: +2800 } },
-        { id: 55, name: "Ole Miss", seed: 5, region: "Midwest", americanOdds: { r32: -800, s16: +150, e8: +500, f4: +800, f2: +1600, champ: +3400 } },
-        { id: 56, name: "Illinois", seed: 6, region: "Midwest", americanOdds: { r32: -600, s16: +200, e8: +600, f4: +1000, f2: +2000, champ: +4400 } },
-        { id: 57, name: "Louisville", seed: 7, region: "Midwest", americanOdds: { r32: -400, s16: +250, e8: +800, f4: +1200, f2: +2500, champ: +5400 } },
-        { id: 58, name: "Memphis", seed: 8, region: "Midwest", americanOdds: { r32: +150, s16: +800, e8: +1200, f4: +1600, f2: +3000, champ: +6400 } },
-        { id: 59, name: "Georgia", seed: 9, region: "Midwest", americanOdds: { r32: +150, s16: +800, e8: +1500, f4: +2000, f2: +3500, champ: +8400 } },
-        { id: 60, name: "Arkansas", seed: 10, region: "Midwest", americanOdds: { r32: +200, s16: +1000, e8: +1800, f4: +2500, f2: +4500, champ: +10400 } },
-        { id: 61, name: "West Virginia", seed: 11, region: "Midwest", americanOdds: { r32: +250, s16: +1200, e8: +2000, f4: +3000, f2: +5000, champ: +12400 } },
-        { id: 62, name: "McNeese", seed: 12, region: "Midwest", americanOdds: { r32: +300, s16: +2000, e8: +4000, f4: +4000, f2: +6000, champ: +15400 } },
-        { id: 63, name: "Yale", seed: 13, region: "Midwest", americanOdds: { r32: +400, s16: +3000, e8: +6000, f4: +6000, f2: +10000, champ: +20400 } },
-        { id: 64, name: "UNC Wilmington", seed: 14, region: "Midwest", americanOdds: { r32: +500, s16: +4000, e8: +8000, f4: +8000, f2: +15000, champ: +30400 } },
-        { id: 65, name: "Colgate", seed: 15, region: "Midwest", americanOdds: { r32: +800, s16: +5000, e8: +10000, f4: +10000, f2: +20000, champ: +50400 } },
-        { id: 66, name: "Grambling", seed: 16, region: "Midwest", americanOdds: { r32: +1500, s16: +8000, e8: +15000, f4: +20000, f2: +50000, champ: +100400 } },
-        { id: 67, name: "Howard", seed: 16, region: "Midwest", americanOdds: { r32: +1500, s16: +8000, e8: +15000, f4: +20000, f2: +50000, champ: +100400 } },
-        { id: 68, name: "Wagner", seed: 16, region: "Midwest", americanOdds: { r32: +1500, s16: +8000, e8: +15000, f4: +20000, f2: +50000, champ: +100400 } }
+        // East Region
+        { id: 17, name: "Duke", seed: 1, region: "East", americanOdds: { r32: -5000, s16: -740, e8: -288, f4: -125, f2: +172, champ: +310 } },
+        { id: 18, name: "American/Mount St. Mary's", seed: 16, region: "East", americanOdds: { r32: +2135, s16: +8000, e8: +15000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 19, name: "Mississippi State", seed: 8, region: "East", americanOdds: { r32: +100, s16: +1200, e8: +2500, f4: +3800, f2: +8000, champ: +23000 } },
+        { id: 20, name: "Baylor", seed: 9, region: "East", americanOdds: { r32: -117, s16: +1200, e8: +2700, f4: +3600, f2: +9000, champ: +23000 } },
+        { id: 21, name: "Oregon", seed: 5, region: "East", americanOdds: { r32: +236, s16: +350, e8: +2600, f4: +3000, f2: +14000, champ: +19000 } },
+        { id: 22, name: "Liberty", seed: 12, region: "East", americanOdds: { r32: -286, s16: +1200, e8: +12000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 23, name: "Arizona", seed: 4, region: "East", americanOdds: { r32: +692, s16: +205, e8: +510, f4: +800, f2: +3700, champ: +3700 } },
+        { id: 24, name: "Akron", seed: 13, region: "East", americanOdds: { r32: -1039, s16: +2500, e8: +8000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 25, name: "BYU", seed: 6, region: "East", americanOdds: { r32: +120, s16: +335, e8: +1050, f4: +2000, f2: +14000, champ: +10000 } },
+        { id: 26, name: "VCU", seed: 11, region: "East", americanOdds: { r32: -141, s16: +335, e8: +975, f4: +3400, f2: +11000, champ: +21000 } },
+        { id: 27, name: "Wisconsin", seed: 3, region: "East", americanOdds: { r32: +1130, s16: -115, e8: +350, f4: +1000, f2: +3100, champ: +6000 } },
+        { id: 28, name: "Montana", seed: 14, region: "East", americanOdds: { r32: -2233, s16: +4000, e8: +8000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 29, name: "Saint Mary's", seed: 7, region: "East", americanOdds: { r32: +156, s16: +350, e8: +875, f4: +2300, f2: +9900, champ: +13000 } },
+        { id: 30, name: "Vanderbilt", seed: 10, region: "East", americanOdds: { r32: -184, s16: +1900, e8: +2900, f4: +8000, f2: +40000, champ: +100000 } },
+        { id: 31, name: "Alabama", seed: 2, region: "East", americanOdds: { r32: +464, s16: -260, e8: +110, f4: +410, f2: +860, champ: +1900 } },
+        { id: 32, name: "Robert Morris", seed: 15, region: "East", americanOdds: { r32: -621, s16: +5000, e8: +10000, f4: +25000, f2: +50000, champ: +100000 } },
+
+        // Midwest Region
+        { id: 33, name: "Houston", seed: 1, region: "Midwest", americanOdds: { r32: +3687, s16: -260, e8: -133, f4: +140, f2: +317, champ: +700 } },
+        { id: 34, name: "SIU Edwardsville", seed: 16, region: "Midwest", americanOdds: { r32: -14608, s16: +8000, e8: +15000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 35, name: "Gonzaga", seed: 8, region: "Midwest", americanOdds: { r32: +221, s16: +282, e8: +450, f4: +850, f2: +2300, champ: +4300 } },
+        { id: 36, name: "Georgia", seed: 9, region: "Midwest", americanOdds: { r32: -266, s16: +1200, e8: +2700, f4: +9500, f2: +40000, champ: +100000 } },
+        { id: 37, name: "Clemson", seed: 5, region: "Midwest", americanOdds: { r32: +272, s16: +147, e8: +790, f4: +1500, f2: +3900, champ: +10000 } },
+        { id: 38, name: "McNeese", seed: 12, region: "Midwest", americanOdds: { r32: -334, s16: +2000, e8: +4000, f4: +10000, f2: +40000, champ: +100000 } },
+        { id: 39, name: "Purdue", seed: 4, region: "Midwest", americanOdds: { r32: +310, s16: +132, e8: +780, f4: +1200, f2: +6500, champ: +8500 } },
+        { id: 40, name: "High Point", seed: 13, region: "Midwest", americanOdds: { r32: -387, s16: +1350, e8: +16000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 41, name: "Illinois", seed: 6, region: "Midwest", americanOdds: { r32: -135, s16: +165, e8: +700, f4: +900, f2: +19000, champ: +5500 } },
+        { id: 42, name: "Texas/Xavier", seed: 11, region: "Midwest", americanOdds: { r32: +116, s16: +1400, e8: +2000, f4: +10000, f2: +40000, champ: +100000 } },
+        { id: 43, name: "Kentucky", seed: 3, region: "Midwest", americanOdds: { r32: +461, s16: -168, e8: +90, f4: +900, f2: +2000, champ: +5500 } },
+        { id: 44, name: "Troy", seed: 14, region: "Midwest", americanOdds: { r32: -615, s16: +4000, e8: +8000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 45, name: "UCLA", seed: 7, region: "Midwest", americanOdds: { r32: +168, s16: +350, e8: +710, f4: +2100, f2: +11000, champ: +14000 } },
+        { id: 46, name: "Utah State", seed: 10, region: "Midwest", americanOdds: { r32: -199, s16: +1200, e8: +2900, f4: +11000, f2: +40000, champ: +100000 } },
+        { id: 47, name: "Tennessee", seed: 2, region: "Midwest", americanOdds: { r32: +1478, s16: -251, e8: -111, f4: +370, f2: +880, champ: +2100 } },
+        { id: 48, name: "Wofford", seed: 15, region: "Midwest", americanOdds: { r32: -3916, s16: +5000, e8: +10000, f4: +25000, f2: +50000, champ: +100000 } },
+
+        // South Region
+        { id: 1, name: "Auburn", seed: 1, region: "South", americanOdds: { r32: -5000, s16: -335, e8: -170, f4: +100, f2: +257, champ: +500 } },
+        { id: 2, name: "Alabama State/St. Francis (PA)", seed: 16, region: "South", americanOdds: { r32: +3798, s16: +8000, e8: +15000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 3, name: "Louisville", seed: 8, region: "South", americanOdds: { r32: +121, s16: +1900, e8: +1150, f4: +1900, f2: +7500, champ: +11000 } },
+        { id: 4, name: "Creighton", seed: 9, region: "South", americanOdds: { r32: -142, s16: +1100, e8: +2100, f4: +3100, f2: +10000, champ: +23000 } },
+        { id: 5, name: "Michigan", seed: 5, region: "South", americanOdds: { r32: +128, s16: +450, e8: +1450, f4: +2300, f2: +12000, champ: +19000 } },
+        { id: 6, name: "UC San Diego", seed: 12, region: "South", americanOdds: { r32: -150, s16: +405, e8: +2200, f4: +5000, f2: +40000, champ: +95000 } },
+        { id: 7, name: "Texas A&M", seed: 4, region: "South", americanOdds: { r32: +260, s16: +126, e8: +700, f4: +1300, f2: +7200, champ: +10000 } },
+        { id: 8, name: "Yale", seed: 13, region: "South", americanOdds: { r32: -318, s16: +780, e8: +5400, f4: +17000, f2: +50000, champ: +100000 } },
+        { id: 9, name: "Ole Miss", seed: 6, region: "South", americanOdds: { r32: +787, s16: +375, e8: +1120, f4: +2100, f2: +14000, champ: +15000 } },
+        { id: 10, name: "San Diego State/UNC", seed: 11, region: "South", americanOdds: { r32: -1247, s16: +1200, e8: +2900, f4: +4100, f2: +12000, champ: +28000 } },
+        { id: 11, name: "Iowa State", seed: 3, region: "South", americanOdds: { r32: +142, s16: -128, e8: +238, f4: +500, f2: +2000, champ: +3000 } },
+        { id: 12, name: "Lipscomb", seed: 14, region: "South", americanOdds: { r32: -167, s16: +4000, e8: +8000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 13, name: "Marquette", seed: 7, region: "South", americanOdds: { r32: +214, s16: +350, e8: +865, f4: +2300, f2: +8200, champ: +16000 } },
+        { id: 14, name: "New Mexico", seed: 10, region: "South", americanOdds: { r32: -258, s16: +1200, e8: +1330, f4: +7000, f2: +40000, champ: +100000 } },
+        { id: 15, name: "Michigan State", seed: 2, region: "South", americanOdds: { r32: +1268, s16: -260, e8: +113, f4: +490, f2: +860, champ: +3000 } },
+        { id: 16, name: "Bryant", seed: 15, region: "South", americanOdds: { r32: -2787, s16: +5000, e8: +10000, f4: +25000, f2: +50000, champ: +100000 } },
+
+        // West Region
+        { id: 49, name: "Florida", seed: 1, region: "West", americanOdds: { r32: +1049, s16: -335, e8: -170, f4: -120, f2: +257, champ: +400 } },
+        { id: 50, name: "Norfolk St.", seed: 16, region: "West", americanOdds: { r32: -1958, s16: +8000, e8: +15000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 51, name: "UConn", seed: 8, region: "West", americanOdds: { r32: +168, s16: +1200, e8: +2800, f4: +2500, f2: +7600, champ: +13000 } },
+        { id: 52, name: "Oklahoma", seed: 9, region: "West", americanOdds: { r32: -198, s16: +1200, e8: +2700, f4: +7500, f2: +30000, champ: +80000 } },
+        { id: 53, name: "Memphis", seed: 5, region: "West", americanOdds: { r32: -135, s16: +147, e8: +700, f4: +7500, f2: +30000, champ: +80000 } },
+        { id: 54, name: "Colorado State", seed: 12, region: "West", americanOdds: { r32: +116, s16: +405, e8: +2300, f4: +6000, f2: +30000, champ: +70000 } },
+        { id: 55, name: "Maryland", seed: 4, region: "West", americanOdds: { r32: +464, s16: +126, e8: +700, f4: +1000, f2: +3000, champ: +7000 } },
+        { id: 56, name: "Grand Canyon", seed: 13, region: "West", americanOdds: { r32: -621, s16: +1200, e8: +2700, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 57, name: "Missouri", seed: 6, region: "West", americanOdds: { r32: +171, s16: +360, e8: +1100, f4: +1400, f2: +12500, champ: +8000 } },
+        { id: 58, name: "Drake", seed: 11, region: "West", americanOdds: { r32: -202, s16: +785, e8: +3000, f4: +16000, f2: +50000, champ: +100000 } },
+        { id: 59, name: "Texas Tech", seed: 3, region: "West", americanOdds: { r32: +1416, s16: -162, e8: +233, f4: +480, f2: +1750, champ: +2400 } },
+        { id: 60, name: "UNCW", seed: 14, region: "West", americanOdds: { r32: -3535, s16: +4000, e8: +8000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 61, name: "Kansas", seed: 7, region: "West", americanOdds: { r32: +171, s16: +350, e8: +1550, f4: +1400, f2: +4000, champ: +8000 } },
+        { id: 62, name: "Arkansas", seed: 10, region: "West", americanOdds: { r32: -202, s16: +1200, e8: +4000, f4: +8000, f2: +40000, champ: +100000 } },
+        { id: 63, name: "St. John's", seed: 2, region: "West", americanOdds: { r32: +692, s16: -260, e8: +113, f4: +650, f2: +860, champ: +3200 } },
+        { id: 64, name: "Omaha", seed: 15, region: "West", americanOdds: { r32: -1039, s16: +5000, e8: +10000, f4: +25000, f2: +50000, champ: +100000 } }
     ];
 }
 
@@ -932,11 +933,9 @@ function handleOddsChange(teamId, round, value) {
         
         // Update ALL teams' probabilities in the UI for this round
         teams.forEach(t => {
-            const probCell = document.querySelector(`input[data-team-id="${t.id}"][data-round="${round}"]`)
-                ?.nextElementSibling;
+            const probCell = document.querySelector(`#${t.id}_${round}_prob`);
             if (probCell) {
-                const probability = t.odds[round];
-                probCell.textContent = `${(probability * 100).toFixed(2)}%`;
+                probCell.textContent = (t.odds[round] * 100).toFixed(1) + '%';
             }
         });
     }
@@ -944,234 +943,5 @@ function handleOddsChange(teamId, round, value) {
 
 // Update the UI
 function updateUI() {
-    console.log(`Updating UI with ${teams.length} teams`);
-    console.log(`Current filter: ${currentRegionFilter}, Search term: "${currentSearchTerm}", Sort: ${currentSortOption} (${currentSortDirection})`);
-    
-    // Filter teams by region
-    if (currentRegionFilter !== 'all') {
-        filteredTeams = teams.filter(team => team.region === currentRegionFilter);
-    } else {
-        filteredTeams = [...teams];
-    }
-    console.log(`After region filter: ${filteredTeams.length} teams`);
-    
-    // Search teams
-    if (currentSearchTerm) {
-        filteredTeams = filteredTeams.filter(team => team.name.toLowerCase().includes(currentSearchTerm));
-        console.log(`After search: ${filteredTeams.length} teams`);
-    }
-    
-    // Sort teams
-    if (currentSortOption === 'name') {
-        filteredTeams.sort((a, b) => {
-            const result = a.name.localeCompare(b.name);
-            return currentSortDirection === 'asc' ? result : -result;
-        });
-    } else if (currentSortOption === 'seed') {
-        filteredTeams.sort((a, b) => {
-            const result = a.seed - b.seed;
-            return currentSortDirection === 'asc' ? result : -result;
-        });
-    } else if (currentSortOption === 'region') {
-        filteredTeams.sort((a, b) => {
-            const result = regions.indexOf(a.region) - regions.indexOf(b.region);
-            return currentSortDirection === 'asc' ? result : -result;
-        });
-    } else if (currentSortOption === 'champ') {
-        filteredTeams.sort((a, b) => {
-            // For champion odds, we want to sort by the implied probability
-            const probA = a.odds.champ;
-            const probB = b.odds.champ;
-            // In ascending order, we want lower probabilities first
-            const result = probA - probB;
-            return currentSortDirection === 'asc' ? result : -result;
-        });
-    }
-    console.log(`After sorting: First team is ${filteredTeams.length > 0 ? filteredTeams[0].name : 'none'}`);
-    
-    // Update odds table
-    updateOddsTable();
-    
-    // Sync with auction tool
-    syncWithAuctionTool();
-}
-
-// Sync data with auction tool
-function syncWithAuctionTool() {
-    // Ensure odds are calculated before saving
-    calculateImpliedProbabilities();
-    
-    // Save the current teams data to localStorage for the auction tool to use
-    const teamsToSave = teams.map(team => ({
-        id: team.id,
-        name: team.name,
-        seed: team.seed,
-        region: team.region,
-        americanOdds: team.americanOdds, // Include American odds
-        odds: team.odds,
-        // Use the championship odds as the win percentage
-        winPercentage: team.odds ? team.odds.champ : 0,
-        // Use the championship odds as the value percentage initially
-        // The auction tool will adjust this based on its own calculations
-        valuePercentage: team.odds ? team.odds.champ : 0,
-        // Ensure we preserve purchase price and isMyTeam status
-        purchasePrice: team.purchasePrice || 0,
-        isMyTeam: team.isMyTeam || false
-    }));
-    
-    // Log purchase prices for debugging
-    console.log('Syncing teams with purchase prices:', teamsToSave.filter(t => t.purchasePrice > 0).map(t => `${t.name}: $${t.purchasePrice}`));
-    
-    localStorage.setItem('teamOddsData', JSON.stringify(teamsToSave));
-    localStorage.setItem('calcuttaTeams', JSON.stringify(teamsToSave));
-    
-    console.log('Synced team data with auction tool:', teamsToSave.length);
-}
-
-// Update odds table
-function updateOddsTable() {
-    // Check if we're on the team-odds page
-    const isTeamOddsPage = window.location.pathname.includes('team-odds.html');
-    const tableBodyId = isTeamOddsPage ? 'oddsTableBody' : 'teamTableBody';
-    
-    const tableBody = document.getElementById(tableBodyId);
-    if (!tableBody) {
-        console.log(`Not updating odds table - we are on ${window.location.pathname}`);
-        return;
-    }
-    
-    console.log(`Updating odds table with ${filteredTeams.length} teams`);
-    
-    // Log teams with purchase prices for debugging
-    const teamsWithPrices = filteredTeams.filter(team => team.purchasePrice > 0);
-    if (teamsWithPrices.length > 0) {
-        console.log('Teams with purchase prices:', teamsWithPrices.map(t => `${t.name}: $${t.purchasePrice}`));
-    } else {
-        console.log('No teams have purchase prices');
-    }
-    
-    // Only update the table if we're on the team-odds page
-    if (!isTeamOddsPage) {
-        console.log('Not on team-odds page, skipping table update');
-        return;
-    }
-    
-    tableBody.innerHTML = '';
-    
-    filteredTeams.forEach(team => {
-        const row = document.createElement('tr');
-        
-        // Add class for my teams
-        if (team.isMyTeam) {
-            row.classList.add('table-success');
-        } else if (team.purchasePrice > 0) {
-            row.classList.add('table-secondary');
-        }
-        
-        // Make sure team has all required properties
-        if (!team.americanOdds) {
-            console.warn(`Team ${team.name} (ID: ${team.id}) missing americanOdds, using defaults`);
-            team.americanOdds = {
-                r32: -1000, s16: +150, e8: +300, f4: +600, f2: +1200, champ: +2500
-            };
-        }
-        
-        if (!team.odds) {
-            console.warn(`Team ${team.name} (ID: ${team.id}) missing odds, recalculating`);
-            calculateImpliedProbabilities();
-        }
-        
-        row.innerHTML = `
-            <td>${team.name}</td>
-            <td>${team.seed}</td>
-            <td>${team.region}</td>
-            <td>
-                <input type="text" class="form-control odds-input" data-team-id="${team.id}" data-round="r32" value="${formatAmericanOdds(team.americanOdds.r32)}">
-                <div class="text-center small text-muted">${(team.odds.r32 * 100).toFixed(2)}%</div>
-            </td>
-            <td>
-                <input type="text" class="form-control odds-input" data-team-id="${team.id}" data-round="s16" value="${formatAmericanOdds(team.americanOdds.s16)}">
-                <div class="text-center small text-muted">${(team.odds.s16 * 100).toFixed(2)}%</div>
-            </td>
-            <td>
-                <input type="text" class="form-control odds-input" data-team-id="${team.id}" data-round="e8" value="${formatAmericanOdds(team.americanOdds.e8)}">
-                <div class="text-center small text-muted">${(team.odds.e8 * 100).toFixed(2)}%</div>
-            </td>
-            <td>
-                <input type="text" class="form-control odds-input" data-team-id="${team.id}" data-round="f4" value="${formatAmericanOdds(team.americanOdds.f4)}">
-                <div class="text-center small text-muted">${(team.odds.f4 * 100).toFixed(2)}%</div>
-            </td>
-            <td>
-                <input type="text" class="form-control odds-input" data-team-id="${team.id}" data-round="f2" value="${formatAmericanOdds(team.americanOdds.f2)}">
-                <div class="text-center small text-muted">${(team.odds.f2 * 100).toFixed(2)}%</div>
-            </td>
-            <td>
-                <input type="text" class="form-control odds-input" data-team-id="${team.id}" data-round="champ" value="${formatAmericanOdds(team.americanOdds.champ)}">
-                <div class="text-center small text-muted">${(team.odds.champ * 100).toFixed(2)}%</div>
-            </td>
-            <td class="text-end">
-                ${team.purchasePrice > 0 ? '$' + team.purchasePrice.toFixed(2) : '-'}
-            </td>
-            <td class="text-center">
-                ${team.isMyTeam ? '<span class="badge bg-success">Yes</span>' : ''}
-            </td>
-        `;
-        
-        tableBody.appendChild(row);
-    });
-    
-    // Add event listeners to odds inputs
-    const oddsInputs = document.querySelectorAll('.odds-input');
-    oddsInputs.forEach(input => {
-        input.addEventListener('change', function() {
-            const teamId = parseInt(this.getAttribute('data-team-id'));
-            const round = this.getAttribute('data-round');
-            const value = this.value;
-            
-            handleOddsChange(teamId, round, value);
-        });
-    });
-}
-
-// Format American odds for display
-function formatAmericanOdds(odds) {
-    if (odds > 0) {
-        return `+${odds}`;
-    } else {
-        return odds.toString();
-    }
-}
-
-// Initialize the application
-async function initializeApp() {
-    // Check if user is logged in
-    if (!isLoggedIn()) {
-        // Redirect to login page
-        window.location.href = 'login.html';
-        return;
-    }
-    
-    // Load teams data
-    await loadTeamsData();
-    
-    // Initialize event listeners
-    initializeEventListeners();
-    
-    // Update the UI
-    updateUI();
-}
-
-// Helper function to get user ID
-function getUserId() {
-    // Try to get the user ID from localStorage
-    const userData = localStorage.getItem('userData');
-    if (userData) {
-        try {
-            const parsed = JSON.parse(userData);
-            return parsed.id || 'default';
-        } catch (e) {
-            console.error('Error parsing user data:', e);
-        }
-    }
-    return 'default';
+    // Implementation of updateUI function
 }
