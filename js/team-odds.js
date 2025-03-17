@@ -259,7 +259,46 @@ function initializeEventListeners() {
             updateUI();
         });
     }
-    
+
+    // Set up event delegation for odds inputs
+    const oddsTable = document.getElementById('oddsTable');
+    if (oddsTable) {
+        oddsTable.addEventListener('change', function(e) {
+            if (e.target.classList.contains('odds-input')) {
+                const teamId = parseInt(e.target.dataset.teamId);
+                const round = e.target.dataset.round;
+                const value = e.target.value;
+                handleOddsChange(teamId, round, value);
+            }
+        });
+
+        // Handle purchase price changes
+        oddsTable.addEventListener('change', function(e) {
+            if (e.target.type === 'number' && e.target.closest('td').nextElementSibling?.querySelector('.form-check-input')) {
+                const teamId = parseInt(e.target.closest('tr').querySelector('.odds-input').dataset.teamId);
+                const price = parseFloat(e.target.value) || 0;
+                const team = teams.find(t => t.id === teamId);
+                if (team) {
+                    team.purchasePrice = price;
+                    saveOdds();
+                }
+            }
+        });
+
+        // Handle "My Team" checkbox changes
+        oddsTable.addEventListener('change', function(e) {
+            if (e.target.type === 'checkbox' && e.target.classList.contains('form-check-input')) {
+                const teamId = parseInt(e.target.closest('tr').querySelector('.odds-input').dataset.teamId);
+                const isMyTeam = e.target.checked;
+                const team = teams.find(t => t.id === teamId);
+                if (team) {
+                    team.isMyTeam = isMyTeam;
+                    saveOdds();
+                }
+            }
+        });
+    }
+
     // Set up event listener for sync with auction tool button
     if (syncWithAuctionBtn) {
         syncWithAuctionBtn.addEventListener('click', function() {
@@ -308,38 +347,6 @@ function initializeEventListeners() {
             }
         });
     }
-
-    // Add event listeners to odds inputs
-    const oddsInputs = document.querySelectorAll('.odds-input');
-    oddsInputs.forEach(input => {
-        if (input) {
-            // Handle change event
-            input.addEventListener('change', function() {
-                const teamId = parseInt(this.getAttribute('data-team-id'));
-                const round = this.getAttribute('data-round');
-                const value = this.value;
-                handleOddsChange(teamId, round, value);
-            });
-
-            // Handle blur event (when input loses focus)
-            input.addEventListener('blur', function() {
-                const teamId = parseInt(this.getAttribute('data-team-id'));
-                const round = this.getAttribute('data-round');
-                const value = this.value;
-                handleOddsChange(teamId, round, value);
-            });
-
-            // Handle keydown event for tab key
-            input.addEventListener('keydown', function(e) {
-                if (e.key === 'Tab') {
-                    const teamId = parseInt(this.getAttribute('data-team-id'));
-                    const round = this.getAttribute('data-round');
-                    const value = this.value;
-                    handleOddsChange(teamId, round, value);
-                }
-            });
-        }
-    });
 }
 
 // Helper function to show alerts
@@ -943,5 +950,105 @@ function handleOddsChange(teamId, round, value) {
 
 // Update the UI
 function updateUI() {
-    // Implementation of updateUI function
+    const tableBody = document.getElementById('oddsTableBody');
+    if (!tableBody) {
+        console.error('Odds table body not found');
+        return;
+    }
+
+    // Clear the table body
+    tableBody.innerHTML = '';
+
+    // Filter teams based on region and search term
+    filteredTeams = teams.filter(team => {
+        const matchesRegion = currentRegionFilter === 'all' || team.region === currentRegionFilter;
+        const matchesSearch = !currentSearchTerm || 
+            team.name.toLowerCase().includes(currentSearchTerm) || 
+            team.region.toLowerCase().includes(currentSearchTerm);
+        return matchesRegion && matchesSearch;
+    });
+
+    // Sort teams
+    filteredTeams.sort((a, b) => {
+        let comparison = 0;
+        switch (currentSortOption) {
+            case 'seed':
+                comparison = a.seed - b.seed;
+                break;
+            case 'champ':
+                comparison = b.odds.champ - a.odds.champ;
+                break;
+            case 'name':
+                comparison = a.name.localeCompare(b.name);
+                break;
+            case 'region':
+                comparison = a.region.localeCompare(b.region);
+                break;
+        }
+        return currentSortDirection === 'asc' ? comparison : -comparison;
+    });
+
+    // Add each team to the table
+    filteredTeams.forEach(team => {
+        const row = document.createElement('tr');
+        
+        // Add team info cells
+        const nameCell = document.createElement('td');
+        nameCell.textContent = team.name;
+        row.appendChild(nameCell);
+
+        const seedCell = document.createElement('td');
+        seedCell.textContent = team.seed;
+        row.appendChild(seedCell);
+
+        const regionCell = document.createElement('td');
+        regionCell.textContent = team.region;
+        row.appendChild(regionCell);
+
+        // Add odds cells for each round
+        const rounds = ['r32', 's16', 'e8', 'f4', 'f2', 'champ'];
+        rounds.forEach(round => {
+            // American odds input cell
+            const oddsCell = document.createElement('td');
+            const oddsInput = document.createElement('input');
+            oddsInput.type = 'text';
+            oddsInput.className = 'form-control odds-input';
+            oddsInput.value = team.americanOdds[round];
+            oddsInput.dataset.teamId = team.id;
+            oddsInput.dataset.round = round;
+            oddsCell.appendChild(oddsInput);
+            row.appendChild(oddsCell);
+        });
+
+        // Add probability cell for champion
+        const champProbCell = document.createElement('td');
+        champProbCell.textContent = (team.odds.champ * 100).toFixed(1) + '%';
+        champProbCell.id = `${team.id}_champ_prob`;
+        row.appendChild(champProbCell);
+
+        // Add purchase price cell
+        const priceCell = document.createElement('td');
+        const priceInput = document.createElement('input');
+        priceInput.type = 'number';
+        priceInput.className = 'form-control';
+        priceInput.value = team.purchasePrice || '';
+        priceInput.min = '0';
+        priceInput.step = '1';
+        priceCell.appendChild(priceInput);
+        row.appendChild(priceCell);
+
+        // Add "My Team" checkbox cell
+        const myTeamCell = document.createElement('td');
+        const myTeamCheckbox = document.createElement('input');
+        myTeamCheckbox.type = 'checkbox';
+        myTeamCheckbox.className = 'form-check-input';
+        myTeamCheckbox.checked = team.isMyTeam || false;
+        myTeamCell.appendChild(myTeamCheckbox);
+        row.appendChild(myTeamCell);
+
+        // Add the row to the table
+        tableBody.appendChild(row);
+    });
+
+    console.log(`Displayed ${filteredTeams.length} teams in the table`);
 }
