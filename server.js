@@ -82,11 +82,23 @@ app.use(cors({
 // Serve static files BEFORE the payment check
 app.use(express.static('./'));
 
+// Import routes
+const authRoutes = require('./routes/auth');
+const userDataRoutes = require('./routes/userData');
+
+// Use routes
+app.use('/api/auth', authRoutes);
+app.use('/api/data', userDataRoutes);
+
+// Root route handler - MUST come before the catch-all route
+app.get('/', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'home.html'));
+});
+
 // Payment check middleware
 const checkPayment = async (req, res, next) => {
   // Skip payment check for these routes
   const publicPaths = [
-    '/',
     '/home.html',
     '/login.html',
     '/register.html',
@@ -129,46 +141,8 @@ const checkPayment = async (req, res, next) => {
   }
 };
 
-// Apply payment check middleware AFTER static files
+// Apply payment check middleware
 app.use(checkPayment);
-
-// Import routes
-const authRoutes = require('./routes/auth');
-const userDataRoutes = require('./routes/userData');
-
-// Use routes
-app.use('/api/auth', authRoutes);
-app.use('/api/data', userDataRoutes);
-
-// Serve home.html for the root route
-app.get('/', (req, res) => {
-  if (req.cookies.token) {
-    const token = req.cookies.token;
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      User.findById(decoded.id).then(user => {
-        if (user && user.hasPaid) {
-          res.redirect('/index.html');
-        } else {
-          res.redirect('/payment.html');
-        }
-      });
-    } catch (err) {
-      res.sendFile(path.resolve(__dirname, 'home.html'));
-    }
-  } else {
-    res.sendFile(path.resolve(__dirname, 'home.html'));
-  }
-});
-
-// Serve payment.html for /payment route
-app.get('/payment.html', (req, res) => {
-  if (!req.cookies.token) {
-    res.redirect('/home.html');
-  } else {
-    res.sendFile(path.resolve(__dirname, 'payment.html'));
-  }
-});
 
 // Protected route for the main application
 app.get('/index.html', (req, res) => {
@@ -191,25 +165,18 @@ app.get('/index.html', (req, res) => {
   }
 });
 
-// Catch-all route
-app.get('*', (req, res) => {
+// Serve payment.html for /payment route
+app.get('/payment.html', (req, res) => {
   if (!req.cookies.token) {
     res.redirect('/home.html');
   } else {
-    const token = req.cookies.token;
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      User.findById(decoded.id).then(user => {
-        if (user && user.hasPaid) {
-          res.sendFile(path.resolve(__dirname, 'index.html'));
-        } else {
-          res.redirect('/payment.html');
-        }
-      });
-    } catch (err) {
-      res.redirect('/home.html');
-    }
+    res.sendFile(path.resolve(__dirname, 'payment.html'));
   }
+});
+
+// Catch-all route - MUST be last
+app.get('*', (req, res) => {
+  res.redirect('/home.html');
 });
 
 // Connect to MongoDB
