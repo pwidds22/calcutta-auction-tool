@@ -202,7 +202,9 @@ const protectedPages = [
 
 // Apply payment check middleware before serving protected pages
 app.use((req, res, next) => {
-  if (protectedPages.some(page => req.path === `/${page}`)) {
+  const isProtectedPage = protectedPages.some(page => req.path === `/${page}`);
+  if (isProtectedPage) {
+    console.log('Protected page requested:', req.path);
     return checkPayment(req, res, next);
   }
   next();
@@ -211,6 +213,7 @@ app.use((req, res, next) => {
 // Serve protected pages
 protectedPages.forEach(page => {
   app.get(`/${page}`, (req, res) => {
+    console.log('Serving protected page:', page);
     res.set('Content-Type', 'text/html');
     res.sendFile(path.resolve(__dirname, page));
   });
