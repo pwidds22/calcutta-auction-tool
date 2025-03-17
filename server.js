@@ -82,6 +82,7 @@ app.use(cors({
 
 // Set cookie options
 app.use((req, res, next) => {
+  const originalCookie = res.cookie.bind(res);
   res.cookie = function(name, value, options = {}) {
     const defaultOptions = {
       httpOnly: true,
@@ -90,7 +91,7 @@ app.use((req, res, next) => {
       path: '/',
       domain: '.calcuttagenius.com'
     };
-    return res.cookie.bind(res)(name, value, { ...defaultOptions, ...options });
+    return originalCookie(name, value, { ...defaultOptions, ...options });
   };
   res.clearCookie = res.clearCookie.bind(res);
   next();
