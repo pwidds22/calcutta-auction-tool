@@ -64,7 +64,7 @@ router.post(
         httpOnly: false
       });
 
-      sendTokenResponse(user, 201, res);
+      sendTokenResponse(user, 201, res, req);
     } catch (err) {
       console.error(err.message);
       res.status(500).json({ 
@@ -89,7 +89,11 @@ router.post(
       console.log('\nLogin attempt:', {
         email: req.body.email,
         headers: req.headers,
-        cookies: req.cookies
+        cookies: req.cookies,
+        env: {
+          nodeEnv: process.env.NODE_ENV,
+          hasJwtSecret: !!process.env.JWT_SECRET
+        }
       });
 
       const errors = validationResult(req);
@@ -134,6 +138,7 @@ router.post(
         }
 
         // Create token
+        console.log('Generating token...');
         const token = user.getSignedJwtToken();
         console.log('Token generated:', token.substring(0, 20) + '...');
 
@@ -143,9 +148,17 @@ router.post(
           httpOnly: true,
           secure: true,
           sameSite: 'Lax',
-          path: '/',
-          domain: '.calcuttagenius.com'
+          path: '/'
         };
+
+        // Get the domain from the request host
+        const host = req.get('host');
+        if (host) {
+          // If it's a custom domain, include the domain in cookie options
+          if (host.includes('calcuttagenius.com')) {
+            options.domain = '.calcuttagenius.com';
+          }
+        }
 
         console.log('Setting cookie with options:', options);
 
@@ -169,7 +182,8 @@ router.post(
         return res.status(500).json({
           success: false,
           message: 'Error during authentication',
-          error: err.message
+          error: err.message,
+          stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
         });
       }
     } catch (err) {
@@ -177,7 +191,8 @@ router.post(
       return res.status(500).json({
         success: false,
         message: 'Server error during login',
-        error: err.message
+        error: err.message,
+        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
       });
     }
   }
@@ -259,18 +274,26 @@ router.put('/update-profile', protect, async (req, res) => {
 });
 
 // Get token from model, create cookie and send response
-const sendTokenResponse = (user, statusCode, res) => {
+const sendTokenResponse = (user, statusCode, res, req) => {
   // Create token
   const token = user.getSignedJwtToken();
 
   const options = {
     expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
     httpOnly: true,
-    secure: true, // Always use secure in production
+    secure: true,
     sameSite: 'Lax',
-    path: '/',
-    domain: '.calcuttagenius.com'
+    path: '/'
   };
+
+  // Get the domain from the request host
+  const host = req.get('host');
+  if (host) {
+    // If it's a custom domain, include the domain in cookie options
+    if (host.includes('calcuttagenius.com')) {
+      options.domain = '.calcuttagenius.com';
+    }
+  }
 
   res
     .status(statusCode)
