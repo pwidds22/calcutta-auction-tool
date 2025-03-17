@@ -42,4 +42,4 @@ async function updateUserPayment(email) {
   }
 }
 
-updateUserPayment('katelynwiddoss@gmail.com'); 
+updateUserPayment('katelyn.saeger@gmail.com'); 
