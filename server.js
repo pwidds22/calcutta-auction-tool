@@ -5,8 +5,8 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 const User = require('./models/User');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 require('dotenv').config();
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 // Initialize express app
 const app = express();
@@ -76,8 +76,16 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  exposedHeaders: ['set-cookie']
 }));
+
+// Set cookie options
+app.use((req, res, next) => {
+  res.cookie = res.cookie.bind(res);
+  res.clearCookie = res.clearCookie.bind(res);
+  next();
+});
 
 // Serve static assets (css, images, js)
 app.use('/css', express.static('css'));
@@ -89,24 +97,37 @@ const authRoutes = require('./routes/auth');
 const userDataRoutes = require('./routes/userData');
 
 // Use routes
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', (req, res, next) => {
+  console.log('Auth request:', {
+    method: req.method,
+    path: req.path,
+    body: req.body,
+    cookies: req.cookies
+  });
+  next();
+}, authRoutes);
+
 app.use('/api/data', userDataRoutes);
 
 // Root route handler
 app.get('/', (req, res) => {
+  res.set('Content-Type', 'text/html');
   res.sendFile(path.resolve(__dirname, 'home.html'));
 });
 
 // Serve public HTML files
 app.get('/home.html', (req, res) => {
+  res.set('Content-Type', 'text/html');
   res.sendFile(path.resolve(__dirname, 'home.html'));
 });
 
 app.get('/login.html', (req, res) => {
+  res.set('Content-Type', 'text/html');
   res.sendFile(path.resolve(__dirname, 'login.html'));
 });
 
 app.get('/register.html', (req, res) => {
+  res.set('Content-Type', 'text/html');
   res.sendFile(path.resolve(__dirname, 'register.html'));
 });
 
@@ -173,6 +194,7 @@ const protectedPages = [
 
 protectedPages.forEach(page => {
   app.get(`/${page}`, (req, res) => {
+    res.set('Content-Type', 'text/html');
     res.sendFile(path.resolve(__dirname, page));
   });
 });
@@ -182,15 +204,18 @@ app.get('/payment.html', (req, res) => {
   if (!req.cookies.token) {
     res.redirect('/home.html');
   } else {
+    res.set('Content-Type', 'text/html');
     res.sendFile(path.resolve(__dirname, 'payment.html'));
   }
 });
 
 app.get('/payment-success.html', (req, res) => {
+  res.set('Content-Type', 'text/html');
   res.sendFile(path.resolve(__dirname, 'payment-success.html'));
 });
 
 app.get('/payment-cancel.html', (req, res) => {
+  res.set('Content-Type', 'text/html');
   res.sendFile(path.resolve(__dirname, 'payment-cancel.html'));
 });
 

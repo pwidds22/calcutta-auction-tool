@@ -87,7 +87,11 @@ router.post(
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Invalid input',
+        errors: errors.array() 
+      });
     }
 
     const { email, password } = req.body;
@@ -97,6 +101,7 @@ router.post(
       const user = await User.findOne({ email }).select('+password');
 
       if (!user) {
+        console.log('Login failed: User not found -', email);
         return res.status(401).json({ 
           success: false,
           message: 'Invalid credentials' 
@@ -107,18 +112,44 @@ router.post(
       const isMatch = await user.matchPassword(password);
 
       if (!isMatch) {
+        console.log('Login failed: Password mismatch -', email);
         return res.status(401).json({ 
           success: false,
           message: 'Invalid credentials' 
         });
       }
 
-      sendTokenResponse(user, 200, res);
+      // Create token
+      const token = user.getSignedJwtToken();
+
+      // Set cookie options
+      const options = {
+        expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'Lax',
+        path: '/'
+      };
+
+      // Send response with cookie
+      res
+        .status(200)
+        .cookie('token', token, options)
+        .json({
+          success: true,
+          token,
+          user: {
+            id: user._id,
+            email: user.email,
+            hasPaid: user.hasPaid
+          }
+        });
+
     } catch (err) {
-      console.error(err.message);
+      console.error('Login error:', err);
       res.status(500).json({ 
         success: false,
-        message: 'Server error' 
+        message: 'Server error during login' 
       });
     }
   }
