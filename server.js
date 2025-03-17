@@ -205,11 +205,6 @@ const checkPayment = async (req, res, next) => {
   }
 };
 
-// Root route handler - move this after the payment check middleware
-app.get('/', (req, res) => {
-  res.redirect('/home.html');
-});
-
 // Apply payment check middleware to ALL routes except public ones
 app.use(async (req, res, next) => {
   const isPublicPath = publicPaths.some(path => 
@@ -225,7 +220,7 @@ app.use(async (req, res, next) => {
   return checkPayment(req, res, next);
 });
 
-// Serve protected pages
+// Serve protected pages - MUST come after payment check middleware
 protectedPages.forEach(page => {
   app.get(page, (req, res) => {
     console.log('Serving protected page:', page);
@@ -234,7 +229,7 @@ protectedPages.forEach(page => {
   });
 });
 
-// Serve public HTML files
+// Serve public HTML files - MUST come after protected pages
 app.get('/home.html', (req, res) => {
   res.set('Content-Type', 'text/html');
   res.sendFile(path.resolve(__dirname, 'home.html'));
@@ -248,6 +243,11 @@ app.get('/login.html', (req, res) => {
 app.get('/register.html', (req, res) => {
   res.set('Content-Type', 'text/html');
   res.sendFile(path.resolve(__dirname, 'register.html'));
+});
+
+// Root route handler - MUST come after all other routes
+app.get('/', (req, res) => {
+  res.redirect('/home.html');
 });
 
 // Serve payment pages
@@ -291,6 +291,7 @@ app.get('/payment-cancel.html', (req, res) => {
 
 // Catch-all route - MUST be last
 app.get('*', (req, res) => {
+  console.log('Catch-all route hit:', req.path);
   res.redirect('/home.html');
 });
 
