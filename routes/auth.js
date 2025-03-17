@@ -85,8 +85,14 @@ router.post(
     check('password', 'Password is required').exists()
   ],
   async (req, res) => {
+    console.log('\nLogin attempt:', {
+      email: req.body.email,
+      headers: req.headers
+    });
+
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('Login validation failed:', errors.array());
       return res.status(400).json({ 
         success: false,
         message: 'Invalid input',
@@ -108,6 +114,13 @@ router.post(
         });
       }
 
+      console.log('User found:', {
+        id: user._id,
+        email: user.email,
+        hasPaid: user.hasPaid,
+        paymentDate: user.paymentDate
+      });
+
       // Check if password matches
       const isMatch = await user.matchPassword(password);
 
@@ -121,6 +134,7 @@ router.post(
 
       // Create token
       const token = user.getSignedJwtToken();
+      console.log('Token generated:', token.substring(0, 20) + '...');
 
       // Set cookie options
       const options = {
@@ -132,6 +146,7 @@ router.post(
       };
 
       // Send response with cookie
+      console.log('Setting cookie with options:', options);
       res
         .status(200)
         .cookie('token', token, options)
@@ -141,7 +156,8 @@ router.post(
           user: {
             id: user._id,
             email: user.email,
-            hasPaid: user.hasPaid
+            hasPaid: user.hasPaid,
+            paymentDate: user.paymentDate
           }
         });
 

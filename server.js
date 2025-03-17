@@ -133,6 +133,12 @@ app.get('/register.html', (req, res) => {
 
 // Payment check middleware
 const checkPayment = async (req, res, next) => {
+  console.log('\nPayment check middleware:', {
+    path: req.path,
+    cookies: req.cookies,
+    headers: req.headers
+  });
+
   // Skip payment check for these routes
   const publicPaths = [
     '/home.html',
@@ -151,29 +157,33 @@ const checkPayment = async (req, res, next) => {
   ];
 
   if (publicPaths.some(path => req.path.startsWith(path))) {
+    console.log('Skipping payment check for public path:', req.path);
     return next();
   }
 
   // Check if user is authenticated
   if (!req.cookies.token) {
-    console.log('No token found, redirecting to home');
+    console.log('No token found in cookies, redirecting to home');
     return res.redirect('/home.html');
   }
 
   try {
     const token = req.cookies.token;
+    console.log('Token found:', token.substring(0, 20) + '...');
+    
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
+    console.log('Token decoded:', decoded);
 
-    console.log('Payment check for user:', {
-      path: req.path,
-      userId: decoded.id,
-      userFound: !!user,
-      hasPaid: user?.hasPaid
+    const user = await User.findById(decoded.id);
+    console.log('User found:', {
+      id: user?._id,
+      email: user?.email,
+      hasPaid: user?.hasPaid,
+      paymentDate: user?.paymentDate
     });
 
     if (!user) {
-      console.log('User not found, redirecting to home');
+      console.log('User not found in database, redirecting to home');
       return res.redirect('/home.html');
     }
 
@@ -182,6 +192,7 @@ const checkPayment = async (req, res, next) => {
       return res.redirect('/payment.html');
     }
 
+    console.log('Payment check passed, proceeding to next middleware');
     req.user = user;
     next();
   } catch (err) {
