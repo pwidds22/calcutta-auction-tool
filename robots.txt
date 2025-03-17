@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Allow: /login
+Allow: /register
+Allow: /blog
+Allow: /sitemap.xml
+Disallow: /api/
+Disallow: /payment
+Disallow: /payment-success
+Disallow: /payment-cancel
+Disallow: /auction
+Disallow: /profile
+
+Sitemap: https://calcuttagenius.com/sitemap.xml 

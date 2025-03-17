@@ -205,7 +205,7 @@ app.use('/blog', blogRoutes);
 
 // Define public and protected paths at the top level
 const publicPaths = [
-    '/home',
+    '/',
     '/login',
     '/register',
     '/payment',
@@ -218,7 +218,8 @@ const publicPaths = [
     '/css',
     '/img',
     '/js',
-    '/robots.txt'
+    '/robots.txt',
+    '/sitemap.xml'
 ];
 
 const protectedPages = [
@@ -303,39 +304,15 @@ app.use(async (req, res, next) => {
 });
 
 // Serve public HTML files without .html extension
-app.get(['/home', '/home.html'], (req, res) => {
+app.get(['/', '/home', '/home.html'], (req, res) => {
     res.sendFile(path.resolve(__dirname, 'home.html'));
 });
 
-app.get(['/login', '/login.html'], async (req, res) => {
-    // If user is already authenticated and paid, redirect to auction
-    if (req.cookies.token) {
-        try {
-            const decoded = jwt.verify(req.cookies.token, process.env.JWT_SECRET);
-            const user = await User.findById(decoded.id);
-            if (user && user.hasPaid) {
-                return res.redirect('/auction');
-            }
-        } catch (err) {
-            // Token invalid, proceed to login page
-        }
-    }
+app.get(['/login', '/login.html'], (req, res) => {
     res.sendFile(path.resolve(__dirname, 'login.html'));
 });
 
-app.get(['/register', '/register.html'], async (req, res) => {
-    // If user is already authenticated and paid, redirect to auction
-    if (req.cookies.token) {
-        try {
-            const decoded = jwt.verify(req.cookies.token, process.env.JWT_SECRET);
-            const user = await User.findById(decoded.id);
-            if (user && user.hasPaid) {
-                return res.redirect('/auction');
-            }
-        } catch (err) {
-            // Token invalid, proceed to register page
-        }
-    }
+app.get(['/register', '/register.html'], (req, res) => {
     res.sendFile(path.resolve(__dirname, 'register.html'));
 });
 
@@ -416,7 +393,7 @@ app.get('*', (req, res, next) => {
     }
     
     // Check if the request is for a known page but with .html
-    const knownPages = ['/home', '/login', '/register', '/payment', '/payment-success', '/payment-cancel', '/auction', '/profile'];
+    const knownPages = ['/', '/login', '/register', '/payment', '/payment-success', '/payment-cancel', '/auction', '/profile'];
     const requestedPath = req.path.replace('.html', '');
     
     if (knownPages.includes(requestedPath)) {
@@ -424,7 +401,7 @@ app.get('*', (req, res, next) => {
     }
     
     console.log('Catch-all route hit:', req.path);
-    res.redirect('/home');
+    res.redirect('/');
 });
 
 // Connect to MongoDB
