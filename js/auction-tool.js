@@ -1554,33 +1554,20 @@ function fetchLatestOdds() {
     
     setTimeout(() => {
         // Load the default teams with market odds
-        auctionTeams = getDefaultTeams().map(team => {
-            // Convert American odds to probabilities
-            const odds = {
-                r32: convertAmericanOddsToProbability(team.americanOdds.r32),
-                s16: convertAmericanOddsToProbability(team.americanOdds.s16),
-                e8: convertAmericanOddsToProbability(team.americanOdds.e8),
-                f4: convertAmericanOddsToProbability(team.americanOdds.f4),
-                f2: convertAmericanOddsToProbability(team.americanOdds.f2),
-                champ: convertAmericanOddsToProbability(team.americanOdds.champ)
-            };
+        auctionTeams = getDefaultTeams().map(team => ({
+            ...team,
+            purchasePrice: (currentTeams[team.id] ? currentTeams[team.id].purchasePrice : 0) || 0,
+            isMyTeam: (currentTeams[team.id] ? currentTeams[team.id].isMyTeam : false) || false,
+            isOpponentTeam: false,
+            odds: {
+                r32: 0, s16: 0, e8: 0, f4: 0, f2: 0, champ: 0
+            },
+            winPercentage: 0,
+            valuePercentage: 0
+        }));
 
-            // Use championship odds as the win percentage
-            const winPercentage = odds.champ;
-
-            return {
-                ...team,
-                purchasePrice: (currentTeams[team.id] ? currentTeams[team.id].purchasePrice : 0) || 0,
-                isMyTeam: (currentTeams[team.id] ? currentTeams[team.id].isMyTeam : false) || false,
-                isOpponentTeam: false,
-                odds: odds,
-                winPercentage: winPercentage,
-                valuePercentage: winPercentage // Initially set to win percentage, will be normalized in calculateTeamValues
-            };
-        });
-
-        // Calculate team values
-        calculateTeamValues();
+        // Calculate implied probabilities and devig odds
+        calculateImpliedProbabilities();
         
         // Save teams to storage
         saveTeamsToStorage();
@@ -1600,18 +1587,107 @@ function fetchLatestOdds() {
     }, 1000);
 }
 
-// Helper function to convert American odds to probability
-function convertAmericanOddsToProbability(americanOdds) {
-    if (!americanOdds) return 0;
-    
-    // Convert American odds to probability
+// Convert American odds to implied probability
+function americanOddsToImpliedProbability(americanOdds) {
     if (americanOdds > 0) {
-        // For positive American odds: probability = 100 / (americanOdds + 100)
         return 100 / (americanOdds + 100);
     } else {
-        // For negative American odds: probability = |americanOdds| / (|americanOdds| + 100)
         return Math.abs(americanOdds) / (Math.abs(americanOdds) + 100);
     }
+}
+
+// Convert implied probability to American odds
+function impliedProbabilityToAmericanOdds(probability) {
+    if (probability <= 0 || probability >= 1) {
+        return 0;
+    }
+    
+    if (probability < 0.5) {
+        return Math.round((100 / probability) - 100);
+    } else {
+        return Math.round(-1 * (probability * 100) / (1 - probability));
+    }
+}
+
+// Devig odds for a specific round within a region
+function devigRegionalRoundOdds(teamsInRegion, round) {
+    // Extract implied probabilities for the round
+    const impliedProbabilities = teamsInRegion.map(team => team.rawImpliedProbabilities[round]);
+    
+    // Calculate the overround (sum of all implied probabilities)
+    const overround = impliedProbabilities.reduce((sum, prob) => sum + prob, 0);
+    
+    // Normalize the probabilities to remove the vig
+    teamsInRegion.forEach((team, index) => {
+        team.odds[round] = team.rawImpliedProbabilities[round] / overround;
+    });
+}
+
+// Devig odds for each round considering tournament structure
+function devigRoundOdds() {
+    const regions = ['East', 'West', 'South', 'Midwest'];
+    
+    // Process each region separately for early rounds
+    regions.forEach(region => {
+        const teamsInRegion = auctionTeams.filter(team => team.region === region);
+        
+        // Devig R32, S16, and E8 within regions
+        ['r32', 's16', 'e8'].forEach(round => {
+            devigRegionalRoundOdds(teamsInRegion, round);
+        });
+    });
+    
+    // Process F4 and Championship rounds across all teams
+    ['f4', 'f2', 'champ'].forEach(round => {
+        devigRegionalRoundOdds(auctionTeams, round);
+    });
+}
+
+// Calculate implied probabilities from American odds
+function calculateImpliedProbabilities() {
+    console.log('Calculating implied probabilities for', auctionTeams.length, 'teams');
+    
+    auctionTeams.forEach(team => {
+        // Check if team has americanOdds
+        if (!team.americanOdds) {
+            console.warn(`Team ${team.name} (ID: ${team.id}) missing americanOdds, using defaults`);
+            // Create default americanOdds if not found
+            team.americanOdds = {
+                r32: -1000, s16: +150, e8: +300, f4: +600, f2: +1200, champ: +2500
+            };
+        }
+        
+        // First, calculate raw implied probabilities from American odds
+        team.rawImpliedProbabilities = {
+            r32: americanOddsToImpliedProbability(team.americanOdds.r32),
+            s16: americanOddsToImpliedProbability(team.americanOdds.s16),
+            e8: americanOddsToImpliedProbability(team.americanOdds.e8),
+            f4: americanOddsToImpliedProbability(team.americanOdds.f4),
+            f2: americanOddsToImpliedProbability(team.americanOdds.f2),
+            champ: americanOddsToImpliedProbability(team.americanOdds.champ)
+        };
+        
+        // Initialize odds object (will be populated by devigging)
+        team.odds = {
+            r32: 0,
+            s16: 0,
+            e8: 0,
+            f4: 0,
+            f2: 0,
+            champ: 0
+        };
+    });
+    
+    // Devig odds for each round
+    devigRoundOdds();
+    
+    // Update winPercentage and valuePercentage based on championship odds
+    auctionTeams.forEach(team => {
+        team.winPercentage = team.odds.champ;
+        team.valuePercentage = team.odds.champ;
+    });
+    
+    console.log('Implied probabilities calculated successfully');
 }
 
 // Add helper function to show alerts
