@@ -180,8 +180,31 @@ const checkPayment = async (req, res, next) => {
   }
 };
 
-// Apply payment check middleware BEFORE any route handlers
-app.use(checkPayment);
+// Protected HTML routes
+const protectedPages = [
+  'index.html',
+  'auction.html',
+  'teams.html',
+  'profile.html',
+  'dashboard.html',
+  'team-odds.html'
+];
+
+// Apply payment check middleware before serving protected pages
+app.use((req, res, next) => {
+  if (protectedPages.some(page => req.path === `/${page}`)) {
+    return checkPayment(req, res, next);
+  }
+  next();
+});
+
+// Serve protected pages
+protectedPages.forEach(page => {
+  app.get(`/${page}`, (req, res) => {
+    res.set('Content-Type', 'text/html');
+    res.sendFile(path.resolve(__dirname, page));
+  });
+});
 
 // Root route handler
 app.get('/', (req, res) => {
@@ -242,22 +265,6 @@ app.get('/payment-success.html', (req, res) => {
 app.get('/payment-cancel.html', (req, res) => {
   res.set('Content-Type', 'text/html');
   res.sendFile(path.resolve(__dirname, 'payment-cancel.html'));
-});
-
-// Protected HTML routes
-const protectedPages = [
-  'index.html',
-  'auction.html',
-  'teams.html',
-  'profile.html',
-  'dashboard.html'
-];
-
-protectedPages.forEach(page => {
-  app.get(`/${page}`, (req, res) => {
-    res.set('Content-Type', 'text/html');
-    res.sendFile(path.resolve(__dirname, page));
-  });
 });
 
 // Catch-all route - MUST be last
