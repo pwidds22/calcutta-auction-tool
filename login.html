@@ -69,8 +69,12 @@
                     // Store the token in localStorage as backup
                     localStorage.setItem('token', data.token);
                     
-                    // Redirect to index page - the server will handle session verification
-                    window.location.href = '/index.html';
+                    // Redirect based on payment status
+                    if (data.user.hasPaid) {
+                        window.location.href = '/auction';
+                    } else {
+                        window.location.href = '/payment';
+                    }
                 } else {
                     alert(data.message || 'Login failed. Please try again.');
                 }

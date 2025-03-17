@@ -165,218 +165,226 @@ app.use('/api/data', userDataRoutes);
 
 // Define public and protected paths at the top level
 const publicPaths = [
-  '/home.html',
-  '/login.html',
-  '/register.html',
-  '/payment.html',
-  '/payment-success.html',
-  '/payment-cancel.html',
-  '/api/auth/register',
-  '/api/auth/login',
-  '/api/payment/webhook',
-  '/favicon.ico',
-  '/css',
-  '/img',
-  '/js',
-  '/robots.txt'
+    '/home',
+    '/login',
+    '/register',
+    '/payment',
+    '/payment-success',
+    '/payment-cancel',
+    '/api/auth/register',
+    '/api/auth/login',
+    '/api/payment/webhook',
+    '/favicon.ico',
+    '/css',
+    '/img',
+    '/js',
+    '/robots.txt'
 ];
 
 const protectedPages = [
-  '/index.html',
-  '/auction.html',
-  '/teams.html',
-  '/profile.html',
-  '/dashboard.html',
-  '/team-odds.html'
+    '/auction',
+    '/profile'
 ];
 
 // Payment check middleware
 const checkPayment = async (req, res, next) => {
-  console.log('\nPayment check middleware:', {
-    path: req.path,
-    cookies: req.cookies,
-    headers: req.headers
-  });
-
-  // Skip payment check for public paths
-  const isPublicPath = publicPaths.some(path => 
-    req.path === path || 
-    req.path.startsWith(path + '/') ||
-    (req.path.startsWith('/api/') && publicPaths.includes(req.path))
-  );
-
-  if (isPublicPath) {
-    console.log('Skipping payment check for public path:', req.path);
-    return next();
-  }
-
-  // Get the token from cookies, authorization header, or query parameter
-  let token = req.cookies?.token;
-  if (!token && req.headers.authorization?.startsWith('Bearer')) {
-    token = req.headers.authorization.split(' ')[1];
-  }
-  if (!token && req.query?.token) {
-    token = req.query.token;
-  }
-
-  // Check if user is authenticated
-  if (!token) {
-    console.log('No token found in cookies, headers, or query, redirecting to login');
-    return res.redirect('/login.html');
-  }
-
-  try {
-    console.log('Token found:', token.substring(0, 20) + '...');
-    
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log('Token decoded:', decoded);
-
-    const user = await User.findById(decoded.id);
-    console.log('User found:', {
-      id: user?._id,
-      email: user?.email,
-      hasPaid: user?.hasPaid,
-      paymentDate: user?.paymentDate
+    console.log('\nPayment check middleware:', {
+        path: req.path,
+        cookies: req.cookies,
+        headers: req.headers
     });
 
-    if (!user) {
-      console.log('User not found in database, redirecting to login');
-      return res.redirect('/login.html');
+    // Skip payment check for public paths
+    const isPublicPath = publicPaths.some(path => 
+        req.path === path || 
+        req.path.startsWith(path + '/') ||
+        (req.path.startsWith('/api/') && publicPaths.includes(req.path))
+    );
+
+    if (isPublicPath) {
+        console.log('Skipping payment check for public path:', req.path);
+        return next();
     }
 
-    if (!user.hasPaid) {
-      console.log('User has not paid, redirecting to payment');
-      return res.redirect('/payment.html');
+    // Get the token from cookies, authorization header, or query parameter
+    let token = req.cookies?.token;
+    if (!token && req.headers.authorization?.startsWith('Bearer')) {
+        token = req.headers.authorization.split(' ')[1];
+    }
+    if (!token && req.query?.token) {
+        token = req.query.token;
     }
 
-    // Generate a new token to refresh the expiry
-    const newToken = user.getSignedJwtToken();
-    
-    // Let the global cookie middleware handle cookie settings
-    res.cookie('token', newToken);
+    // Check if user is authenticated
+    if (!token) {
+        console.log('No token found in cookies, headers, or query, redirecting to login');
+        return res.redirect('/login');
+    }
 
-    console.log('Payment check passed, proceeding to next middleware');
-    req.user = user;
-    next();
-  } catch (err) {
-    console.error('Payment check error:', err);
-    res.redirect('/login.html');
-  }
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.id);
+
+        if (!user) {
+            console.log('User not found in database, redirecting to login');
+            return res.redirect('/login');
+        }
+
+        if (!user.hasPaid) {
+            console.log('User has not paid, redirecting to payment');
+            return res.redirect('/payment');
+        }
+
+        // Generate a new token to refresh the expiry
+        const newToken = user.getSignedJwtToken();
+        res.cookie('token', newToken);
+
+        console.log('Payment check passed, proceeding to next middleware');
+        req.user = user;
+        next();
+    } catch (err) {
+        console.error('Payment check error:', err);
+        res.redirect('/login');
+    }
 };
 
-// Apply payment check middleware to ALL routes except public ones
+// Apply payment check middleware to protected routes only
 app.use(async (req, res, next) => {
-  const isPublicPath = publicPaths.some(path => 
-    req.path === path || 
-    req.path.startsWith(path + '/') ||
-    (req.path.startsWith('/api/') && publicPaths.includes(req.path))
-  );
+    const isProtectedPath = protectedPages.some(path => 
+        req.path === path || 
+        req.path.startsWith(path + '/')
+    );
 
-  if (isPublicPath) {
-    return next();
-  }
-  
-  return checkPayment(req, res, next);
+    if (isProtectedPath) {
+        return checkPayment(req, res, next);
+    }
+    
+    next();
 });
 
-// Serve protected pages - MUST come after payment check middleware
-protectedPages.forEach(page => {
-  app.get(page, (req, res) => {
-    console.log('Serving protected page:', page);
-    try {
-      const filePath = path.join(__dirname, page.substring(1));
-      console.log('Attempting to serve file:', filePath);
-      
-      // Check if file exists
-      if (!require('fs').existsSync(filePath)) {
-        console.error('File does not exist:', filePath);
-        return res.status(404).send('File not found');
-      }
+// Serve public HTML files without .html extension
+app.get(['/home', '/home.html'], (req, res) => {
+    res.sendFile(path.resolve(__dirname, 'home.html'));
+});
 
-      // Try to serve the file
-      res.sendFile(filePath, (err) => {
-        if (err) {
-          console.error('Error serving file:', err);
-          if (!res.headersSent) {
-            res.status(500).send('Error serving file: ' + err.message);
-          }
-        } else {
-          console.log('File served successfully:', filePath);
+app.get(['/login', '/login.html'], async (req, res) => {
+    // If user is already authenticated and paid, redirect to auction
+    if (req.cookies.token) {
+        try {
+            const decoded = jwt.verify(req.cookies.token, process.env.JWT_SECRET);
+            const user = await User.findById(decoded.id);
+            if (user && user.hasPaid) {
+                return res.redirect('/auction');
+            }
+        } catch (err) {
+            // Token invalid, proceed to login page
         }
-      });
+    }
+    res.sendFile(path.resolve(__dirname, 'login.html'));
+});
+
+app.get(['/register', '/register.html'], async (req, res) => {
+    // If user is already authenticated and paid, redirect to auction
+    if (req.cookies.token) {
+        try {
+            const decoded = jwt.verify(req.cookies.token, process.env.JWT_SECRET);
+            const user = await User.findById(decoded.id);
+            if (user && user.hasPaid) {
+                return res.redirect('/auction');
+            }
+        } catch (err) {
+            // Token invalid, proceed to register page
+        }
+    }
+    res.sendFile(path.resolve(__dirname, 'register.html'));
+});
+
+app.get(['/payment', '/payment.html'], async (req, res) => {
+    if (!req.cookies.token) {
+        return res.redirect('/home');
+    }
+
+    try {
+        const token = req.cookies.token;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.id);
+
+        if (!user) {
+            return res.redirect('/home');
+        }
+
+        // If user has already paid, redirect to auction
+        if (user.hasPaid) {
+            console.log('User already paid, redirecting to auction:', user.email);
+            return res.redirect('/auction');
+        }
+
+        res.sendFile(path.resolve(__dirname, 'payment.html'));
     } catch (err) {
-      console.error('Error in protected page route:', err);
-      if (!res.headersSent) {
-        res.status(500).send('Server error: ' + err.message);
-      }
+        console.error('Payment page error:', err);
+        res.redirect('/home');
     }
-  });
 });
 
-// Serve public HTML files - MUST come after protected pages
-app.get('/home.html', (req, res) => {
-  res.set('Content-Type', 'text/html');
-  res.sendFile(path.resolve(__dirname, 'home.html'));
+app.get(['/payment-success', '/payment-success.html'], (req, res) => {
+    res.sendFile(path.resolve(__dirname, 'payment-success.html'));
 });
 
-app.get('/login.html', (req, res) => {
-  res.set('Content-Type', 'text/html');
-  res.sendFile(path.resolve(__dirname, 'login.html'));
+app.get(['/payment-cancel', '/payment-cancel.html'], (req, res) => {
+    res.sendFile(path.resolve(__dirname, 'payment-cancel.html'));
 });
 
-app.get('/register.html', (req, res) => {
-  res.set('Content-Type', 'text/html');
-  res.sendFile(path.resolve(__dirname, 'register.html'));
+// Serve protected pages
+app.get(['/auction', '/auction.html'], (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Root route handler - MUST come after all other routes
-app.get('/', (req, res) => {
-  res.redirect('/home.html');
+app.get(['/profile', '/profile.html'], (req, res) => {
+    res.sendFile(path.join(__dirname, 'profile.html'));
 });
 
-// Serve payment pages
-app.get('/payment.html', async (req, res) => {
-  if (!req.cookies.token) {
-    return res.redirect('/home.html');
-  }
-
-  try {
-    const token = req.cookies.token;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
-
-    if (!user) {
-      return res.redirect('/home.html');
+// Root route handler - redirect to auction for authenticated users, home for others
+app.get('/', async (req, res) => {
+    if (!req.cookies.token) {
+        return res.redirect('/home');
     }
 
-    // If user has already paid, redirect to index
-    if (user.hasPaid) {
-      console.log('User already paid, redirecting to index:', user.email);
-      return res.redirect('/index.html');
+    try {
+        const token = req.cookies.token;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.id);
+
+        if (!user || !user.hasPaid) {
+            return res.redirect('/home');
+        }
+
+        res.redirect('/auction');
+    } catch (err) {
+        console.error('Root route error:', err);
+        res.redirect('/home');
     }
-
-    res.set('Content-Type', 'text/html');
-    res.sendFile(path.resolve(__dirname, 'payment.html'));
-  } catch (err) {
-    console.error('Payment page error:', err);
-    res.redirect('/home.html');
-  }
-});
-
-app.get('/payment-success.html', (req, res) => {
-  res.set('Content-Type', 'text/html');
-  res.sendFile(path.resolve(__dirname, 'payment-success.html'));
-});
-
-app.get('/payment-cancel.html', (req, res) => {
-  res.set('Content-Type', 'text/html');
-  res.sendFile(path.resolve(__dirname, 'payment-cancel.html'));
 });
 
 // Catch-all route - MUST be last
-app.get('*', (req, res) => {
-  console.log('Catch-all route hit:', req.path);
-  res.redirect('/home.html');
+app.get('*', (req, res, next) => {
+    // Don't redirect API calls or static files
+    if (req.path.startsWith('/api/') || 
+        req.path.startsWith('/css/') || 
+        req.path.startsWith('/js/') || 
+        req.path.startsWith('/img/')) {
+        return next();
+    }
+    
+    // Check if the request is for a known page but with .html
+    const knownPages = ['/home', '/login', '/register', '/payment', '/payment-success', '/payment-cancel', '/auction', '/profile'];
+    const requestedPath = req.path.replace('.html', '');
+    
+    if (knownPages.includes(requestedPath)) {
+        return res.redirect(requestedPath);
+    }
+    
+    console.log('Catch-all route hit:', req.path);
+    res.redirect('/home');
 });
 
 // Connect to MongoDB

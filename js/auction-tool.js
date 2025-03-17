@@ -26,87 +26,118 @@ let isLoading = false;
 // Base teams data - this is constant and should not change
 const AUCTION_BASE_TEAMS = getDefaultTeams();
 
+// Get default teams with their American odds
+function getDefaultTeams() {
+    return [
+        // East Region
+        { id: 17, name: "Duke", seed: 1, region: "East", americanOdds: { r32: -33233, s16: -740, e8: -288, f4: -125, f2: +172, champ: +310 } },
+        { id: 18, name: "American/Mount St. Mary's", seed: 16, region: "East", americanOdds: { r32: +49900, s16: +8000, e8: +15000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 19, name: "BYU", seed: 6, region: "East", americanOdds: { r32: -99, s16: +335, e8: +1050, f4: +2000, f2: +14000, champ: +10000 } },
+        { id: 20, name: "Baylor", seed: 9, region: "East", americanOdds: { r32: +101, s16: +1200, e8: +2700, f4: +3600, f2: +9000, champ: +23000 } },
+        { id: 21, name: "Oregon", seed: 5, region: "East", americanOdds: { r32: -180, s16: +350, e8: +2600, f4: +3000, f2: +14000, champ: +19000 } },
+        { id: 22, name: "Liberty", seed: 12, region: "East", americanOdds: { r32: +180, s16: +1200, e8: +12000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 23, name: "Arizona", seed: 4, region: "East", americanOdds: { r32: -1049, s16: +205, e8: +510, f4: +800, f2: +3700, champ: +3700 } },
+        { id: 24, name: "Akron", seed: 13, region: "East", americanOdds: { r32: +1049, s16: +2500, e8: +8000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 25, name: "Wisconsin", seed: 3, region: "East", americanOdds: { r32: -1513, s16: -115, e8: +350, f4: +1000, f2: +3100, champ: +6000 } },
+        { id: 26, name: "Montana", seed: 14, region: "East", americanOdds: { r32: +1513, s16: +4000, e8: +8000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 27, name: "Saint Mary's", seed: 7, region: "East", americanOdds: { r32: -230, s16: +350, e8: +875, f4: +2300, f2: +9900, champ: +13000 } },
+        { id: 28, name: "Vanderbilt", seed: 10, region: "East", americanOdds: { r32: +230, s16: +1900, e8: +2900, f4: +8000, f2: +40000, champ: +100000 } },
+        { id: 29, name: "Alabama", seed: 2, region: "East", americanOdds: { r32: -3126, s16: -260, e8: +110, f4: +410, f2: +860, champ: +1900 } },
+        { id: 30, name: "Robert Morris", seed: 15, region: "East", americanOdds: { r32: +3126, s16: +5000, e8: +10000, f4: +25000, f2: +50000, champ: +100000 } },
+
+        // Midwest Region
+        { id: 33, name: "Houston", seed: 1, region: "Midwest", americanOdds: { r32: -16567, s16: -260, e8: -133, f4: +140, f2: +317, champ: +700 } },
+        { id: 34, name: "SIU Edwardsville", seed: 16, region: "Midwest", americanOdds: { r32: +16567, s16: +8000, e8: +15000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 35, name: "Gonzaga", seed: 8, region: "Midwest", americanOdds: { r32: -361, s16: +282, e8: +450, f4: +850, f2: +2300, champ: +4300 } },
+        { id: 36, name: "Georgia", seed: 9, region: "Midwest", americanOdds: { r32: +361, s16: +1200, e8: +2700, f4: +9500, f2: +40000, champ: +100000 } },
+        { id: 37, name: "Clemson", seed: 5, region: "Midwest", americanOdds: { r32: -253, s16: +147, e8: +790, f4: +1500, f2: +3900, champ: +10000 } },
+        { id: 38, name: "McNeese", seed: 12, region: "Midwest", americanOdds: { r32: +253, s16: +2000, e8: +4000, f4: +10000, f2: +40000, champ: +100000 } },
+        { id: 39, name: "Purdue", seed: 4, region: "Midwest", americanOdds: { r32: -337, s16: +132, e8: +780, f4: +1200, f2: +6500, champ: +8500 } },
+        { id: 40, name: "High Point", seed: 13, region: "Midwest", americanOdds: { r32: +337, s16: +1350, e8: +16000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 41, name: "Illinois", seed: 6, region: "Midwest", americanOdds: { r32: -148, s16: +165, e8: +700, f4: +900, f2: +19000, champ: +5500 } },
+        { id: 42, name: "Texas/Xavier", seed: 11, region: "Midwest", americanOdds: { r32: +302, s16: +1400, e8: +2000, f4: +10000, f2: +40000, champ: +100000 } },
+        { id: 43, name: "Kentucky", seed: 3, region: "Midwest", americanOdds: { r32: -405, s16: -168, e8: +90, f4: +900, f2: +2000, champ: +5500 } },
+        { id: 44, name: "Troy", seed: 14, region: "Midwest", americanOdds: { r32: +405, s16: +4000, e8: +8000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 45, name: "UCLA", seed: 7, region: "Midwest", americanOdds: { r32: -242, s16: +350, e8: +710, f4: +2100, f2: +11000, champ: +14000 } },
+        { id: 46, name: "Utah State", seed: 10, region: "Midwest", americanOdds: { r32: +242, s16: +1200, e8: +2900, f4: +11000, f2: +40000, champ: +100000 } },
+        { id: 47, name: "Tennessee", seed: 2, region: "Midwest", americanOdds: { r32: -1943, s16: -251, e8: -111, f4: +370, f2: +880, champ: +2100 } },
+        { id: 48, name: "Wofford", seed: 15, region: "Midwest", americanOdds: { r32: +1943, s16: +5000, e8: +10000, f4: +25000, f2: +50000, champ: +100000 } },
+
+        // South Region
+        { id: 1, name: "Florida", seed: 1, region: "South", americanOdds: { r32: -2678, s16: -335, e8: -170, f4: +100, f2: +257, champ: +500 } },
+        { id: 2, name: "Norfolk St.", seed: 16, region: "South", americanOdds: { r32: +2678, s16: +8000, e8: +15000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 3, name: "Connecticut", seed: 8, region: "South", americanOdds: { r32: -199, s16: +1900, e8: +1150, f4: +1900, f2: +7500, champ: +11000 } },
+        { id: 4, name: "Oklahoma", seed: 9, region: "South", americanOdds: { r32: +199, s16: +1100, e8: +2100, f4: +3100, f2: +10000, champ: +23000 } },
+        { id: 5, name: "Memphis", seed: 5, region: "South", americanOdds: { r32: -88, s16: +450, e8: +1450, f4: +2300, f2: +12000, champ: +19000 } },
+        { id: 6, name: "Colorado State", seed: 12, region: "South", americanOdds: { r32: +88, s16: +405, e8: +2200, f4: +5000, f2: +40000, champ: +95000 } },
+        { id: 7, name: "Maryland", seed: 4, region: "South", americanOdds: { r32: -376, s16: +126, e8: +700, f4: +1300, f2: +7200, champ: +10000 } },
+        { id: 8, name: "Grand Canyon", seed: 13, region: "South", americanOdds: { r32: +376, s16: +780, e8: +5400, f4: +17000, f2: +50000, champ: +100000 } },
+        { id: 9, name: "Missouri", seed: 6, region: "South", americanOdds: { r32: -154, s16: +375, e8: +1120, f4: +2100, f2: +14000, champ: +15000 } },
+        { id: 10, name: "Drake", seed: 11, region: "South", americanOdds: { r32: +154, s16: +1200, e8: +2900, f4: +4100, f2: +12000, champ: +28000 } },
+        { id: 11, name: "Texas Tech", seed: 3, region: "South", americanOdds: { r32: -793, s16: -128, e8: +238, f4: +500, f2: +2000, champ: +3000 } },
+        { id: 12, name: "UNCW", seed: 14, region: "South", americanOdds: { r32: +793, s16: +4000, e8: +8000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 13, name: "Kansas", seed: 7, region: "South", americanOdds: { r32: -241, s16: +350, e8: +865, f4: +2300, f2: +8200, champ: +16000 } },
+        { id: 14, name: "Arkansas", seed: 10, region: "South", americanOdds: { r32: +241, s16: +1200, e8: +1330, f4: +7000, f2: +40000, champ: +100000 } },
+        { id: 15, name: "Saint John's", seed: 2, region: "South", americanOdds: { r32: -2469, s16: -260, e8: +113, f4: +490, f2: +860, champ: +3000 } },
+        { id: 16, name: "Omaha", seed: 15, region: "South", americanOdds: { r32: +2469, s16: +5000, e8: +10000, f4: +25000, f2: +50000, champ: +100000 } },
+
+        // West Region
+        { id: 49, name: "Auburn", seed: 1, region: "West", americanOdds: { r32: -99900, s16: -335, e8: -170, f4: -120, f2: +257, champ: +400 } },
+        { id: 50, name: "Alabama State/St. Francis (PA)", seed: 16, region: "West", americanOdds: { r32: +99900, s16: +8000, e8: +15000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 51, name: "Louisville", seed: 8, region: "West", americanOdds: { r32: +130, s16: +1200, e8: +2800, f4: +2500, f2: +7600, champ: +13000 } },
+        { id: 52, name: "Creighton", seed: 9, region: "West", americanOdds: { r32: -130, s16: +1200, e8: +2700, f4: +7500, f2: +30000, champ: +80000 } },
+        { id: 53, name: "Michigan", seed: 5, region: "West", americanOdds: { r32: +122, s16: +147, e8: +700, f4: +7500, f2: +30000, champ: +80000 } },
+        { id: 54, name: "UC San Diego", seed: 12, region: "West", americanOdds: { r32: -122, s16: +405, e8: +2300, f4: +6000, f2: +30000, champ: +70000 } },
+        { id: 55, name: "Texas A&M", seed: 4, region: "West", americanOdds: { r32: -233, s16: +126, e8: +700, f4: +1000, f2: +3000, champ: +7000 } },
+        { id: 56, name: "Yale", seed: 13, region: "West", americanOdds: { r32: +233, s16: +1200, e8: +2700, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 57, name: "Ole Miss", seed: 6, region: "West", americanOdds: { r32: +102, s16: +360, e8: +1100, f4: +1400, f2: +12500, champ: +8000 } },
+        { id: 58, name: "San Diego State/UNC", seed: 11, region: "West", americanOdds: { r32: -102, s16: +785, e8: +3000, f4: +16000, f2: +50000, champ: +100000 } },
+        { id: 59, name: "Iowa State", seed: 3, region: "West", americanOdds: { r32: -792, s16: -162, e8: +233, f4: +480, f2: +1750, champ: +2400 } },
+        { id: 60, name: "Lipscomb", seed: 14, region: "West", americanOdds: { r32: +792, s16: +4000, e8: +8000, f4: +25000, f2: +50000, champ: +100000 } },
+        { id: 61, name: "Marquette", seed: 7, region: "West", americanOdds: { r32: +129, s16: +350, e8: +1550, f4: +1400, f2: +4000, champ: +8000 } },
+        { id: 62, name: "New Mexico", seed: 10, region: "West", americanOdds: { r32: -129, s16: +1200, e8: +4000, f4: +8000, f2: +40000, champ: +100000 } },
+        { id: 63, name: "Michigan State", seed: 2, region: "West", americanOdds: { r32: -1657, s16: -260, e8: +113, f4: +650, f2: +860, champ: +3200 } },
+        { id: 64, name: "Bryant", seed: 15, region: "West", americanOdds: { r32: +1657, s16: +5000, e8: +10000, f4: +25000, f2: +50000, champ: +100000 } }
+    ];
+}
+
 // Initialize teams
 async function initializeTeams() {
     console.log('Initializing teams...');
     
     try {
-        // First try to load from localStorage
-        const savedTeams = await loadTeamsFromStorage();
+        // Try to load from localStorage first (only for purchase prices and team status)
+        const savedTeams = loadTeamsFromStorage();
+        
+        // Create a map of existing teams to preserve purchase prices and team status
+        const existingTeamsMap = {};
         if (savedTeams && savedTeams.length > 0) {
-            console.log('Found saved teams:', savedTeams.length);
-            auctionTeams = savedTeams;
-        } else {
-            // If no saved teams, try to get from team-odds
-            const teamOddsData = localStorage.getItem('teamOddsData');
-            if (teamOddsData) {
-                const parsedData = JSON.parse(teamOddsData);
-                if (parsedData && parsedData.length > 0) {
-                    console.log('Found team odds data:', parsedData.length);
-                    auctionTeams = parsedData.map(team => ({
-                        ...team,
-                        purchasePrice: team.purchasePrice || 0,
-                        isMyTeam: team.isMyTeam || false,
-                        isOpponentTeam: false
-                    }));
-                    console.log('Teams initialized from team-odds data:', auctionTeams.length);
-                } else {
-                    console.log('No valid team odds data found, using default teams');
-                    // Use default teams with converted odds
-                    auctionTeams = getDefaultTeams().map(team => {
-                        // Convert American odds to probabilities
-                        const odds = {
-                            r32: convertAmericanOddsToProbability(team.americanOdds.r32),
-                            s16: convertAmericanOddsToProbability(team.americanOdds.s16),
-                            e8: convertAmericanOddsToProbability(team.americanOdds.e8),
-                            f4: convertAmericanOddsToProbability(team.americanOdds.f4),
-                            f2: convertAmericanOddsToProbability(team.americanOdds.f2),
-                            champ: convertAmericanOddsToProbability(team.americanOdds.champ)
-                        };
-
-                        // Use championship odds as the win percentage
-                        const winPercentage = odds.champ;
-
-                        return {
-                            ...team,
-                            purchasePrice: 0,
-                            isMyTeam: false,
-                            isOpponentTeam: false,
-                            odds: odds,
-                            winPercentage: winPercentage,
-                            valuePercentage: winPercentage
-                        };
-                    });
-                }
-            } else {
-                console.log('No team data found, using default teams');
-                // Use default teams with converted odds
-                auctionTeams = getDefaultTeams().map(team => {
-                    // Convert American odds to probabilities
-                    const odds = {
-                        r32: convertAmericanOddsToProbability(team.americanOdds.r32),
-                        s16: convertAmericanOddsToProbability(team.americanOdds.s16),
-                        e8: convertAmericanOddsToProbability(team.americanOdds.e8),
-                        f4: convertAmericanOddsToProbability(team.americanOdds.f4),
-                        f2: convertAmericanOddsToProbability(team.americanOdds.f2),
-                        champ: convertAmericanOddsToProbability(team.americanOdds.champ)
-                    };
-
-                    // Use championship odds as the win percentage
-                    const winPercentage = odds.champ;
-
-                    return {
-                        ...team,
-                        purchasePrice: 0,
-                        isMyTeam: false,
-                        isOpponentTeam: false,
-                        odds: odds,
-                        winPercentage: winPercentage,
-                        valuePercentage: winPercentage
-                    };
-                });
-            }
+            savedTeams.forEach(team => {
+                existingTeamsMap[team.id] = {
+                    purchasePrice: team.purchasePrice || 0,
+                    isMyTeam: team.isMyTeam || false
+                };
+            });
         }
+        
+        // Start with default teams and their American odds
+        auctionTeams = getDefaultTeams().map(team => {
+            const existingTeam = existingTeamsMap[team.id];
+            return {
+                ...team,
+                purchasePrice: existingTeam ? existingTeam.purchasePrice : 0,
+                isMyTeam: existingTeam ? existingTeam.isMyTeam : false,
+                isOpponentTeam: false,
+                odds: {
+                    r32: 0, s16: 0, e8: 0, f4: 0, f2: 0, champ: 0
+                },
+                winPercentage: 0,
+                valuePercentage: 0
+            };
+        });
+
+        // Calculate implied probabilities and devig odds
+        calculateImpliedProbabilities();
         
         // Initialize other team arrays
         myTeams = auctionTeams.filter(team => team.isMyTeam);
@@ -139,30 +170,22 @@ async function initializeTeams() {
         console.log('Teams loaded:', auctionTeams.length);
         console.log('Using pot size for calculations:', (projectedPotSize > 0 ? projectedPotSize : estimatedPotSize));
     } catch (error) {
-        console.error('Error loading team odds data:', error);
+        console.error('Error initializing teams:', error);
     }
 }
 
-// Save teams data to localStorage and server
+// Save teams data to localStorage (only purchase prices and team status)
 async function saveTeamsToStorage() {
     try {
-        // Create a copy of teams with ALL necessary data
+        // Create a copy of teams with ONLY necessary data
         const teamsToSave = auctionTeams.map(team => ({
             id: team.id,
-            name: team.name,           // Include base team info
-            seed: team.seed,          // Include base team info
-            region: team.region,      // Include base team info
-            americanOdds: team.americanOdds,
-            odds: team.odds,
-            winPercentage: team.winPercentage,
-            valuePercentage: team.valuePercentage,
             purchasePrice: team.purchasePrice || 0,
             isMyTeam: team.isMyTeam || false
         }));
         
-        // Save to localStorage as a fallback
+        // Save to localStorage
         localStorage.setItem('calcuttaTeams', JSON.stringify(teamsToSave));
-        localStorage.setItem('teamOddsData', JSON.stringify(teamsToSave)); // Also save to teamOddsData
         console.log('Teams saved to localStorage');
         
         // Save to server if logged in
@@ -237,9 +260,6 @@ async function initializeApp() {
         // Update payout rules
         updatePayoutRules();
         
-        // Sync with team odds if available
-        syncWithTeamOdds();
-        
     } catch (error) {
         console.error('Error initializing application:', error);
     }
@@ -262,16 +282,6 @@ function initializeEventListeners() {
         if (resetAuctionBtn) {
             resetAuctionBtn.addEventListener('click', resetAuction);
             console.log('Added event listener to resetAuctionBtn');
-        }
-        
-        // Sync team odds button
-        const syncTeamOddsButton = document.getElementById('syncTeamOdds');
-        if (syncTeamOddsButton) {
-            syncTeamOddsButton.addEventListener('click', function() {
-                syncWithTeamOdds();
-                alert('Teams synced with latest odds data!');
-            });
-            console.log('Added event listener to sync team odds button');
         }
         
         // Payout rule inputs
@@ -398,9 +408,6 @@ function resetAuction() {
         
         // Save the reset teams to localStorage
         saveTeamsToStorage();
-        
-        // Sync with team odds to ensure we have the latest data
-        syncWithTeamOdds();
         
         alert('Auction has been reset.');
     }
@@ -627,31 +634,39 @@ function loadFromLocalStorage() {
 
 // Calculate team values based on payout rules and odds
 function calculateTeamValues() {
-    console.log('Calculating team values');
+    console.log('Calculating team values...');
     
-    try {
-        // Always use projected pot size if available, fall back to estimated pot size
-        const potSize = (projectedPotSize > 0 ? projectedPotSize : estimatedPotSize);
-        console.log('Using pot size for value calculations:', potSize);
-        
-        // Calculate team values based on win percentages
-        auctionTeams.forEach(team => {
-            team.valuePercentage = team.winPercentage;
-        });
-        
-        // Normalize value percentages to ensure they sum to 1
-        const totalValuePercentage = auctionTeams.reduce((sum, team) => sum + team.valuePercentage, 0);
-        
-        if (totalValuePercentage > 0) {
-            auctionTeams.forEach(team => {
-                team.valuePercentage = team.valuePercentage / totalValuePercentage;
-            });
+    // Use projected pot size if available, otherwise use estimated pot size
+    const potSize = projectedPotSize > 0 ? projectedPotSize : estimatedPotSize;
+    console.log('Using pot size:', potSize);
+    
+    // Calculate total win percentage (should sum to 1 since we're using devigged odds)
+    const totalWinPercentage = auctionTeams.reduce((sum, team) => sum + team.odds.champ, 0);
+    console.log('Total win percentage:', totalWinPercentage);
+    
+    // Calculate fair value for each team based on their championship probability
+    auctionTeams.forEach(team => {
+        // Use devigged championship odds for value calculation
+        team.valuePercentage = team.odds.champ;
+        team.fairValue = potSize * team.valuePercentage;
+    });
+    
+    // Calculate value metrics
+    auctionTeams.forEach(team => {
+        if (team.purchasePrice > 0) {
+            team.valueRatio = team.fairValue / team.purchasePrice;
+            team.valueGap = team.fairValue - team.purchasePrice;
+        } else {
+            team.valueRatio = 0;
+            team.valueGap = 0;
         }
-        
-        console.log('Team values calculated successfully');
-    } catch (error) {
-        console.error('Error calculating team values:', error);
-    }
+    });
+    
+    // Sort teams by value ratio (descending)
+    auctionTeams.sort((a, b) => b.valueRatio - a.valueRatio);
+    
+    // Update UI
+    updateUI();
 }
 
 // Update team categories
@@ -1273,108 +1288,6 @@ function calculateFairValue(team) {
     return team.valuePercentage * potSize;
 }
 
-// Synchronize with team odds data
-function syncWithTeamOdds() {
-    // Check if user has their own odds data first
-    const userTeamOddsData = localStorage.getItem(`teamOddsData_${getUserId()}`);
-    
-    // If no user-specific odds, use the default odds
-    const teamOddsData = userTeamOddsData || localStorage.getItem('teamOddsData');
-    
-    if (teamOddsData) {
-        try {
-            const oddsData = JSON.parse(teamOddsData);
-            console.log('Found team odds data:', oddsData.length);
-            
-            if (oddsData.length > 0) {
-                // Create a map of existing teams for quick lookup
-                const existingTeamsMap = {};
-                auctionTeams.forEach(team => {
-                    existingTeamsMap[team.id] = team;
-                });
-                
-                // Get base team data for reference
-                const baseTeams = getDefaultTeams();
-                const baseTeamsMap = {};
-                baseTeams.forEach(team => {
-                    baseTeamsMap[team.id] = team;
-                });
-                
-                // Update teams array with new odds data while preserving purchase prices, isMyTeam status,
-                // and ensuring base team info (name, seed, region) is always present
-                auctionTeams = oddsData.map(oddsTeam => {
-                    const existingTeam = existingTeamsMap[oddsTeam.id];
-                    const baseTeam = baseTeamsMap[oddsTeam.id];
-                    
-                    if (!baseTeam) {
-                        console.warn(`No base team found for ID ${oddsTeam.id}`);
-                        return null;
-                    }
-                    
-                    return {
-                        ...baseTeam, // Start with base team info (name, seed, region)
-                        ...oddsTeam, // Add odds data
-                        // Preserve or set purchase price and team status
-                        purchasePrice: existingTeam ? existingTeam.purchasePrice : (oddsTeam.purchasePrice || 0),
-                        isMyTeam: existingTeam ? existingTeam.isMyTeam : (oddsTeam.isMyTeam || false),
-                        // Ensure name, seed, and region are from base team data
-                        name: baseTeam.name,
-                        seed: baseTeam.seed,
-                        region: baseTeam.region
-                    };
-                }).filter(team => team !== null); // Remove any null entries
-                
-                // Recalculate team values
-                calculateTeamValues();
-                
-                // Update team categories
-                updateTeamCategories();
-                
-                // Update the UI
-                updateUI();
-                
-                // Save the updated teams to localStorage
-                saveTeamsToStorage();
-                
-                console.log('Teams synced with odds data:', auctionTeams.length);
-            } else {
-                console.warn('Team odds data is empty');
-            }
-        } catch (error) {
-            console.error('Error syncing with team odds data:', error);
-        }
-    } else {
-        console.warn('No team odds data found in localStorage');
-    }
-    
-    // Always ensure showProfits is true after syncing
-    showProfits = true;
-    
-    // Always ensure the table has the show-profits class
-    const table = document.querySelector('#teamTableBody').closest('table');
-    if (table) {
-        table.classList.add('show-profits');
-    }
-}
-
-// Helper function to get user ID
-function getUserId() {
-    // Try to get the user ID from localStorage
-    const userData = localStorage.getItem('userData');
-    if (userData) {
-        try {
-            const parsed = JSON.parse(userData);
-            return parsed.id || 'default';
-        } catch (e) {
-            console.error('Error parsing user data:', e);
-        }
-    }
-    return 'default';
-}
-
-// Check for team odds updates periodically
-setInterval(syncWithTeamOdds, 5000);
-
 // Filter teams based on current filters
 function filterTeams() {
     // Apply region filter
@@ -1535,7 +1448,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
 });
 
-// Add new function to fetch latest odds
+// Add new function to fetch latest odds (simplified to just re-initialize with default teams)
 function fetchLatestOdds() {
     console.log('Fetching latest odds...');
     isLoading = true;
@@ -1553,7 +1466,7 @@ function fetchLatestOdds() {
     }
     
     setTimeout(() => {
-        // Load the default teams with market odds
+        // Load the default teams
         auctionTeams = getDefaultTeams().map(team => ({
             ...team,
             purchasePrice: (currentTeams[team.id] ? currentTeams[team.id].purchasePrice : 0) || 0,
@@ -1583,7 +1496,7 @@ function fetchLatestOdds() {
         updateUI();
         
         // Show success message
-        showAlert('success', 'Teams loaded successfully!');
+        showAlert('success', 'Teams loaded with devigged odds!');
     }, 1000);
 }
 
@@ -1708,7 +1621,7 @@ function calculateImpliedProbabilities() {
     // Devig odds for each round
     devigRoundOdds();
     
-    // Update winPercentage and valuePercentage based on championship odds
+    // Update winPercentage and valuePercentage based on devigged championship odds
     auctionTeams.forEach(team => {
         team.winPercentage = team.odds.champ;
         team.valuePercentage = team.odds.champ;
