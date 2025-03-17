@@ -129,8 +129,7 @@ const checkPayment = async (req, res, next) => {
 
   // Skip payment check for these routes
   const publicPaths = [
-    '/',
-    '/home.html',
+    '/home.html',  // Remove '/' to prevent matching /index.html
     '/login.html',
     '/register.html',
     '/payment.html',
@@ -145,7 +144,7 @@ const checkPayment = async (req, res, next) => {
     '/js'
   ];
 
-  if (publicPaths.some(path => req.path.startsWith(path))) {
+  if (publicPaths.some(path => req.path === path || req.path.startsWith('/api/') && publicPaths.includes(req.path))) {
     console.log('Skipping payment check for public path:', req.path);
     return next();
   }
@@ -190,6 +189,11 @@ const checkPayment = async (req, res, next) => {
   }
 };
 
+// Root route handler - move this after the payment check middleware
+app.get('/', (req, res) => {
+  res.redirect('/home.html');
+});
+
 // Protected HTML routes
 const protectedPages = [
   'index.html',
@@ -200,14 +204,15 @@ const protectedPages = [
   'team-odds.html'
 ];
 
-// Apply payment check middleware before serving protected pages
-app.use((req, res, next) => {
-  const isProtectedPage = protectedPages.some(page => req.path === `/${page}`);
-  if (isProtectedPage) {
-    console.log('Protected page requested:', req.path);
-    return checkPayment(req, res, next);
+// Apply payment check middleware to ALL routes except public ones
+app.use(async (req, res, next) => {
+  // Skip if it's a public path
+  if (publicPaths.some(path => req.path === path || req.path.startsWith('/api/') && publicPaths.includes(req.path))) {
+    return next();
   }
-  next();
+  
+  // Apply payment check to everything else
+  return checkPayment(req, res, next);
 });
 
 // Serve protected pages
@@ -217,12 +222,6 @@ protectedPages.forEach(page => {
     res.set('Content-Type', 'text/html');
     res.sendFile(path.resolve(__dirname, page));
   });
-});
-
-// Root route handler
-app.get('/', (req, res) => {
-  res.set('Content-Type', 'text/html');
-  res.sendFile(path.resolve(__dirname, 'home.html'));
 });
 
 // Serve public HTML files
