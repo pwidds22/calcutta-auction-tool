@@ -992,7 +992,7 @@ function updateUI() {
     filteredTeams.forEach(team => {
         const row = document.createElement('tr');
         
-        // Add team info cells
+        // Team Info columns (first 3)
         const nameCell = document.createElement('td');
         nameCell.textContent = team.name;
         row.appendChild(nameCell);
@@ -1005,28 +1005,33 @@ function updateUI() {
         regionCell.textContent = team.region;
         row.appendChild(regionCell);
 
-        // Add odds cells for each round
+        // Odds columns (next 6)
         const rounds = ['r32', 's16', 'e8', 'f4', 'f2', 'champ'];
         rounds.forEach(round => {
-            // American odds input cell
             const oddsCell = document.createElement('td');
+            oddsCell.className = 'text-center';
+
+            // American odds input
             const oddsInput = document.createElement('input');
             oddsInput.type = 'text';
             oddsInput.className = 'form-control odds-input';
             oddsInput.value = team.americanOdds[round];
             oddsInput.dataset.teamId = team.id;
             oddsInput.dataset.round = round;
+
+            // Probability display
+            const probabilityDiv = document.createElement('div');
+            probabilityDiv.className = 'small text-muted mt-1';
+            probabilityDiv.id = `${team.id}_${round}_prob`;
+            probabilityDiv.textContent = (team.odds[round] * 100).toFixed(1) + '%';
+
             oddsCell.appendChild(oddsInput);
+            oddsCell.appendChild(probabilityDiv);
             row.appendChild(oddsCell);
         });
 
-        // Add probability cell for champion
-        const champProbCell = document.createElement('td');
-        champProbCell.textContent = (team.odds.champ * 100).toFixed(1) + '%';
-        champProbCell.id = `${team.id}_champ_prob`;
-        row.appendChild(champProbCell);
-
-        // Add purchase price cell
+        // Status columns (last 2)
+        // Purchase Price
         const priceCell = document.createElement('td');
         const priceInput = document.createElement('input');
         priceInput.type = 'number';
@@ -1037,7 +1042,7 @@ function updateUI() {
         priceCell.appendChild(priceInput);
         row.appendChild(priceCell);
 
-        // Add "My Team" checkbox cell
+        // My Team checkbox
         const myTeamCell = document.createElement('td');
         const myTeamCheckbox = document.createElement('input');
         myTeamCheckbox.type = 'checkbox';
