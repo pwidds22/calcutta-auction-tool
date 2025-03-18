@@ -133,16 +133,27 @@ router.post('/create-checkout-session', protect, async (req, res) => {
       // If a promo code is provided, validate it first
       if (req.body.promoCode) {
         try {
-          // Get the promotion code directly by ID
-          const promotionCode = await stripe.promotionCodes.retrieve(
-            'promo_1R3pWpGEojItVDJFounmBKyM'
-          );
+          // First try to find a promotion code
+          const promotionCodes = await stripe.promotionCodes.list({
+            code: req.body.promoCode,
+            active: true,
+            limit: 1
+          });
 
-          if (promotionCode && promotionCode.active) {
+          console.log('Searching for promotion code:', {
+            requestedCode: req.body.promoCode,
+            foundCodes: promotionCodes.data.length,
+            firstCode: promotionCodes.data[0]?.id || 'none'
+          });
+
+          if (promotionCodes.data.length > 0) {
+            const promotionCode = promotionCodes.data[0];
             console.log('Valid promotion code found:', {
               code: promotionCode.code,
               promoId: promotionCode.id,
-              couponId: promotionCode.coupon.id
+              couponId: promotionCode.coupon.id,
+              active: promotionCode.active,
+              valid: promotionCode.valid
             });
             
             // Use the promotion code directly
@@ -150,7 +161,38 @@ router.post('/create-checkout-session', protect, async (req, res) => {
               promotion_code: promotionCode.id
             }];
           } else {
-            throw new Error('Invalid or inactive promotion code');
+            // If no promotion code found, try to find a coupon
+            const coupons = await stripe.coupons.list({
+              limit: 100
+            });
+            
+            console.log('Searching for coupon:', {
+              requestedCode: req.body.promoCode,
+              totalCoupons: coupons.data.length
+            });
+
+            const matchingCoupon = coupons.data.find(
+              coupon => coupon.name?.toLowerCase() === req.body.promoCode.toLowerCase() ||
+                       coupon.id.toLowerCase() === req.body.promoCode.toLowerCase()
+            );
+
+            if (matchingCoupon) {
+              console.log('Valid coupon found:', {
+                code: req.body.promoCode,
+                couponId: matchingCoupon.id,
+                couponName: matchingCoupon.name,
+                valid: matchingCoupon.valid,
+                active: !matchingCoupon.deleted
+              });
+              sessionConfig.discounts = [{
+                coupon: matchingCoupon.id
+              }];
+            } else {
+              console.log('No valid promotion code or coupon found:', {
+                requestedCode: req.body.promoCode
+              });
+              throw new Error('Invalid or inactive promotion code');
+            }
           }
         } catch (promoErr) {
           console.error('Promotion code validation error:', {
