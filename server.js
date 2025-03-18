@@ -160,6 +160,7 @@ app.post('/api/payment/webhook', express.raw({type: 'application/json'}), async 
   let event;
 
   try {
+    // Use the raw body for signature verification
     event = stripe.webhooks.constructEvent(
       req.body,
       sig,
@@ -267,7 +268,10 @@ app.post('/api/payment/webhook', express.raw({type: 'application/json'}), async 
   }
 });
 
-// 2. Then register the regular routes
+// 2. Then register the JSON body parser for all other routes
+app.use(express.json());
+
+// 3. Register regular routes
 app.use('/api/auth', (req, res, next) => {
   console.log('Auth request:', {
     method: req.method,
@@ -278,7 +282,7 @@ app.use('/api/auth', (req, res, next) => {
   next();
 }, authRoutes);
 
-// 3. Register payment routes
+// 4. Register payment routes
 app.use('/api/payment', (req, res, next) => {
   console.log('Payment route hit:', {
     method: req.method,

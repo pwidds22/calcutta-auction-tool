@@ -104,7 +104,7 @@ router.post('/create-checkout-session', protect, async (req, res) => {
     // Create checkout session
     try {
       console.log('Creating Stripe checkout session for customer:', customer.id);
-      const session = await stripe.checkout.sessions.create({
+      const sessionConfig = {
         customer: customer.id,
         payment_method_types: ['card'],
         line_items: [
@@ -126,20 +126,25 @@ router.post('/create-checkout-session', protect, async (req, res) => {
         metadata: {
           userId: user.id
         },
-        // Add promo code if provided
-        ...(req.body.promoCode && {
-          discounts: [{
-            coupon: req.body.promoCode
-          }]
-        })
-      });
+        allow_promotion_codes: true // Enable promo code field
+      };
+
+      // Add promo code if provided
+      if (req.body.promoCode) {
+        sessionConfig.discounts = [{
+          coupon: req.body.promoCode
+        }];
+      }
+
+      const session = await stripe.checkout.sessions.create(sessionConfig);
 
       console.log('Successfully created checkout session:', {
         sessionId: session.id,
         userEmail: user.email,
         customerId: customer.id,
         successUrl: session.success_url,
-        cancelUrl: session.cancel_url
+        cancelUrl: session.cancel_url,
+        hasPromoCode: !!req.body.promoCode
       });
 
       res.json({
