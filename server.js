@@ -362,7 +362,14 @@ const checkPayment = async (req, res, next) => {
             return res.redirect('/login');
         }
 
+        // If user has not paid, check if they're on the payment success page
         if (!user.hasPaid) {
+            const isPaymentSuccess = req.path === '/payment-success' || req.path === '/payment-success.html';
+            if (isPaymentSuccess) {
+                console.log('User on payment success page, allowing access');
+                return next();
+            }
+            
             console.log('User has not paid, redirecting to payment');
             return res.redirect('/payment');
         }

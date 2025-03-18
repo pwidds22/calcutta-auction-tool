@@ -45,8 +45,7 @@ function getDefaultTeams() {
         { id: 13, name: "Akron", seed: 13, region: "East", americanOdds: { r32: +771.28, s16: +2100, e8: +25000, f4: +25000, f2: +50000, champ: +144492 } },
         { id: 14, name: "Montana", seed: 14, region: "East", americanOdds: { r32: +1513, s16: +10000, e8: +8000, f4: +25000, f2: +50000, champ: +144492 } },
         { id: 15, name: "Robert Morris", seed: 15, region: "East", americanOdds: { r32: +2319.59, s16: +15000, e8: +10000, f4: +25000, f2: +50000, champ: +144492 } },
-        { id: 16, name: "American", seed: 16, region: "East", americanOdds: { r32: +49900, s16: +8000, e8: +15000, f4: +25000, f2: +50000, champ: +144492 } },
-        { id: 17, name: "Mount St. Mary's", seed: 16, region: "East", americanOdds: { r32: +49900, s16: +8000, e8: +15000, f4: +25000, f2: +50000, champ: +144492 } },
+        { id: 16, name: "American/Mount St. Mary's", seed: 16, region: "East", americanOdds: { r32: +49900, s16: +8000, e8: +15000, f4: +25000, f2: +50000, champ: +144492 } },
 
         // Midwest Region
         { id: 33, name: "Houston", seed: 1, region: "Midwest", americanOdds: { r32: -16567, s16: -310, e8: -144, f4: +130, f2: +317, champ: +1056 } },
@@ -334,6 +333,13 @@ function initializeEventListeners() {
             console.log('Added event listener to saveSettingsBtn');
         }
         
+        // Save payout rules button
+        const savePayoutRulesBtn = document.getElementById('savePayoutRulesBtn');
+        if (savePayoutRulesBtn) {
+            savePayoutRulesBtn.addEventListener('click', savePayoutRules);
+            console.log('Added event listener to savePayoutRulesBtn');
+        }
+        
         // Reset auction button
         const resetAuctionBtn = document.getElementById('resetAuctionBtn');
         if (resetAuctionBtn) {
@@ -478,6 +484,8 @@ function resetProfitCache() {
 
 // Update payout rules
 function updatePayoutRules() {
+    console.log('Updating payout rules...');
+    
     // Get all payout values and convert to numbers, defaulting to 0 if invalid
     payoutRules.roundOf64 = parseFloat(document.getElementById('roundOf64').value) || 0;
     payoutRules.roundOf32 = parseFloat(document.getElementById('roundOf32').value) || 0;
@@ -489,6 +497,8 @@ function updatePayoutRules() {
     payoutRules.highestSeed = parseFloat(document.getElementById('highestSeed').value) || 0;
     payoutRules.largestMargin = parseFloat(document.getElementById('largestMargin').value) || 0;
     payoutRules.customProp = parseFloat(document.getElementById('customProp').value) || 0;
+    
+    console.log('Updated payout rules:', payoutRules);
     
     // Calculate round totals
     const r64total = payoutRules.roundOf64 * 32;
@@ -548,6 +558,8 @@ function updatePayoutRules() {
     
     // Update the UI
     updateUI();
+    
+    console.log('Payout rules updated successfully');
 }
 
 // Update pot size
@@ -567,12 +579,13 @@ async function saveSettings() {
         // Update pot size
         updatePotSize();
         
-        // Save to localStorage
+        // Save to localStorage first
         const settings = {
-            payoutRules,
-            estimatedPotSize
+            payoutRules: payoutRules,
+            estimatedPotSize: estimatedPotSize
         };
         localStorage.setItem('calcuttaSettings', JSON.stringify(settings));
+        console.log('Settings saved to localStorage:', settings);
         
         // Save to server if logged in
         if (isLoggedIn()) {
@@ -584,7 +597,7 @@ async function saveSettings() {
             
             const success = await saveUserData(userData);
             if (success) {
-                console.log('Settings saved to server');
+                console.log('Settings saved to server:', userData);
             } else {
                 console.error('Failed to save settings to server');
             }
@@ -596,7 +609,7 @@ async function saveSettings() {
         // Update UI
         updateUI();
         
-        console.log('Settings saved');
+        console.log('Settings saved successfully');
     } catch (error) {
         console.error('Error saving settings:', error);
     }
@@ -604,7 +617,110 @@ async function saveSettings() {
 
 // Load saved settings
 async function loadSavedSettings() {
-    // Set default values first
+    console.log('Loading saved settings...');
+    
+    // Try to load from server first if logged in
+    if (isLoggedIn()) {
+        try {
+            const userData = await loadUserData();
+            console.log('Loaded user data from server:', userData);
+            
+            if (userData) {
+                // Set payout rules from server data if available
+                if (userData.payoutRules) {
+                    payoutRules = userData.payoutRules;
+                    console.log('Loaded payout rules from server:', payoutRules);
+                    
+                    // Update UI with user's specific payout rules
+                    Object.keys(payoutRules).forEach(rule => {
+                        const input = document.getElementById(rule);
+                        if (input) {
+                            input.value = payoutRules[rule];
+                            console.log(`Updated input ${rule} with value ${payoutRules[rule]}`);
+                        }
+                    });
+                }
+                
+                // Set pot size from server data if available
+                if (userData.estimatedPotSize) {
+                    estimatedPotSize = userData.estimatedPotSize;
+                    potSize = estimatedPotSize;
+                    const estimatedPotSizeInput = document.getElementById('estimatedPotSize');
+                    if (estimatedPotSizeInput) {
+                        estimatedPotSizeInput.value = estimatedPotSize;
+                    }
+                }
+            } else {
+                console.log('No user data found on server, loading from localStorage');
+                loadFromLocalStorage();
+            }
+        } catch (error) {
+            console.error('Error loading user data:', error);
+            console.log('Falling back to localStorage');
+            loadFromLocalStorage();
+        }
+    } else {
+        console.log('User not logged in, loading from localStorage');
+        loadFromLocalStorage();
+    }
+    
+    // Ensure special categories are set to 0 in the UI if not already set
+    const specialCategories = ['biggestUpset', 'highestSeed', 'largestMargin', 'customProp'];
+    specialCategories.forEach(category => {
+        const input = document.getElementById(category);
+        if (input && (!payoutRules[category] || payoutRules[category] === 0)) {
+            input.value = '0';
+            payoutRules[category] = 0;
+        }
+    });
+    
+    // Update payout rules to reflect changes
+    updatePayoutRules();
+    console.log('Finished loading saved settings');
+}
+
+function loadFromLocalStorage() {
+    console.log('Loading settings from localStorage');
+    const savedSettings = localStorage.getItem('calcuttaSettings');
+    if (savedSettings) {
+        try {
+            const settings = JSON.parse(savedSettings);
+            console.log('Parsed localStorage settings:', settings);
+            
+            if (settings.payoutRules) {
+                payoutRules = settings.payoutRules;
+                console.log('Loaded payout rules from localStorage:', payoutRules);
+                
+                // Update UI with saved payout rules
+                Object.keys(payoutRules).forEach(rule => {
+                    const input = document.getElementById(rule);
+                    if (input) {
+                        input.value = payoutRules[rule];
+                        console.log(`Updated input ${rule} with value ${payoutRules[rule]}`);
+                    }
+                });
+            }
+            
+            if (settings.estimatedPotSize) {
+                estimatedPotSize = settings.estimatedPotSize;
+                potSize = estimatedPotSize;
+                const estimatedPotSizeInput = document.getElementById('estimatedPotSize');
+                if (estimatedPotSizeInput) {
+                    estimatedPotSizeInput.value = estimatedPotSize;
+                }
+            }
+        } catch (error) {
+            console.error('Error parsing saved settings:', error);
+            setDefaultValues();
+        }
+    } else {
+        console.log('No settings found in localStorage, using defaults');
+        setDefaultValues();
+    }
+}
+
+function setDefaultValues() {
+    console.log('Setting default values');
     payoutRules = {
         roundOf64: 0.50,
         roundOf32: 1.00,
@@ -620,72 +736,17 @@ async function loadSavedSettings() {
     estimatedPotSize = 10000;
     potSize = 10000;
     
-    // Try to load from server first if logged in
-    if (isLoggedIn()) {
-        try {
-            const userData = await loadUserData();
-            if (userData && userData.payoutRules) {
-                payoutRules = userData.payoutRules;
-                // Update UI with user's specific payout rules
-                Object.keys(payoutRules).forEach(rule => {
-                    const input = document.getElementById(rule);
-                    if (input) {
-                        input.value = payoutRules[rule];
-                    }
-                });
-            }
-            if (userData && userData.estimatedPotSize) {
-                estimatedPotSize = userData.estimatedPotSize;
-                potSize = estimatedPotSize;
-                document.getElementById('estimatedPotSize').value = estimatedPotSize;
-            }
-        } catch (error) {
-            console.error('Error loading user data:', error);
-            // Fall back to localStorage only if server load fails
-            loadFromLocalStorage();
-        }
-    } else {
-        loadFromLocalStorage();
-    }
-    
-    // Ensure special categories are set to 0 in the UI
-    const specialCategories = ['biggestUpset', 'highestSeed', 'largestMargin', 'customProp'];
-    specialCategories.forEach(category => {
-        const input = document.getElementById(category);
+    // Update UI with default values
+    Object.keys(payoutRules).forEach(rule => {
+        const input = document.getElementById(rule);
         if (input) {
-            input.value = '0';
-            payoutRules[category] = 0;
+            input.value = payoutRules[rule];
         }
     });
     
-    // Update payout rules to reflect changes
-    updatePayoutRules();
-}
-
-function loadFromLocalStorage() {
-    const savedSettings = localStorage.getItem('calcuttaSettings');
-    if (savedSettings) {
-        try {
-            const settings = JSON.parse(savedSettings);
-            if (settings.payoutRules) {
-                payoutRules = settings.payoutRules;
-                // Update UI with saved payout rules
-                Object.keys(payoutRules).forEach(rule => {
-                    const input = document.getElementById(rule);
-                    if (input) {
-                        input.value = payoutRules[rule];
-                    }
-                });
-            }
-            
-            if (settings.estimatedPotSize) {
-                estimatedPotSize = settings.estimatedPotSize;
-                potSize = estimatedPotSize;
-                document.getElementById('estimatedPotSize').value = estimatedPotSize;
-            }
-        } catch (error) {
-            console.error('Error parsing saved settings:', error);
-        }
+    const estimatedPotSizeInput = document.getElementById('estimatedPotSize');
+    if (estimatedPotSizeInput) {
+        estimatedPotSizeInput.value = estimatedPotSize;
     }
 }
 
@@ -1954,5 +2015,54 @@ function showAlert(type, message) {
         setTimeout(() => {
             alert.remove();
         }, 3000);
+    }
+}
+
+// Save payout rules
+async function savePayoutRules() {
+    try {
+        console.log('Saving payout rules...');
+        
+        // Update payout rules from inputs
+        updatePayoutRules();
+        
+        // Save to localStorage first
+        const settings = {
+            payoutRules: payoutRules,
+            estimatedPotSize: estimatedPotSize
+        };
+        localStorage.setItem('calcuttaSettings', JSON.stringify(settings));
+        console.log('Payout rules saved to localStorage:', settings);
+        
+        // Save to server if logged in
+        if (isLoggedIn()) {
+            const userData = {
+                teams: auctionTeams,
+                payoutRules: payoutRules,
+                estimatedPotSize: estimatedPotSize
+            };
+            
+            const success = await saveUserData(userData);
+            if (success) {
+                console.log('Payout rules saved to server:', userData);
+                showAlert('success', 'Payout rules saved successfully!');
+            } else {
+                console.error('Failed to save payout rules to server');
+                showAlert('danger', 'Failed to save payout rules. Please try again.');
+            }
+        } else {
+            showAlert('success', 'Payout rules saved successfully!');
+        }
+        
+        // Recalculate team values
+        calculateTeamValues();
+        
+        // Update UI
+        updateUI();
+        
+        console.log('Payout rules saved successfully');
+    } catch (error) {
+        console.error('Error saving payout rules:', error);
+        showAlert('danger', 'Error saving payout rules. Please try again.');
     }
 }
