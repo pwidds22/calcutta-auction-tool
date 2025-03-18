@@ -133,28 +133,50 @@ router.post('/create-checkout-session', protect, async (req, res) => {
       // If a promo code is provided, validate it first
       if (req.body.promoCode) {
         try {
-          // Verify the promotion code exists and is valid
-          const promotionCode = await stripe.promotionCodes.list({
+          // First try to find a promotion code
+          const promotionCodes = await stripe.promotionCodes.list({
             code: req.body.promoCode,
             active: true,
             limit: 1
           });
 
-          if (promotionCode.data.length > 0) {
+          if (promotionCodes.data.length > 0) {
             console.log('Valid promotion code found:', {
               code: req.body.promoCode,
-              couponId: promotionCode.data[0].coupon.id
+              promoId: promotionCodes.data[0].id,
+              couponId: promotionCodes.data[0].coupon.id
             });
+            // Use the promotion code directly
             sessionConfig.discounts = [{
-              promotion_code: promotionCode.data[0].id
+              promotion_code: promotionCodes.data[0].id
             }];
           } else {
-            throw new Error('Invalid or inactive promotion code');
+            // If no promotion code found, try to find a coupon
+            const coupons = await stripe.coupons.list({
+              limit: 1
+            });
+            
+            const matchingCoupon = coupons.data.find(
+              coupon => coupon.name?.toLowerCase() === req.body.promoCode.toLowerCase()
+            );
+
+            if (matchingCoupon) {
+              console.log('Valid coupon found:', {
+                code: req.body.promoCode,
+                couponId: matchingCoupon.id
+              });
+              sessionConfig.discounts = [{
+                coupon: matchingCoupon.id
+              }];
+            } else {
+              throw new Error('Invalid or inactive promotion code');
+            }
           }
         } catch (promoErr) {
           console.error('Promotion code validation error:', {
             code: req.body.promoCode,
-            error: promoErr.message
+            error: promoErr.message,
+            stack: promoErr.stack
           });
           return res.status(400).json({
             success: false,
