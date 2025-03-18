@@ -81,13 +81,32 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ email, password }),
+                    credentials: 'include'  // Important: Include credentials
                 });
 
-                if (response.ok) {
-                    window.location.href = '/payment.html';
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    // Store the token in cookie if it's not already set by the server
+                    if (data.token && !document.cookie.includes('token=')) {
+                        const options = {
+                            path: '/',
+                            secure: window.location.protocol === 'https:',
+                            sameSite: 'Lax'
+                        };
+                        document.cookie = `token=${data.token}; ${Object.entries(options).map(([k, v]) => `${k}=${v}`).join('; ')}`;
+                    }
+                    
+                    // Log the token status
+                    console.log('Registration successful, token status:', {
+                        tokenInResponse: !!data.token,
+                        cookieExists: document.cookie.includes('token=')
+                    });
+                    
+                    // Redirect to payment route (not the HTML file)
+                    window.location.href = '/payment';
                 } else {
-                    const data = await response.json();
                     alert(data.message || 'Registration failed. Please try again.');
                 }
             } catch (error) {

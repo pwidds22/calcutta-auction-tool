@@ -260,8 +260,8 @@ const sendTokenResponse = (user, statusCode, res, req) => {
 
   const options = {
     expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-    httpOnly: true,
-    secure: true,
+    httpOnly: false, // Allow JavaScript access for client-side token handling
+    secure: process.env.NODE_ENV === 'production',
     sameSite: 'Lax',
     path: '/'
   };
@@ -275,12 +275,19 @@ const sendTokenResponse = (user, statusCode, res, req) => {
     }
   }
 
+  // Log cookie being set
+  console.log('Setting auth token cookie:', {
+    host: req.get('host'),
+    options,
+    tokenLength: token.length
+  });
+
   res
     .status(statusCode)
     .cookie('token', token, options)
     .json({
       success: true,
-      token,
+      token, // Include token in response for client-side handling
       user: {
         id: user._id,
         email: user.email,

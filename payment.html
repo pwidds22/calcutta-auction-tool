@@ -75,31 +75,109 @@
                 <button id="payButton" class="btn btn-primary btn-lg px-5">
                     Pay Now
                 </button>
+                <div id="errorMessage" class="alert alert-danger mt-3" style="display: none;"></div>
             </div>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
     <script>
+        // Function to parse cookies
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+
+        // Function to check authentication and redirect if needed
+        function checkAuth() {
+            const token = getCookie('token');
+            console.log('Checking authentication:', {
+                hasToken: !!token,
+                cookieString: document.cookie,
+                tokenLength: token ? token.length : 0
+            });
+            
+            if (!token) {
+                console.log('No token found, will redirect to login');
+                return false;
+            }
+            console.log('Token found, proceeding with payment');
+            return true;
+        }
+
+        // Check auth on page load with a small delay to allow cookies to be set
+        window.addEventListener('load', () => {
+            console.log('Page loaded, checking authentication...');
+            setTimeout(() => {
+                if (!checkAuth()) {
+                    console.log('No authentication token found after delay, redirecting to login');
+                    window.location.href = '/login';
+                }
+            }, 250);  // 250ms delay
+        });
+
         document.getElementById('payButton').addEventListener('click', async () => {
+            if (!checkAuth()) {
+                return;
+            }
+
+            const button = document.getElementById('payButton');
+            const errorDiv = document.getElementById('errorMessage');
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            errorDiv.style.display = 'none';
+
             const promoCode = document.getElementById('promoCode').value.trim();
             try {
+                const token = getCookie('token');
+                if (!token) {
+                    throw new Error('Not authenticated. Please log in again.');
+                }
+
                 const response = await fetch('/api/payment/create-checkout-session', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ promoCode })
+                    body: JSON.stringify({ promoCode }),
+                    credentials: 'include'
                 });
+
+                if (!response.ok) {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const data = await response.json();
+                        throw new Error(data.message || 'Payment session creation failed');
+                    } else {
+                        const text = await response.text();
+                        console.error('Non-JSON response:', text);
+                        throw new Error('Unexpected server response. Please try again.');
+                    }
+                }
+                
                 const data = await response.json();
-                if (data.success) {
+                
+                if (data.success && data.url) {
                     window.location.href = data.url;
                 } else {
-                    alert(data.message || 'Error creating payment session');
+                    throw new Error(data.message || 'Error creating payment session');
                 }
             } catch (error) {
-                console.error('Error:', error);
-                alert('An error occurred. Please try again.');
+                console.error('Payment error:', error);
+                errorDiv.textContent = error.message || 'An error occurred while processing your payment. Please try again or contact support if the issue persists.';
+                errorDiv.style.display = 'block';
+                button.disabled = false;
+                button.innerHTML = 'Pay Now';
+
+                // If not authenticated, redirect to login
+                if (error.message.includes('Not authenticated')) {
+                    setTimeout(() => {
+                        window.location.href = '/login';
+                    }, 2000);
+                }
             }
         });
     </script>

@@ -11,85 +11,11 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 // Initialize express app
 const app = express();
 
-// Raw body for Stripe webhooks
-app.post('/api/payment/webhook', express.raw({type: 'application/json'}), async (req, res) => {
-  console.log('\nWebhook received:', {
-    headers: req.headers,
-    body: req.body.toString().substring(0, 200) // Log first 200 chars of body
-  });
-
-  const sig = req.headers['stripe-signature'];
-  let event;
-
-  try {
-    event = stripe.webhooks.constructEvent(
-      req.body,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET
-    );
-    console.log('Webhook event constructed successfully:', event.type);
-  } catch (err) {
-    console.error('Webhook signature verification failed:', err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-
-  // Handle successful payment
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    console.log('\nProcessing checkout session:', {
-      id: session.id,
-      customerEmail: session.customer_email,
-      customerDetails: session.customer_details,
-      metadata: session.metadata
-    });
-    
-    try {
-      // Get the email from the session
-      const stripeEmail = session.customer_email || (session.customer_details && session.customer_details.email);
-      console.log('Stripe email:', stripeEmail);
-      
-      if (!stripeEmail) {
-        console.error('No email found in session data');
-        return res.status(400).json({ success: false, error: 'No email found in session data' });
-      }
-      
-      // Try to find the user by the email from Stripe
-      let user = await User.findOne({ email: stripeEmail });
-      
-      // If no user found with the Stripe email, check if there's a recent user with unpaid status
-      if (!user) {
-        console.log(`No user found with Stripe email ${stripeEmail}, checking for recent unpaid users...`);
-        
-        // Look for users created in the last hour who haven't paid yet
-        const recentUsers = await User.find({ 
-          hasPaid: false,
-          createdAt: { $gt: new Date(Date.now() - 60 * 60 * 1000) } // Last hour
-        }).sort({ createdAt: -1 }); // Most recent first
-        
-        if (recentUsers.length > 0) {
-          user = recentUsers[0]; // Use the most recently created unpaid user
-          console.log(`Using most recent unpaid user: ${user.email} (created at ${user.createdAt})`);
-        } else {
-          console.error('No recent unpaid users found');
-        }
-      }
-      
-      if (user) {
-        user.hasPaid = true;
-        user.paymentDate = new Date();
-        await user.save();
-        console.log(`User ${user.email} marked as paid`);
-      } else {
-        console.error(`Could not find a user to mark as paid`);
-      }
-    } catch (err) {
-      console.error('Error updating user payment status:', err);
-      return res.status(500).json({ success: false });
-    }
-  }
-
-  res.json({ received: true });
-});
+// Import routes
+const authRoutes = require('./routes/auth');
+const userDataRoutes = require('./routes/userData');
+const blogRoutes = require('./routes/blog');
+const paymentRoutes = require('./routes/payment');
 
 // Middleware
 app.use(express.json());
@@ -103,23 +29,34 @@ const allowedOrigins = [
   'http://127.0.0.1:3000',  // development alternative port
   'https://calcutta-auction-tool.onrender.com',  // production
   'https://calcuttagenius.com',  // custom domain
-  'http://calcuttagenius.com'  // custom domain without https
+  'http://calcuttagenius.com',   // custom domain without https
+  'https://www.calcuttagenius.com',  // www subdomain
+  'http://www.calcuttagenius.com'    // www subdomain without https
 ];
 
+// CORS middleware
 app.use(cors({
   origin: function(origin, callback) {
+    console.log('CORS request from origin:', origin);
+    
     // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin || process.env.NODE_ENV === 'development') return callback(null, true);
+    if (!origin || process.env.NODE_ENV === 'development') {
+      console.log('Allowing request with no origin or in development mode');
+      return callback(null, true);
+    }
     
     if (allowedOrigins.indexOf(origin) === -1) {
+      console.log('Origin not allowed:', origin);
       const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
       return callback(new Error(msg), false);
     }
+    
+    console.log('Origin allowed:', origin);
     return callback(null, true);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With'],
   exposedHeaders: ['set-cookie']
 }));
 
@@ -184,12 +121,126 @@ app.use('/css', express.static(path.join(__dirname, 'css')));
 app.use('/img', express.static(path.join(__dirname, 'img')));
 app.use('/js', express.static(path.join(__dirname, 'js')));
 
-// Import routes
-const authRoutes = require('./routes/auth');
-const userDataRoutes = require('./routes/userData');
-const blogRoutes = require('./routes/blog');
+// Use routes - Important: Order matters!
+// 1. First, register the raw body parser route for Stripe webhook
+app.post('/api/payment/webhook', express.raw({type: 'application/json'}), async (req, res) => {
+  console.log('\nWebhook received:', {
+    type: req.headers['stripe-signature'] ? 'Signed' : 'Unsigned',
+    timestamp: new Date().toISOString()
+  });
 
-// Use routes
+  const sig = req.headers['stripe-signature'];
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+    console.log('Webhook event constructed successfully:', {
+      type: event.type,
+      id: event.id,
+      timestamp: new Date(event.created * 1000).toISOString()
+    });
+  } catch (err) {
+    console.error('Webhook signature verification failed:', {
+      error: err.message,
+      signature: sig ? sig.substring(0, 20) + '...' : 'missing'
+    });
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // Handle successful payment
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    console.log('\nProcessing completed checkout session:', {
+      id: session.id,
+      customerEmail: session.customer_email,
+      amount: session.amount_total,
+      currency: session.currency,
+      timestamp: new Date().toISOString()
+    });
+    
+    try {
+      // Get the email from the session
+      const stripeEmail = session.customer_email || (session.customer_details && session.customer_details.email);
+      console.log('Looking up user by Stripe email:', stripeEmail);
+      
+      if (!stripeEmail) {
+        console.error('No email found in session data:', {
+          sessionId: session.id,
+          hasCustomerDetails: !!session.customer_details
+        });
+        return res.status(400).json({ success: false, error: 'No email found in session data' });
+      }
+      
+      // Try to find the user by the email from Stripe
+      let user = await User.findOne({ email: stripeEmail });
+      
+      // If no user found with the Stripe email, check if there's a recent user with unpaid status
+      if (!user) {
+        console.log('No user found with Stripe email, checking recent unpaid users:', {
+          stripeEmail,
+          timestamp: new Date().toISOString()
+        });
+        
+        // Look for users created in the last hour who haven't paid yet
+        const recentUsers = await User.find({ 
+          hasPaid: false,
+          createdAt: { $gt: new Date(Date.now() - 60 * 60 * 1000) } // Last hour
+        }).sort({ createdAt: -1 }); // Most recent first
+        
+        if (recentUsers.length > 0) {
+          user = recentUsers[0]; // Use the most recently created unpaid user
+          console.log('Found recent unpaid user:', {
+            email: user.email,
+            createdAt: user.createdAt,
+            timeSinceCreation: Math.round((Date.now() - user.createdAt) / 1000 / 60) + ' minutes'
+          });
+        } else {
+          console.error('No recent unpaid users found');
+        }
+      }
+      
+      if (user) {
+        user.hasPaid = true;
+        user.paymentDate = new Date();
+        await user.save();
+        console.log('Successfully marked user as paid:', {
+          email: user.email,
+          paymentDate: user.paymentDate,
+          sessionId: session.id
+        });
+      } else {
+        console.error('Could not find a user to mark as paid:', {
+          sessionId: session.id,
+          stripeEmail,
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      res.json({ received: true });
+    } catch (err) {
+      console.error('Error processing webhook:', {
+        error: err.message,
+        sessionId: session.id,
+        timestamp: new Date().toISOString()
+      });
+      return res.status(500).json({ success: false });
+    }
+  } else {
+    // Handle other event types
+    console.log('Received webhook event:', {
+      type: event.type,
+      id: event.id,
+      timestamp: new Date().toISOString()
+    });
+    res.json({ received: true });
+  }
+});
+
+// 2. Then register the regular routes
 app.use('/api/auth', (req, res, next) => {
   console.log('Auth request:', {
     method: req.method,
@@ -199,6 +250,19 @@ app.use('/api/auth', (req, res, next) => {
   });
   next();
 }, authRoutes);
+
+// 3. Register payment routes
+app.use('/api/payment', (req, res, next) => {
+  console.log('Payment route hit:', {
+    method: req.method,
+    path: req.path,
+    url: req.url,
+    body: req.body,
+    cookies: req.cookies?.token ? 'token present' : 'no token',
+    auth: req.headers.authorization ? 'auth present' : 'no auth'
+  });
+  next();
+}, paymentRoutes);
 
 app.use('/api/data', userDataRoutes);
 app.use('/blog', blogRoutes);
@@ -317,8 +381,20 @@ app.get(['/register', '/register.html'], (req, res) => {
 });
 
 app.get(['/payment', '/payment.html'], async (req, res) => {
+    console.log('\nAccessing payment page:', {
+        hasToken: !!req.cookies?.token,
+        tokenValue: req.cookies?.token ? req.cookies.token.substring(0, 20) + '...' : 'missing',
+        url: req.url,
+        method: req.method,
+        headers: {
+            cookie: req.headers.cookie ? 'present' : 'missing',
+            authorization: req.headers.authorization ? 'present' : 'missing'
+        }
+    });
+
     if (!req.cookies.token) {
-        return res.redirect('/home');
+        console.log('No token found, redirecting to login');
+        return res.redirect('/login');
     }
 
     try {
@@ -327,7 +403,8 @@ app.get(['/payment', '/payment.html'], async (req, res) => {
         const user = await User.findById(decoded.id);
 
         if (!user) {
-            return res.redirect('/home');
+            console.log('User not found, redirecting to login');
+            return res.redirect('/login');
         }
 
         // If user has already paid, redirect to auction
@@ -336,10 +413,27 @@ app.get(['/payment', '/payment.html'], async (req, res) => {
             return res.redirect('/auction');
         }
 
+        // Set a fresh token cookie before serving the page
+        const newToken = user.getSignedJwtToken();
+        res.cookie('token', newToken, {
+            httpOnly: false, // Allow JavaScript access
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Lax',
+            path: '/',
+            expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
+        });
+
+        console.log('Serving payment page for user:', {
+            email: user.email,
+            tokenSet: true,
+            newTokenLength: newToken.length
+        });
+
+        // Serve the payment page
         res.sendFile(path.resolve(__dirname, 'payment.html'));
     } catch (err) {
         console.error('Payment page error:', err);
-        res.redirect('/home');
+        res.redirect('/login');
     }
 });
 
