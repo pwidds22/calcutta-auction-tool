@@ -126,14 +126,41 @@ router.post('/create-checkout-session', protect, async (req, res) => {
         metadata: {
           userId: user.id
         },
-        allow_promotion_codes: true // Enable promo code field
+        allow_promotion_codes: true, // Enable promo code field
+        automatic_tax: { enabled: false }
       };
 
-      // Add promo code if provided
+      // If a promo code is provided, validate it first
       if (req.body.promoCode) {
-        sessionConfig.discounts = [{
-          coupon: req.body.promoCode
-        }];
+        try {
+          // Verify the promotion code exists and is valid
+          const promotionCode = await stripe.promotionCodes.list({
+            code: req.body.promoCode,
+            active: true,
+            limit: 1
+          });
+
+          if (promotionCode.data.length > 0) {
+            console.log('Valid promotion code found:', {
+              code: req.body.promoCode,
+              couponId: promotionCode.data[0].coupon.id
+            });
+            sessionConfig.discounts = [{
+              promotion_code: promotionCode.data[0].id
+            }];
+          } else {
+            throw new Error('Invalid or inactive promotion code');
+          }
+        } catch (promoErr) {
+          console.error('Promotion code validation error:', {
+            code: req.body.promoCode,
+            error: promoErr.message
+          });
+          return res.status(400).json({
+            success: false,
+            message: 'Invalid promotion code. Please check and try again.'
+          });
+        }
       }
 
       const session = await stripe.checkout.sessions.create(sessionConfig);
@@ -144,7 +171,8 @@ router.post('/create-checkout-session', protect, async (req, res) => {
         customerId: customer.id,
         successUrl: session.success_url,
         cancelUrl: session.cancel_url,
-        hasPromoCode: !!req.body.promoCode
+        hasPromoCode: !!req.body.promoCode,
+        promoCode: req.body.promoCode || 'none'
       });
 
       res.json({
