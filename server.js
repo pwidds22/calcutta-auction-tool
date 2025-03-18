@@ -621,11 +621,17 @@ app.get('/', async (req, res) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const user = await User.findById(decoded.id);
 
-        if (!user || !user.hasPaid) {
+        if (!user) {
             return res.redirect('/home');
         }
 
-        res.redirect('/auction');
+        // If user is authenticated and has paid, redirect to auction
+        if (user.hasPaid) {
+            return res.redirect('/auction');
+        }
+
+        // If user is authenticated but hasn't paid, redirect to payment
+        return res.redirect('/payment');
     } catch (err) {
         console.error('Root route error:', err);
         res.redirect('/home');
