@@ -69,13 +69,11 @@
                 </ul>
             </div>
             <div class="text-center">
-                <div class="mb-3">
-                    <input type="text" id="promoCode" class="form-control" placeholder="Enter promo code (optional)">
-                </div>
                 <button id="payButton" class="btn btn-primary btn-lg px-5">
                     Pay Now
                 </button>
                 <div id="errorMessage" class="alert alert-danger mt-3" style="display: none;"></div>
+                <p class="mt-3 text-muted small">You'll be redirected to our secure payment page where you can enter any promotional codes.</p>
             </div>
         </div>
     </div>
@@ -129,7 +127,6 @@
             button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
             errorDiv.style.display = 'none';
 
-            const promoCode = document.getElementById('promoCode').value.trim();
             try {
                 const token = getCookie('token');
                 if (!token) {
@@ -142,7 +139,6 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ promoCode }),
                     credentials: 'include'
                 });
 
