@@ -126,86 +126,9 @@ router.post('/create-checkout-session', protect, async (req, res) => {
         metadata: {
           userId: user.id
         },
-        allow_promotion_codes: true, // Enable promo code field
+        allow_promotion_codes: true, // Stripe will handle promo codes automatically
         automatic_tax: { enabled: false }
       };
-
-      // If a promo code is provided, validate it first
-      if (req.body.promoCode) {
-        try {
-          // First try to find a promotion code
-          const promotionCodes = await stripe.promotionCodes.list({
-            code: req.body.promoCode,
-            active: true,
-            limit: 1
-          });
-
-          console.log('Searching for promotion code:', {
-            requestedCode: req.body.promoCode,
-            foundCodes: promotionCodes.data.length,
-            firstCode: promotionCodes.data[0]?.id || 'none'
-          });
-
-          if (promotionCodes.data.length > 0) {
-            const promotionCode = promotionCodes.data[0];
-            console.log('Valid promotion code found:', {
-              code: promotionCode.code,
-              promoId: promotionCode.id,
-              couponId: promotionCode.coupon.id,
-              active: promotionCode.active,
-              valid: promotionCode.valid
-            });
-            
-            // Use the promotion code directly
-            sessionConfig.discounts = [{
-              promotion_code: promotionCode.id
-            }];
-          } else {
-            // If no promotion code found, try to find a coupon
-            const coupons = await stripe.coupons.list({
-              limit: 100
-            });
-            
-            console.log('Searching for coupon:', {
-              requestedCode: req.body.promoCode,
-              totalCoupons: coupons.data.length
-            });
-
-            const matchingCoupon = coupons.data.find(
-              coupon => coupon.name?.toLowerCase() === req.body.promoCode.toLowerCase() ||
-                       coupon.id.toLowerCase() === req.body.promoCode.toLowerCase()
-            );
-
-            if (matchingCoupon) {
-              console.log('Valid coupon found:', {
-                code: req.body.promoCode,
-                couponId: matchingCoupon.id,
-                couponName: matchingCoupon.name,
-                valid: matchingCoupon.valid,
-                active: !matchingCoupon.deleted
-              });
-              sessionConfig.discounts = [{
-                coupon: matchingCoupon.id
-              }];
-            } else {
-              console.log('No valid promotion code or coupon found:', {
-                requestedCode: req.body.promoCode
-              });
-              throw new Error('Invalid or inactive promotion code');
-            }
-          }
-        } catch (promoErr) {
-          console.error('Promotion code validation error:', {
-            code: req.body.promoCode,
-            error: promoErr.message,
-            stack: promoErr.stack
-          });
-          return res.status(400).json({
-            success: false,
-            message: 'Invalid promotion code. Please check and try again.'
-          });
-        }
-      }
 
       const session = await stripe.checkout.sessions.create(sessionConfig);
 
@@ -214,9 +137,7 @@ router.post('/create-checkout-session', protect, async (req, res) => {
         userEmail: user.email,
         customerId: customer.id,
         successUrl: session.success_url,
-        cancelUrl: session.cancel_url,
-        hasPromoCode: !!req.body.promoCode,
-        promoCode: req.body.promoCode || 'none'
+        cancelUrl: session.cancel_url
       });
 
       res.json({
