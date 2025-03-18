@@ -189,45 +189,6 @@ router.post('/create-checkout-session', protect, async (req, res) => {
   }
 });
 
-// @route   POST api/payment/webhook
-// @desc    Handle Stripe webhook events
-// @access  Public
-router.post('/webhook', express.raw({type: 'application/json'}), async (req, res) => {
-  const sig = req.headers['stripe-signature'];
-  let event;
-
-  try {
-    event = stripe.webhooks.constructEvent(
-      req.body,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET
-    );
-  } catch (err) {
-    console.error('Webhook signature verification failed:', err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-
-  // Handle successful payment
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    const userId = session.metadata.userId;
-
-    try {
-      const user = await User.findById(userId);
-      if (user) {
-        user.hasPaid = true;
-        user.paymentDate = new Date();
-        await user.save();
-      }
-    } catch (err) {
-      console.error('Error updating user payment status:', err);
-      return res.status(500).json({ success: false });
-    }
-  }
-
-  res.json({ received: true });
-});
-
 // @route   GET api/payment/status
 // @desc    Get user's payment status
 // @access  Private

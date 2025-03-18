@@ -44,6 +44,124 @@ const userDataRoutes = require('./routes/userData');
 const blogRoutes = require('./routes/blog');
 const paymentRoutes = require('./routes/payment');
 
+// Register the webhook route first, before any body parsers
+app.post('/api/payment/webhook', express.raw({type: 'application/json'}), async (req, res) => {
+  console.log('\nWebhook received:', {
+    type: req.headers['stripe-signature'] ? 'Signed' : 'Unsigned',
+    timestamp: new Date().toISOString()
+  });
+
+  const sig = req.headers['stripe-signature'];
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+    console.log('Webhook event constructed successfully:', {
+      type: event.type,
+      id: event.id,
+      timestamp: new Date(event.created * 1000).toISOString()
+    });
+  } catch (err) {
+    console.error('Webhook signature verification failed:', {
+      error: err.message,
+      signature: sig ? sig.substring(0, 20) + '...' : 'missing'
+    });
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // Handle successful payment
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    console.log('\nProcessing completed checkout session:', {
+      id: session.id,
+      customerEmail: session.customer_email,
+      amount: session.amount_total,
+      currency: session.currency,
+      timestamp: new Date().toISOString()
+    });
+    
+    try {
+      // Get the email from the session
+      const stripeEmail = session.customer_email || (session.customer_details && session.customer_details.email);
+      console.log('Looking up user by Stripe email:', stripeEmail);
+      
+      if (!stripeEmail) {
+        console.error('No email found in session data:', {
+          sessionId: session.id,
+          hasCustomerDetails: !!session.customer_details
+        });
+        return res.status(400).json({ success: false, error: 'No email found in session data' });
+      }
+      
+      // Try to find the user by the email from Stripe
+      let user = await User.findOne({ email: stripeEmail });
+      
+      // If no user found with the Stripe email, check if there's a recent user with unpaid status
+      if (!user) {
+        console.log('No user found with Stripe email, checking recent unpaid users:', {
+          stripeEmail,
+          timestamp: new Date().toISOString()
+        });
+        
+        // Look for users created in the last hour who haven't paid yet
+        const recentUsers = await User.find({ 
+          hasPaid: false,
+          createdAt: { $gt: new Date(Date.now() - 60 * 60 * 1000) } // Last hour
+        }).sort({ createdAt: -1 }); // Most recent first
+        
+        if (recentUsers.length > 0) {
+          user = recentUsers[0]; // Use the most recently created unpaid user
+          console.log('Found recent unpaid user:', {
+            email: user.email,
+            createdAt: user.createdAt,
+            timeSinceCreation: Math.round((Date.now() - user.createdAt) / 1000 / 60) + ' minutes'
+          });
+        } else {
+          console.error('No recent unpaid users found');
+        }
+      }
+      
+      if (user) {
+        user.hasPaid = true;
+        user.paymentDate = new Date();
+        await user.save();
+        console.log('Successfully marked user as paid:', {
+          email: user.email,
+          paymentDate: user.paymentDate,
+          sessionId: session.id
+        });
+      } else {
+        console.error('Could not find a user to mark as paid:', {
+          sessionId: session.id,
+          stripeEmail,
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      res.json({ received: true });
+    } catch (err) {
+      console.error('Error processing webhook:', {
+        error: err.message,
+        sessionId: session.id,
+        timestamp: new Date().toISOString()
+      });
+      return res.status(500).json({ success: false });
+    }
+  } else {
+    // Handle other event types
+    console.log('Received webhook event:', {
+      type: event.type,
+      id: event.id,
+      timestamp: new Date().toISOString()
+    });
+    res.json({ received: true });
+  }
+});
+
 // Middleware
 app.use(express.json());
 app.use(cookieParser());
