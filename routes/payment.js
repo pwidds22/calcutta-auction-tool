@@ -40,14 +40,23 @@ router.post('/create-checkout-session', protect, async (req, res) => {
     hasAuthHeader: !!req.headers.authorization,
     authHeader: req.headers.authorization ? req.headers.authorization.substring(0, 20) + '...' : 'missing',
     origin: req.headers.origin,
-    host: req.headers.host
+    host: req.headers.host,
+    stripeKey: process.env.STRIPE_SECRET_KEY ? 'present' : 'missing',
+    nodeEnv: process.env.NODE_ENV
   });
 
   try {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error('Stripe secret key is not configured');
+    }
+
     const user = await User.findById(req.user.id);
 
     if (!user) {
-      console.error('User not found:', req.user.id);
+      console.error('User not found:', {
+        userId: req.user.id,
+        userEmail: req.user.email
+      });
       return res.status(404).json({
         success: false,
         message: 'User not found. Please try logging in again.'
@@ -66,8 +75,10 @@ router.post('/create-checkout-session', protect, async (req, res) => {
     let customer;
     try {
       if (user.stripeCustomerId) {
+        console.log('Retrieving existing Stripe customer:', user.stripeCustomerId);
         customer = await stripe.customers.retrieve(user.stripeCustomerId);
       } else {
+        console.log('Creating new Stripe customer for:', user.email);
         customer = await stripe.customers.create({
           email: user.email,
           metadata: {
@@ -78,7 +89,12 @@ router.post('/create-checkout-session', protect, async (req, res) => {
         await user.save();
       }
     } catch (stripeErr) {
-      console.error('Stripe customer error:', stripeErr);
+      console.error('Stripe customer error:', {
+        error: stripeErr.message,
+        type: stripeErr.type,
+        code: stripeErr.code,
+        userEmail: user.email
+      });
       return res.status(500).json({
         success: false,
         message: 'Error processing payment. Please try again or contact support.'
@@ -87,6 +103,7 @@ router.post('/create-checkout-session', protect, async (req, res) => {
 
     // Create checkout session
     try {
+      console.log('Creating Stripe checkout session for customer:', customer.id);
       const session = await stripe.checkout.sessions.create({
         customer: customer.id,
         payment_method_types: ['card'],
@@ -117,10 +134,12 @@ router.post('/create-checkout-session', protect, async (req, res) => {
         })
       });
 
-      console.log('Created checkout session:', {
+      console.log('Successfully created checkout session:', {
         sessionId: session.id,
         userEmail: user.email,
-        customerId: customer.id
+        customerId: customer.id,
+        successUrl: session.success_url,
+        cancelUrl: session.cancel_url
       });
 
       res.json({
@@ -129,7 +148,15 @@ router.post('/create-checkout-session', protect, async (req, res) => {
         url: session.url
       });
     } catch (checkoutErr) {
-      console.error('Stripe checkout error:', checkoutErr);
+      console.error('Stripe checkout error:', {
+        error: checkoutErr.message,
+        type: checkoutErr.type,
+        code: checkoutErr.code,
+        param: checkoutErr.param,
+        userEmail: user.email,
+        customerId: customer.id
+      });
+      
       let errorMessage = 'Error processing payment. Please try again.';
       
       if (checkoutErr.type === 'StripeInvalidRequestError') {
@@ -144,7 +171,12 @@ router.post('/create-checkout-session', protect, async (req, res) => {
       });
     }
   } catch (err) {
-    console.error('Payment session error:', err);
+    console.error('Payment session error:', {
+      error: err.message,
+      stack: err.stack,
+      userEmail: req.user?.email,
+      userId: req.user?.id
+    });
     res.status(500).json({
       success: false,
       message: 'An unexpected error occurred. Please try again or contact support.'

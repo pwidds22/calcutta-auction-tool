@@ -8,6 +8,33 @@ const User = require('./models/User');
 require('dotenv').config();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
+// Environment variable validation
+const requiredEnvVars = [
+  'MONGO_URI',
+  'JWT_SECRET',
+  'STRIPE_SECRET_KEY',
+  'STRIPE_PUBLISHABLE_KEY',
+  'STRIPE_WEBHOOK_SECRET',
+  'FRONTEND_URL'
+];
+
+console.log('\nEnvironment configuration:', {
+  nodeEnv: process.env.NODE_ENV,
+  port: process.env.PORT || (process.env.NODE_ENV === 'production' ? 10000 : 5000),
+  frontendUrl: process.env.FRONTEND_URL,
+  hasStripeKey: !!process.env.STRIPE_SECRET_KEY,
+  hasStripePublishable: !!process.env.STRIPE_PUBLISHABLE_KEY,
+  hasWebhookSecret: !!process.env.STRIPE_WEBHOOK_SECRET,
+  hasJwtSecret: !!process.env.JWT_SECRET,
+  hasMongoUri: !!process.env.MONGO_URI
+});
+
+const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
+if (missingEnvVars.length > 0) {
+  console.error('\nMissing required environment variables:', missingEnvVars);
+  process.exit(1);
+}
+
 // Initialize express app
 const app = express();
 
