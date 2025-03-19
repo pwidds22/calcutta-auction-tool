@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calcutta Auction Tool</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/styles.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="text-center mb-4" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading teams...</p>
+        </div>
+        
+        <!-- Error Message -->
+        <div id="errorMessage" class="alert alert-danger mb-4" style="display: none;" role="alert">
+        </div>
+        
+        <!-- Auction Results Tracker -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Auction Management</h5>
+            </div>
+            <div class="card-body">
+                <!-- Pot Projections -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h6>Pot Projections</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="estimatedPotSize" class="form-label">Your Estimated Pot Size</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="estimatedPotSize" value="10000">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Pot Projection Based on Purchases</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="text" class="form-control" id="projectedPotSize" readonly value="0">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Auction Results -->
+                <h6>Auction Results Tracker</h6>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card border-primary">
+                            <div class="card-header bg-primary text-white">
+                                My Teams
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-1">Teams: <span id="myTeamsCount">0</span></p>
+                                <p class="mb-1">Total Paid: <span id="myTeamsTotal">$0</span></p>
+                                <p class="mb-1">Projected Value: <span id="myTeamsProjectedValue">$0</span></p>
+                                <p class="mb-1">Expected Profit: <span id="myTeamsProfit">$0</span></p>
+                                <p class="mb-0">ROI: <span id="myTeamsROI">0%</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-secondary">
+                            <div class="card-header bg-secondary text-white">
+                                Opponent's Teams
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-1">Teams: <span id="opponentsTeamsCount">0</span></p>
+                                <p class="mb-1">Total Paid: <span id="opponentsTeamsTotal">$0</span></p>
+                                <p class="mb-1">Projected Value: <span id="opponentsTeamsProjectedValue">$0</span></p>
+                                <p class="mb-1">Expected Profit: <span id="opponentsTeamsProfit">$0</span></p>
+                                <p class="mb-0">ROI: <span id="opponentsTeamsROI">0%</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-success">
+                            <div class="card-header bg-success text-white">
+                                Available Teams
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-1">Teams: <span id="availableTeamsCount">0</span></p>
+                                <p class="mb-0">Projected Value: <span id="availableTeamsProjectedValue">$0</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Team Table -->
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Team Auction Tracker</h5>
+                    <div class="btn-group">
+                        <button id="resetButton" class="btn btn-danger">Reset Auction</button>
+                        <button id="syncTeamOddsBtn" class="btn btn-success">Sync Team Odds</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Filters -->
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label for="regionFilter" class="form-label">Region</label>
+                        <select class="form-select" id="regionFilter">
+                            <option value="All">All Regions</option>
+                            <option value="East">East</option>
+                            <option value="Midwest">Midwest</option>
+                            <option value="South">South</option>
+                            <option value="West">West</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="statusFilter" class="form-label">Status</label>
+                        <select class="form-select" id="statusFilter">
+                            <option value="All">All Teams</option>
+                            <option value="My Teams">My Teams</option>
+                            <option value="Opponent Teams">Opponent Teams</option>
+                            <option value="Available">Available</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="sortOption" class="form-label">Sort By</label>
+                        <select class="form-select" id="sortOption">
+                            <option value="seed">Seed</option>
+                            <option value="name">Name</option>
+                            <option value="value">Value %</option>
+                            <option value="win">Win %</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="searchInput" class="form-label">Search</label>
+                        <input type="text" class="form-control" id="searchInput" placeholder="Search teams...">
+                    </div>
+                </div>
+
+                <!-- Summary Statistics -->
+                <div class="summary-statistics mb-3"></div>
+
+                <!-- Team Table -->
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover" id="teamTable">
+                        <thead>
+                            <tr>
+                                <th data-sort="seed">Seed</th>
+                                <th data-sort="name">Team</th>
+                                <th data-sort="region">Region</th>
+                                <th data-sort="purchasePrice">Purchase Price</th>
+                                <th data-sort="winPercentage">Win %</th>
+                                <th data-sort="valuePercentage">Value %</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <nav aria-label="Team table pagination">
+                    <ul class="pagination justify-content-center"></ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="../js/main.js"></script>
+</body>
+</html> 

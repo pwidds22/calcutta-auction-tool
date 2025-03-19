@@ -265,6 +265,7 @@ app.use((req, res, next) => {
 app.use('/css', express.static(path.join(__dirname, 'css')));
 app.use('/img', express.static(path.join(__dirname, 'img')));
 app.use('/js', express.static(path.join(__dirname, 'js')));
+app.use(express.static(path.join(__dirname, 'views'))); // Serve files from views directory
 
 // Use routes - Important: Order matters!
 // 1. First, register the raw body parser route for Stripe webhook
@@ -414,7 +415,6 @@ app.use('/api/payment', (req, res, next) => {
 }, paymentRoutes);
 
 app.use('/api/data', userDataRoutes);
-app.use('/blog', blogRoutes);
 
 // Define public and protected paths at the top level
 const publicPaths = [
@@ -523,17 +523,20 @@ app.use(async (req, res, next) => {
     next();
 });
 
+// Define views directory path at the top level
+const viewsPath = path.join(__dirname, 'views');
+
 // Serve public HTML files without .html extension
 app.get(['/', '/home', '/home.html'], (req, res) => {
-    res.sendFile(path.resolve(__dirname, 'home.html'));
+    res.sendFile(path.join(viewsPath, 'home.html'));
 });
 
 app.get(['/login', '/login.html'], (req, res) => {
-    res.sendFile(path.resolve(__dirname, 'login.html'));
+    res.sendFile(path.join(viewsPath, 'login.html'));
 });
 
 app.get(['/register', '/register.html'], (req, res) => {
-    res.sendFile(path.resolve(__dirname, 'register.html'));
+    res.sendFile(path.join(viewsPath, 'register.html'));
 });
 
 app.get(['/payment', '/payment.html'], async (req, res) => {
@@ -585,8 +588,8 @@ app.get(['/payment', '/payment.html'], async (req, res) => {
             newTokenLength: newToken.length
         });
 
-        // Serve the payment page
-        res.sendFile(path.resolve(__dirname, 'payment.html'));
+        // Serve the payment page from views directory
+        res.sendFile(path.join(viewsPath, 'payment.html'));
     } catch (err) {
         console.error('Payment page error:', err);
         res.redirect('/login');
@@ -594,20 +597,42 @@ app.get(['/payment', '/payment.html'], async (req, res) => {
 });
 
 app.get(['/payment-success', '/payment-success.html'], (req, res) => {
-    res.sendFile(path.resolve(__dirname, 'payment-success.html'));
+    res.sendFile(path.join(viewsPath, 'payment-success.html'));
 });
 
 app.get(['/payment-cancel', '/payment-cancel.html'], (req, res) => {
-    res.sendFile(path.resolve(__dirname, 'payment-cancel.html'));
-});
-
-// Serve protected pages
-app.get(['/auction', '/auction.html'], (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(viewsPath, 'payment-cancel.html'));
 });
 
 app.get(['/profile', '/profile.html'], (req, res) => {
-    res.sendFile(path.join(__dirname, 'profile.html'));
+    res.sendFile(path.join(viewsPath, 'profile.html'));
+});
+
+app.get(['/auction', '/auction.html'], (req, res) => {
+    const indexPath = path.join(__dirname, 'views', 'index.html');
+    console.log('Serving auction page from:', indexPath);
+    res.sendFile(indexPath, (err) => {
+        if (err) {
+            console.error('Error serving auction page:', err);
+            res.status(500).send('Error loading auction page');
+        }
+    });
+});
+
+app.get(['/debug', '/debug.html'], (req, res) => {
+    res.sendFile(path.join(viewsPath, 'debug.html'));
+});
+
+// Add a direct route handler for blog
+app.get(['/blog', '/blog.html'], (req, res) => {
+    const blogPath = path.join(__dirname, 'views', 'blog.html');
+    console.log('Serving blog page from:', blogPath);
+    res.sendFile(blogPath, (err) => {
+        if (err) {
+            console.error('Error serving blog page:', err);
+            res.status(500).send('Error loading blog page');
+        }
+    });
 });
 
 // Root route handler - redirect to auction for authenticated users, home for others
