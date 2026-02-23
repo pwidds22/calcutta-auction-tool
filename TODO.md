@@ -1,13 +1,15 @@
 # TODO - March Madness 2026 Sprint
 
-## Phase 1: Foundation (Days 1-3)
-- [ ] Init Next.js 15 project (TypeScript, Tailwind, shadcn/ui)
-- [ ] Create Supabase project + database schema (profiles, auction_data tables)
-- [ ] Set up RLS policies (users access own data only)
-- [ ] Implement auth (register, login, logout) with `@supabase/ssr`
-- [ ] Add Next.js middleware for route protection (auth + has_paid check)
+## Phase 1: Foundation (Days 1-3) ✅
+- [x] Init Next.js project (TypeScript, Tailwind, shadcn/ui) — `v2/`
+- [x] Create Supabase project + database schema (profiles, auction_data tables)
+- [x] Set up RLS policies (users access own data only)
+- [x] Implement auth (register, login, logout) with `@supabase/ssr`
+- [x] Add Next.js middleware for route protection (auth + has_paid check)
+- [x] Stripe payment flow (checkout via Payment Link + webhook handler)
+- [x] Verify auth flow end-to-end locally
 - [ ] Deploy to Vercel (connect repo, configure env vars)
-- [ ] Verify auth flow end-to-end on Vercel
+- [ ] Configure Stripe webhook for production URL
 
 ## Phase 2: Core Product (Days 4-8)
 - [ ] Port calculation logic to TypeScript:
@@ -24,7 +26,7 @@
   - [ ] Auction results tracker
   - [ ] Profit projection columns (green/red)
 - [ ] Wire up Supabase CRUD (save/load teams, payout rules, pot size)
-- [ ] Stripe payment flow (checkout session + webhook + gate)
+- [x] Stripe payment flow (checkout session + webhook + gate) — done in Phase 1
 - [ ] Update 2026 March Madness team data (64 teams + current odds)
 
 ## Phase 3: Polish & Launch (Days 9-14)

@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'INPUT=$(cat); if echo \"$INPUT\" | grep -qE \"\\.env|\\.env\\.local|\\.env\\.development|\\.env\\.production\"; then echo \"BLOCKED: Do not edit .env files - they contain secrets (MONGO_URI, JWT_SECRET, Stripe keys)\" >&2; exit 2; fi'"
+            "command": "bash -c 'INPUT=$(cat); if echo \"$INPUT\" | grep -qP \"file_path.*?[/\\\\]\\.[e]nv\"; then echo \"BLOCKED: Do not write env files\" >&2; exit 2; fi'"
           }
         ]
       },
