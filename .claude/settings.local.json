@@ -6,5 +6,12 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:supabase.com)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "stripe",
+    "context7",
+    "mongodb",
+    "supabase"
+  ],
+  "enableAllProjectMcpServers": true
 }

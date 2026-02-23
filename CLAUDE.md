@@ -210,4 +210,31 @@ These formulas are the heart of the product — port to TypeScript with unit tes
 
 ## Session Notes
 <!-- Updated by /start-session and /end-session commands -->
-_No active session_
+
+### Session: 2026-02-23 — Project Organization & Rebuild Planning
+
+**Completed:**
+- Audited and improved Claude Code setup (`.claude/` commands, agents, settings)
+- Deleted `PROJECT_OVERVIEW.md` (was for PoolPicks.io, wrong repo)
+- Updated `CLAUDE.md` with missing directory docs, client-side MVC info, duplicate webhook note, new anti-patterns
+- Read and synthesized all research docs (`CLAUDE_RESEARCH1.md`, `CLAUDE_RESEARCH2.md`, `FUTURE_IMPROVEMENTS.md`)
+- Researched tech stack: Next.js 15 + Supabase + Vercel confirmed (~$46/mo)
+- Researched sportsbook affiliates → wrote `AFFILIATE_RESEARCH.md`
+- Created `ROADMAP.md` — full product strategy, phased build plan, revenue targets
+- Created `TODO.md` — sprint tasks for March Madness 2026 rebuild
+- Rewrote `CLAUDE.md` for new stack (new architecture + legacy reference)
+- Committed and pushed all setup files
+
+**Key Decisions Made:**
+- Full rebuild: Next.js 15 (App Router, TS) + Supabase + Vercel
+- Timeline: Ship for March Madness 2026 (~3 weeks)
+- Pricing: $14.99 → $29.99/event
+- Build order: Foundation → Core tool → Polish/launch → Post-season hosting
+- Affiliates: FanDuel first, start with DFS, track before investing in state licensing
+
+**Next Steps (Next Session):**
+- Start Phase 1: Init Next.js project, create Supabase project + schema, implement auth, deploy to Vercel
+- See `TODO.md` Phase 1 tasks for full checklist
+
+**Blockers:**
+- None. Ready to build.
