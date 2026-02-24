@@ -8,8 +8,8 @@
 - [x] Add Next.js middleware for route protection (auth + has_paid check)
 - [x] Stripe payment flow (checkout via Payment Link + webhook handler)
 - [x] Verify auth flow end-to-end locally
-- [ ] Deploy to Vercel (connect repo, configure env vars)
-- [ ] Configure Stripe webhook for production URL
+- [x] Deploy to Vercel (connect repo, configure env vars) — `calcutta-genius.vercel.app`
+- [x] Configure Stripe webhook for production URL — live mode, `checkout.session.completed`
 
 ## Phase 2: Core Product (Days 4-8)
 - [ ] Port calculation logic to TypeScript:
@@ -34,7 +34,9 @@
 - [ ] Pricing: Free tier (basic calculator) + Premium ($29.99)
 - [ ] Blog migration (MDX)
 - [ ] SEO basics (meta tags, OG, sitemap, target keywords)
-- [ ] DNS cutover: calcuttagenius.com Render -> Vercel
+- [ ] Finalize brand name and domain (researching alternatives to calcuttagenius.com)
+- [ ] Purchase new domain if rebranding, add to Vercel, configure DNS
+- [ ] DNS cutover: new domain -> Vercel (or calcuttagenius.com if keeping)
 - [ ] Test Stripe webhook with `stripe listen --forward-to`
 - [ ] Email existing 15 customers about upgrade
 - [ ] End-to-end testing (register -> pay -> use tool -> save)

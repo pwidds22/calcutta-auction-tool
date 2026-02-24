@@ -288,3 +288,40 @@ These formulas are the heart of the product — port to TypeScript with unit tes
 
 **Blockers:**
 - None. Foundation is solid, ready for Phase 2.
+
+### Session: 2026-02-23 — Vercel Deployment & Stripe Webhook (Phase 1 COMPLETE)
+
+**Completed:**
+- Cleaned up `v2/next.config.ts` — removed `turbopack.root` workaround that would break in Vercel's deploy context
+- Removed hardcoded live Stripe Payment Link URL from `v2/lib/stripe/config.ts` — now requires `NEXT_PUBLIC_STRIPE_PAYMENT_LINK_URL` env var
+- Moved Windows-only binary packages (`@tailwindcss/oxide-win32-x64-msvc`, `lightningcss-win32-x64-msvc`) from `dependencies` to `optionalDependencies` in `v2/package.json` — fixes Vercel Linux build (npm silently skips incompatible optional deps)
+- Deployed v2 to Vercel: **calcutta-genius.vercel.app** (root directory: `v2`)
+- Configured all environment variables in Vercel (Supabase + Stripe live keys)
+- Verified landing page, auth pages, and route protection working in production
+- Set up Stripe webhook endpoint in live mode: `checkout.session.completed` → `https://calcutta-genius.vercel.app/api/webhooks/stripe`
+- Added `STRIPE_WEBHOOK_SECRET` to Vercel env vars and redeployed
+
+**Key Files Modified:**
+- `v2/next.config.ts` — simplified to empty config
+- `v2/lib/stripe/config.ts` — removed hardcoded fallback URL
+- `v2/package.json` — Windows binaries moved to `optionalDependencies`
+
+**Infrastructure:**
+- Vercel project: `calcutta-auction-tool` at `calcutta-genius.vercel.app`
+- Stripe webhook: live mode, `checkout.session.completed` event
+- Auto-deploys on push to `main` via GitHub integration
+
+**Key Learnings:**
+- Windows platform binaries (`*-win32-x64-msvc`) in `dependencies` cause `EBADPLATFORM` errors on Vercel (Linux) — must use `optionalDependencies`
+- User's global `~/.npmrc` has `os=linux` which blocks Windows optional deps from auto-resolving locally — existing `node_modules` from prior installs still work
+- Vercel MCP `deploy_to_vercel` tool only provides instructions, doesn't actually deploy — use dashboard or CLI
+
+**Next Steps (Next Session):**
+- **Domain**: User researching new brand name (will NOT be calcuttagenius.com). Finalize domain choice, add to Vercel, configure DNS. Add this to Phase 3 tasks.
+- **Phase 2**: Port calculation logic from `js/auction-tool.js` to TypeScript (`v2/lib/calculations/`)
+- Build auction tool UI (team table, payout rules editor, pot size, profit projections)
+- Wire up Supabase CRUD for save/load
+- 2026 March Madness team data (64 teams + current odds)
+
+**Blockers:**
+- None. Phase 1 fully complete. Ready for Phase 2.
