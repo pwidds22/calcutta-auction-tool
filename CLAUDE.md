@@ -594,3 +594,65 @@ These formulas are the heart of the product — port to TypeScript with unit tes
 
 **Blockers:**
 - None. Build complete, needs E2E testing.
+
+### Session: 2026-02-25 — E2E Testing: 3 Critical Bugs Found & Fixed
+
+**Completed:**
+- Created broadcast verification script (`v2/scripts/test-broadcast.ts`) to test HTTP API → WebSocket delivery
+- Discovered and fixed **3 critical bugs** that would have made live auctions completely non-functional:
+
+**Bug 1: Broadcast topic format (silent failure)**
+- `v2/lib/supabase/broadcast.ts` line 25: `topic: \`realtime:${channelName}\`` → `topic: channelName`
+- The `realtime:` prefix caused HTTP API broadcasts to silently fail (202 response, no delivery)
+- The Supabase JS SDK does NOT require the prefix — only the raw channel name
+- **Impact**: All real-time events (bids, team sold, auction started) never reached any client
+
+**Bug 2: RLS infinite recursion on `auction_participants` (query failures)**
+- The SELECT policy on `auction_participants` had a self-referencing subquery that caused PostgreSQL `infinite recursion detected` error
+- Supabase returned empty results instead of errors, so `placeBid()` always returned "Not a participant"
+- **Fix**: Created `SECURITY DEFINER` function `public.is_session_participant(p_session_id)` that bypasses RLS for the lookup
+- Updated 3 RLS policies to use the function: `auction_participants` SELECT, `auction_bids` SELECT, `auction_bids` INSERT
+- Applied via Supabase MCP `execute_sql`, also updated migration file for future deployments
+
+**Bug 3: Duplicate presence keys in participant list**
+- `v2/lib/auction/live/use-auction-channel.ts` Presence sync returned duplicate entries per user (multiple connections)
+- Added deduplication by `userId` using a `Set`
+
+**Files Modified:**
+- `v2/lib/supabase/broadcast.ts` — removed `realtime:` prefix from topic
+- `v2/lib/auction/live/use-auction-channel.ts` — deduplicated Presence users
+- `v2/supabase/migrations/00002_live_auction_hosting.sql` — added `is_session_participant()` function, updated RLS policies
+
+**Files Created:**
+- `v2/scripts/test-broadcast.ts` — standalone broadcast verification script
+
+**E2E Test Results (after fixes):**
+- Session creation + join via code: WORKING
+- Real-time Presence (online users): WORKING
+- Commissioner start/open/close bidding: WORKING
+- Participant placing bids: WORKING
+- Real-time bid updates across tabs: WORKING
+- Strategy overlay with fair values: WORKING
+
+**Key Learnings:**
+- Supabase Realtime HTTP Broadcast API does NOT want the `realtime:` prefix on topics — the SDK handles this internally
+- Self-referencing RLS policies on the same table cause infinite recursion in PostgreSQL — use `SECURITY DEFINER` functions instead
+- Always write a standalone transport-layer test before testing the full UI — it caught the broadcast bug in 30 seconds
+
+**Feature Requests (from user, for next session):**
+1. Commissioner should be able to bid (currently only participants can)
+2. Auto-timer with countdown (e.g., 20 seconds, resets to 5-10 on new bid) — needs research on typical Calcutta timer durations; user noted their previous tool had timer bugs (jumping from 20 to 1)
+3. Randomize team order option + rotation draft (each person nominates a team in turn)
+4. Match bid buttons (+1, +5, etc.) — in addition to existing +$5/+$10/+$25/+$50/+$100
+
+**Next Steps (Next Session):**
+- Implement auto-timer for bidding (research standard durations first)
+- Allow commissioner to bid
+- Add randomize/rotation team order options
+- Continue Phase 2 testing: sell team, skip, undo, pause, reconnection, auto-sync to strategy tool
+- **Phase C: Landing + Pricing Update** — rebrand landing page for multi-tournament platform
+- **Phase D: Deploy + Launch** — push to Vercel, update odds on Selection Sunday (3/15)
+
+**Blockers:**
+- Timer implementation needs research on standard Calcutta auction timer conventions (typical durations, reset behavior)
+- Timer reliability is critical — user's previous tool had bugs where timer jumped unexpectedly

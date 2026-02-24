@@ -174,13 +174,20 @@ export function useAuctionChannel(
       })
       .on('presence', { event: 'sync' }, () => {
         const presenceState = channel.presenceState();
-        const users = Object.values(presenceState)
-          .flat()
-          .map((p: Record<string, unknown>) => ({
-            userId: p.userId as string,
-            displayName: p.displayName as string,
-            isCommissioner: p.isCommissioner as boolean,
-          }));
+        const seen = new Set<string>();
+        const users: AuctionChannelState['onlineUsers'] = [];
+        for (const p of Object.values(presenceState).flat()) {
+          const rec = p as Record<string, unknown>;
+          const uid = rec.userId as string;
+          if (!seen.has(uid)) {
+            seen.add(uid);
+            users.push({
+              userId: uid,
+              displayName: rec.displayName as string,
+              isCommissioner: rec.isCommissioner as boolean,
+            });
+          }
+        }
         setState((prev) => ({ ...prev, onlineUsers: users }));
       })
       .subscribe(async (status) => {

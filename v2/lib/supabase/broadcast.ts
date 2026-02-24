@@ -22,7 +22,7 @@ export async function broadcastToChannel(
     body: JSON.stringify({
       messages: [
         {
-          topic: `realtime:${channelName}`,
+          topic: channelName,
           event,
           payload,
         },

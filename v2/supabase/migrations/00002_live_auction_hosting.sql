@@ -68,16 +68,24 @@ create table public.auction_participants (
 
 alter table public.auction_participants enable row level security;
 
+-- Helper function: avoids infinite recursion from self-referencing RLS policies
+create or replace function public.is_session_participant(p_session_id uuid)
+returns boolean
+language sql
+security definer
+stable
+as $$
+  select exists (
+    select 1 from public.auction_participants
+    where session_id = p_session_id and user_id = auth.uid()
+  );
+$$;
+
 -- Participants can view all members in sessions they belong to
 create policy "Participants can view session members"
   on public.auction_participants for select
   to authenticated
-  using (
-    session_id in (
-      select ap.session_id from public.auction_participants ap
-      where ap.user_id = (select auth.uid())
-    )
-  );
+  using (public.is_session_participant(session_id));
 
 -- Users can join sessions (insert themselves)
 create policy "Users can join sessions"
@@ -115,12 +123,7 @@ alter table public.auction_bids enable row level security;
 create policy "Participants can view session bids"
   on public.auction_bids for select
   to authenticated
-  using (
-    session_id in (
-      select ap.session_id from public.auction_participants ap
-      where ap.user_id = (select auth.uid())
-    )
-  );
+  using (public.is_session_participant(session_id));
 
 -- Participants can place bids in sessions they belong to
 create policy "Participants can place bids"
@@ -128,10 +131,7 @@ create policy "Participants can place bids"
   to authenticated
   with check (
     (select auth.uid()) = bidder_id
-    and session_id in (
-      select ap.session_id from public.auction_participants ap
-      where ap.user_id = (select auth.uid())
-    )
+    and public.is_session_participant(session_id)
   );
 
 -- ============================================
