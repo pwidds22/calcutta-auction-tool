@@ -383,3 +383,35 @@ These formulas are the heart of the product — port to TypeScript with unit tes
 
 **Blockers:**
 - None. Phase 2 core product complete and functional.
+
+### Session: 2026-02-24 — Rebrand to Calcutta Edge + Vercel Deploy Fix
+
+**Completed:**
+- Full rebrand from "Calcutta Genius" to "Calcutta Edge" across 33 files:
+  - v2 app: `v2/app/layout.tsx`, `v2/app/page.tsx`, `v2/app/(protected)/payment/page.tsx`, `v2/components/auth/{login-form,register-form}.tsx`
+  - Legacy views: `views/{home,blog,login,register,payment,payment-success,payment-cancel,profile,index}.html`
+  - Legacy routes: `routes/{auth,blog,payment}.js`, `server.js`
+  - Config: `robots.txt`, `sitemap.xml`, `v2/supabase/migrations/00001_initial_schema.sql`
+  - Docs: `CLAUDE.md`, `ROADMAP.md`, `TODO.md`, `CLAUDE_RESEARCH1.md`, `CLAUDE_RESEARCH2.md`, `AFFILIATE_RESEARCH.md`
+  - Claude Code: `.claude/agents/{code-reviewer,security-reviewer}.md`, `.claude/commands/{review,start-session}.md`
+  - Assets: `img/dashboard-preview.svg`, `email_templates/welcome_email.txt`
+- Updated git remote to `https://github.com/pwidds22/calcutta-edge.git` (user renamed repo on GitHub)
+- Fixed Vercel deploy failure: moved `@rollup/rollup-win32-x64-msvc` from `devDependencies` to `optionalDependencies` in `v2/package.json`
+- Verified zero remaining "calcuttagenius" / "Calcutta Genius" / "calcutta-genius" references in codebase
+- Vercel deploy succeeds, site live at calcuttaedge.com with new branding
+
+**Commits:**
+- `fd38860` — Rebrand: Calcutta Genius → Calcutta Edge across entire codebase
+- `a51e9fb` — Move @rollup/rollup-win32-x64-msvc to optionalDependencies for Vercel
+
+**Key Learnings:**
+- ALL Windows-only `*-win32-x64-msvc` packages must go in `optionalDependencies` (not `devDependencies`) for Vercel Linux builds — `@rollup/rollup-win32-x64-msvc` was missed previously
+
+**Next Steps (Next Session):**
+- Fix Stripe Payment Link redirect (needs redirect URL configured in Stripe dashboard)
+- Phase 3: Landing page redesign, pricing tiers, blog migration, SEO
+- Visual polish: responsive layout, dark mode support, loading states
+- Update 2026 March Madness odds when bracket is set
+
+**Blockers:**
+- None. Rebrand complete, deployed, and live.
