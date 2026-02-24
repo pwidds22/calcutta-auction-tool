@@ -5,15 +5,16 @@ import { Button } from '@/components/ui/button';
 import { placeBid } from '@/actions/bidding';
 import { Gavel } from 'lucide-react';
 
+import { DEFAULT_BID_INCREMENTS } from '@/lib/auction/live/types';
+
 interface BidPanelProps {
   sessionId: string;
   biddingStatus: string;
   currentHighestBid: number;
   currentHighestBidderName: string | null;
   userId: string;
+  bidIncrements?: number[];
 }
-
-const INCREMENTS = [5, 10, 25, 50, 100];
 
 export function BidPanel({
   sessionId,
@@ -21,7 +22,9 @@ export function BidPanel({
   currentHighestBid,
   currentHighestBidderName,
   userId,
+  bidIncrements,
 }: BidPanelProps) {
+  const increments = bidIncrements ?? DEFAULT_BID_INCREMENTS;
   const [bidAmount, setBidAmount] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -107,7 +110,7 @@ export function BidPanel({
       {/* Quick increments */}
       {isOpen && (
         <div className="mt-2 flex gap-1.5">
-          {INCREMENTS.map((inc) => (
+          {increments.map((inc) => (
             <button
               key={inc}
               onClick={() => handleIncrement(inc)}

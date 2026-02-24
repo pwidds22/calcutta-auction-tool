@@ -1,8 +1,11 @@
 'use client';
 
+import { useCallback, useEffect } from 'react';
 import { useAuctionChannel } from '@/lib/auction/live/use-auction-channel';
+import { useTimer } from '@/lib/auction/live/use-timer';
 import type { BaseTeam, TournamentConfig, PayoutRules } from '@/lib/tournaments/types';
 import type { BidEntry, SoldTeam } from '@/lib/auction/live/use-auction-channel';
+import type { SessionSettings } from '@/lib/auction/live/types';
 import { AuctionStatusBar } from './auction-status-bar';
 import { TeamSpotlight } from './team-spotlight';
 import { BidPanel } from './bid-panel';
@@ -11,6 +14,7 @@ import { ParticipantList } from './participant-list';
 import { ResultsTable } from './results-table';
 import { MyPortfolio } from './my-portfolio';
 import { StrategyOverlay } from './strategy-overlay';
+import { TimerDisplay } from './timer-display';
 
 interface ParticipantViewProps {
   session: {
@@ -26,6 +30,7 @@ interface ParticipantViewProps {
     payout_rules: PayoutRules;
     estimated_pot_size: number;
     tournament_id: string;
+    settings: SessionSettings;
   };
   participants: Array<{
     user_id: string;
@@ -93,14 +98,31 @@ export function ParticipantView({
       bidHistory: initialBidHistory,
       soldTeams: initialSoldTeams,
       auctionStatus: session.status,
+      teamOrder: session.team_order,
     },
   });
+
+  const activeTeamOrder = channel.teamOrder ?? session.team_order;
 
   const teamMap = new Map(baseTeams.map((t) => [t.id, t]));
   const currentTeamId =
     channel.currentTeamIdx !== null
-      ? session.team_order[channel.currentTeamIdx]
+      ? activeTeamOrder[channel.currentTeamIdx]
       : null;
+  // Timer (participants don't trigger auto-close, just display)
+  const timer = useTimer({
+    isCommissioner: false,
+    onExpire: useCallback(() => {}, []),
+  });
+
+  useEffect(() => {
+    if (channel.timerIsRunning && channel.timerEndsAt) {
+      timer.start(channel.timerEndsAt, channel.timerDurationMs);
+    } else if (!channel.timerIsRunning) {
+      timer.stop();
+    }
+  }, [channel.timerIsRunning, channel.timerEndsAt, channel.timerDurationMs]);
+
   const currentTeam = currentTeamId ? teamMap.get(currentTeamId) ?? null : null;
 
   if (channel.auctionStatus === 'lobby') {
@@ -149,7 +171,7 @@ export function ParticipantView({
             team={currentTeam}
             config={config}
             teamIndex={channel.currentTeamIdx ?? 0}
-            totalTeams={session.team_order.length}
+            totalTeams={activeTeamOrder.length}
           />
 
           <StrategyOverlay
@@ -163,12 +185,15 @@ export function ParticipantView({
             soldTeams={channel.soldTeams}
           />
 
+          <TimerDisplay timer={timer.state} />
+
           <BidPanel
             sessionId={session.id}
             biddingStatus={channel.biddingStatus}
             currentHighestBid={channel.currentHighestBid}
             currentHighestBidderName={channel.currentHighestBidderName}
             userId={userId}
+            bidIncrements={session.settings?.bidIncrements}
           />
 
           <BidLadder

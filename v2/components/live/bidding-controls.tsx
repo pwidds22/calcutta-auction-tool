@@ -22,6 +22,7 @@ interface BiddingControlsProps {
   currentHighestBidderName: string | null;
   hasSoldTeams: boolean;
   currentTeamIdx: number | null;
+  timerIsRunning?: boolean;
 }
 
 export function BiddingControls({
@@ -32,6 +33,7 @@ export function BiddingControls({
   currentHighestBidderName,
   hasSoldTeams,
   currentTeamIdx,
+  timerIsRunning,
 }: BiddingControlsProps) {
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -106,7 +108,7 @@ export function BiddingControls({
               className="flex-1 gap-2 bg-amber-600 text-white hover:bg-amber-700"
             >
               <XCircle className="size-4" />
-              Close Bidding
+              {timerIsRunning ? 'Close Early' : 'Close Bidding'}
             </Button>
             <Button
               onClick={() => handle(() => skipTeam(sessionId), 'skip')}

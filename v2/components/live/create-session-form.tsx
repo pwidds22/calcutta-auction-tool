@@ -5,7 +5,12 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { createSession } from '@/actions/session';
 import type { TournamentConfig, PayoutRules } from '@/lib/tournaments/types';
-import { ArrowLeft, Gavel } from 'lucide-react';
+import {
+  BID_INCREMENT_PRESETS,
+  type BidIncrementPreset,
+  type SessionSettings,
+} from '@/lib/auction/live/types';
+import { ArrowLeft, Gavel, Timer, DollarSign } from 'lucide-react';
 import Link from 'next/link';
 
 interface CreateSessionFormProps {
@@ -22,6 +27,14 @@ export function CreateSessionForm({ tournaments }: CreateSessionFormProps) {
   const [name, setName] = useState('');
   const [tournamentId, setTournamentId] = useState(activeTournament?.id ?? '');
   const [potSize, setPotSize] = useState('10000');
+
+  // Bid increment preset
+  const [bidPreset, setBidPreset] = useState<BidIncrementPreset>('medium');
+
+  // Timer settings
+  const [timerEnabled, setTimerEnabled] = useState(false);
+  const [initialDuration, setInitialDuration] = useState('20');
+  const [resetDuration, setResetDuration] = useState('8');
 
   const selectedTournament = tournaments.find((t) => t.id === tournamentId);
 
@@ -41,11 +54,21 @@ export function CreateSessionForm({ tournaments }: CreateSessionFormProps) {
 
     const payoutRules = selectedTournament.defaultPayoutRules as PayoutRules;
 
+    const settings: SessionSettings = {
+      bidIncrements: [...BID_INCREMENT_PRESETS[bidPreset].values],
+      timer: {
+        enabled: timerEnabled,
+        initialDurationSec: Math.max(5, Math.min(120, Number(initialDuration) || 20)),
+        resetDurationSec: Math.max(3, Math.min(30, Number(resetDuration) || 8)),
+      },
+    };
+
     const result = await createSession({
       tournamentId,
       name: name.trim(),
       payoutRules,
       estimatedPotSize: Number(potSize) || 10000,
+      settings,
     });
 
     if (result.error) {
@@ -126,6 +149,109 @@ export function CreateSessionForm({ tournaments }: CreateSessionFormProps) {
           <p className="mt-1 text-xs text-white/30">
             This is just an estimate — the real pot size is calculated from actual sales.
           </p>
+        </div>
+
+        {/* Bid Increments */}
+        <div>
+          <label className="block text-sm font-medium text-white/60 mb-1.5">
+            <DollarSign className="inline size-3.5 mr-1" />
+            Bid Increments
+          </label>
+          <div className="grid grid-cols-3 gap-2">
+            {(Object.entries(BID_INCREMENT_PRESETS) as [BidIncrementPreset, typeof BID_INCREMENT_PRESETS[BidIncrementPreset]][]).map(
+              ([key, preset]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setBidPreset(key)}
+                  className={`rounded-md border px-3 py-2 text-left transition-colors ${
+                    bidPreset === key
+                      ? 'border-emerald-500/50 bg-emerald-500/10 text-white'
+                      : 'border-white/10 bg-white/[0.02] text-white/50 hover:border-white/20 hover:text-white/70'
+                  }`}
+                >
+                  <div className="text-xs font-medium">{preset.label}</div>
+                  <div className="text-[10px] opacity-60">{preset.description}</div>
+                </button>
+              )
+            )}
+          </div>
+          <p className="mt-1.5 text-xs text-white/30">
+            Quick bid buttons: {BID_INCREMENT_PRESETS[bidPreset].values.map((v) => `$${v}`).join(', ')}
+          </p>
+        </div>
+
+        {/* Bidding Timer */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-white/60 mb-1.5">
+            <Timer className="size-3.5" />
+            Bidding Timer
+          </label>
+          <button
+            type="button"
+            onClick={() => setTimerEnabled(!timerEnabled)}
+            className={`flex w-full items-center justify-between rounded-md border px-3 py-2.5 transition-colors ${
+              timerEnabled
+                ? 'border-emerald-500/50 bg-emerald-500/10 text-white'
+                : 'border-white/10 bg-white/[0.02] text-white/50 hover:border-white/20'
+            }`}
+          >
+            <span className="text-sm">
+              {timerEnabled ? 'Countdown timer enabled' : 'No timer (manual close)'}
+            </span>
+            <div
+              className={`h-5 w-9 rounded-full p-0.5 transition-colors ${
+                timerEnabled ? 'bg-emerald-500' : 'bg-white/20'
+              }`}
+            >
+              <div
+                className={`size-4 rounded-full bg-white transition-transform ${
+                  timerEnabled ? 'translate-x-4' : 'translate-x-0'
+                }`}
+              />
+            </div>
+          </button>
+
+          {timerEnabled && (
+            <div className="mt-2 grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs text-white/40 mb-1">
+                  Initial countdown
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={initialDuration}
+                    onChange={(e) => setInitialDuration(e.target.value)}
+                    min={5}
+                    max={120}
+                    className="h-9 w-full rounded-md border border-white/10 bg-white/[0.04] px-3 pr-8 text-sm text-white focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/30">
+                    sec
+                  </span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs text-white/40 mb-1">
+                  Reset on new bid
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={resetDuration}
+                    onChange={(e) => setResetDuration(e.target.value)}
+                    min={3}
+                    max={30}
+                    className="h-9 w-full rounded-md border border-white/10 bg-white/[0.04] px-3 pr-8 text-sm text-white focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/30">
+                    sec
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {error && (

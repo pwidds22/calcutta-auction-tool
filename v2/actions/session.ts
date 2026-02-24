@@ -2,8 +2,10 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { broadcastToChannel } from '@/lib/supabase/broadcast';
 import { getTournament } from '@/lib/tournaments/registry';
 import type { PayoutRules } from '@/lib/tournaments/types';
+import type { SessionSettings } from '@/lib/auction/live/types';
 
 // 6-char code using unambiguous characters (no I/O/1/0)
 function generateJoinCode(): string {
@@ -20,6 +22,7 @@ export async function createSession(input: {
   name: string;
   payoutRules: PayoutRules;
   estimatedPotSize: number;
+  settings?: SessionSettings;
 }) {
   const supabase = await createClient();
   const {
@@ -57,6 +60,7 @@ export async function createSession(input: {
       estimated_pot_size: input.estimatedPotSize,
       team_order: teamOrder,
       status: 'lobby',
+      settings: input.settings ?? {},
     })
     .select('id, join_code')
     .single();
@@ -222,6 +226,12 @@ export async function updateTeamOrder(
     .eq('id', sessionId);
 
   if (error) return { error: error.message };
+
+  // Broadcast to connected clients
+  await broadcastToChannel(`auction:${sessionId}`, 'TEAM_ORDER_UPDATED', {
+    teamOrder,
+  });
+
   return { success: true };
 }
 

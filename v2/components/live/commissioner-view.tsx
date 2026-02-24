@@ -1,16 +1,26 @@
 'use client';
 
+import { useCallback, useEffect } from 'react';
 import { useAuctionChannel } from '@/lib/auction/live/use-auction-channel';
+import { useTimer } from '@/lib/auction/live/use-timer';
 import type { BaseTeam, TournamentConfig, PayoutRules } from '@/lib/tournaments/types';
 import type { BidEntry, SoldTeam } from '@/lib/auction/live/use-auction-channel';
+import type { SessionSettings } from '@/lib/auction/live/types';
+import { updateTeamOrder } from '@/actions/session';
 import { AuctionStatusBar } from './auction-status-bar';
 import { TeamSpotlight } from './team-spotlight';
 import { BiddingControls } from './bidding-controls';
+import { BidPanel } from './bid-panel';
 import { BidLadder } from './bid-ladder';
 import { TeamQueue } from './team-queue';
 import { ParticipantList } from './participant-list';
+import { MyPortfolio } from './my-portfolio';
 import { ResultsTable } from './results-table';
 import { StrategyOverlay } from './strategy-overlay';
+import { TimerDisplay } from './timer-display';
+import { closeBidding } from '@/actions/bidding';
+import { Shuffle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface CommissionerViewProps {
   session: {
@@ -26,6 +36,7 @@ interface CommissionerViewProps {
     payout_rules: PayoutRules;
     estimated_pot_size: number;
     tournament_id: string;
+    settings: SessionSettings;
   };
   participants: Array<{
     user_id: string;
@@ -95,14 +106,46 @@ export function CommissionerView({
       bidHistory: initialBidHistory,
       soldTeams: initialSoldTeams,
       auctionStatus: session.status,
+      teamOrder: session.team_order,
     },
   });
+
+  // Use dynamic team order from channel (updated via broadcast) or fallback to session
+  const activeTeamOrder = channel.teamOrder ?? session.team_order;
 
   const teamMap = new Map(baseTeams.map((t) => [t.id, t]));
   const currentTeamId =
     channel.currentTeamIdx !== null
-      ? session.team_order[channel.currentTeamIdx]
+      ? activeTeamOrder[channel.currentTeamIdx]
       : null;
+
+  // Fisher-Yates shuffle
+  const handleShuffle = useCallback(async () => {
+    const order = [...activeTeamOrder];
+    for (let i = order.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    await updateTeamOrder(session.id, order);
+  }, [activeTeamOrder, session.id]);
+
+  // Timer: commissioner auto-closes bidding on expiry
+  const timer = useTimer({
+    isCommissioner: true,
+    onExpire: useCallback(() => {
+      closeBidding(session.id);
+    }, [session.id]),
+  });
+
+  // Sync timer state from channel broadcasts
+  useEffect(() => {
+    if (channel.timerIsRunning && channel.timerEndsAt) {
+      timer.start(channel.timerEndsAt, channel.timerDurationMs);
+    } else if (!channel.timerIsRunning) {
+      timer.stop();
+    }
+  }, [channel.timerIsRunning, channel.timerEndsAt, channel.timerDurationMs]);
+
   const currentTeam = currentTeamId ? teamMap.get(currentTeamId) ?? null : null;
 
   return (
@@ -124,9 +167,19 @@ export function CommissionerView({
       <div className="grid grid-cols-12 gap-4">
         {/* Left: Team Queue */}
         <div className="col-span-12 lg:col-span-3">
+          {channel.auctionStatus === 'lobby' && (
+            <Button
+              onClick={handleShuffle}
+              variant="outline"
+              className="mb-2 w-full gap-2 border-white/10 text-white/60 hover:border-white/20 hover:text-white/80"
+            >
+              <Shuffle className="size-3.5" />
+              Shuffle Team Order
+            </Button>
+          )}
           <TeamQueue
             sessionId={session.id}
-            teamOrder={session.team_order}
+            teamOrder={activeTeamOrder}
             baseTeams={baseTeams}
             soldTeams={channel.soldTeams}
             currentTeamIdx={channel.currentTeamIdx}
@@ -140,7 +193,7 @@ export function CommissionerView({
             team={currentTeam}
             config={config}
             teamIndex={channel.currentTeamIdx ?? 0}
-            totalTeams={session.team_order.length}
+            totalTeams={activeTeamOrder.length}
           />
 
           <StrategyOverlay
@@ -154,6 +207,8 @@ export function CommissionerView({
             soldTeams={channel.soldTeams}
           />
 
+          <TimerDisplay timer={timer.state} />
+
           <BiddingControls
             sessionId={session.id}
             auctionStatus={channel.auctionStatus}
@@ -162,6 +217,17 @@ export function CommissionerView({
             currentHighestBidderName={channel.currentHighestBidderName}
             hasSoldTeams={channel.soldTeams.length > 0}
             currentTeamIdx={channel.currentTeamIdx}
+            timerIsRunning={timer.state.isRunning}
+          />
+
+          {/* Commissioner can bid too */}
+          <BidPanel
+            sessionId={session.id}
+            biddingStatus={channel.biddingStatus}
+            currentHighestBid={channel.currentHighestBid}
+            currentHighestBidderName={channel.currentHighestBidderName}
+            userId={userId}
+            bidIncrements={session.settings?.bidIncrements}
           />
 
           <BidLadder
@@ -174,6 +240,11 @@ export function CommissionerView({
         {/* Right: Participants + Results */}
         <div className="col-span-12 space-y-4 lg:col-span-3">
           <ParticipantList onlineUsers={channel.onlineUsers} />
+          <MyPortfolio
+            soldTeams={channel.soldTeams}
+            baseTeams={baseTeams}
+            userId={userId}
+          />
           <ResultsTable
             soldTeams={channel.soldTeams}
             baseTeams={baseTeams}

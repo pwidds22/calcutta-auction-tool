@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { broadcastToChannel } from '@/lib/supabase/broadcast';
+import type { SessionSettings } from '@/lib/auction/live/types';
 
 function channelName(sessionId: string) {
   return `auction:${sessionId}`;
@@ -96,7 +97,7 @@ export async function openBidding(sessionId: string) {
 
   const { data: session } = await supabase
     .from('auction_sessions')
-    .select('commissioner_id, status, bidding_status')
+    .select('commissioner_id, status, bidding_status, settings')
     .eq('id', sessionId)
     .single();
 
@@ -114,6 +115,17 @@ export async function openBidding(sessionId: string) {
   if (error) return { error: error.message };
 
   await broadcastToChannel(channelName(sessionId), 'BIDDING_OPEN', {});
+
+  // Start timer if enabled
+  const settings = session.settings as SessionSettings | null;
+  if (settings?.timer?.enabled) {
+    const durationMs = settings.timer.initialDurationSec * 1000;
+    const endsAt = new Date(Date.now() + durationMs).toISOString();
+    await broadcastToChannel(channelName(sessionId), 'TIMER_START', {
+      endsAt,
+      durationMs,
+    });
+  }
 
   return { success: true };
 }
@@ -139,7 +151,7 @@ export async function placeBid(sessionId: string, amount: number) {
   const { data: session } = await supabase
     .from('auction_sessions')
     .select(
-      'status, bidding_status, current_highest_bid, team_order, current_team_idx'
+      'status, bidding_status, current_highest_bid, team_order, current_team_idx, settings'
     )
     .eq('id', sessionId)
     .single();
@@ -187,6 +199,17 @@ export async function placeBid(sessionId: string, amount: number) {
     amount,
   });
 
+  // Reset timer on new bid
+  const settings = session.settings as SessionSettings | null;
+  if (settings?.timer?.enabled) {
+    const durationMs = settings.timer.resetDurationSec * 1000;
+    const endsAt = new Date(Date.now() + durationMs).toISOString();
+    await broadcastToChannel(channelName(sessionId), 'TIMER_RESET', {
+      endsAt,
+      durationMs,
+    });
+  }
+
   return { success: true };
 }
 
@@ -216,6 +239,7 @@ export async function closeBidding(sessionId: string) {
   if (error) return { error: error.message };
 
   await broadcastToChannel(channelName(sessionId), 'BIDDING_CLOSED', {});
+  await broadcastToChannel(channelName(sessionId), 'TIMER_STOP', {});
 
   return { success: true };
 }
@@ -292,7 +316,8 @@ export async function sellTeam(sessionId: string) {
     })
     .eq('id', sessionId);
 
-  // 5. Broadcast
+  // 5. Stop timer + broadcast
+  await broadcastToChannel(channelName(sessionId), 'TIMER_STOP', {});
   await broadcastToChannel(channelName(sessionId), 'TEAM_SOLD', {
     teamId,
     winnerId,
@@ -412,6 +437,7 @@ export async function skipTeam(sessionId: string) {
     })
     .eq('id', sessionId);
 
+  await broadcastToChannel(channelName(sessionId), 'TIMER_STOP', {});
   await broadcastToChannel(channelName(sessionId), 'TEAM_SKIPPED', {
     teamId,
     nextTeamIdx: isLastTeam ? null : nextIdx,
@@ -500,6 +526,7 @@ export async function pauseAuction(sessionId: string) {
     .update({ status: 'paused', bidding_status: 'waiting' })
     .eq('id', sessionId);
 
+  await broadcastToChannel(channelName(sessionId), 'TIMER_STOP', {});
   await broadcastToChannel(channelName(sessionId), 'AUCTION_PAUSED', {});
 
   return { success: true };

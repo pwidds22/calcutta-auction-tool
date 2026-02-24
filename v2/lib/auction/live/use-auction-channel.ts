@@ -32,6 +32,11 @@ export interface AuctionChannelState {
     displayName: string;
     isCommissioner: boolean;
   }>;
+  teamOrder: number[] | null;
+  // Timer state
+  timerEndsAt: string | null;
+  timerDurationMs: number;
+  timerIsRunning: boolean;
 }
 
 export interface UseAuctionChannelOptions {
@@ -47,6 +52,7 @@ export interface UseAuctionChannelOptions {
     bidHistory: BidEntry[];
     soldTeams: SoldTeam[];
     auctionStatus: string;
+    teamOrder?: number[];
   };
 }
 
@@ -67,6 +73,10 @@ export function useAuctionChannel(
       initialState.auctionStatus as AuctionChannelState['auctionStatus'],
     isConnected: false,
     onlineUsers: [],
+    teamOrder: initialState.teamOrder ?? null,
+    timerEndsAt: null,
+    timerDurationMs: 0,
+    timerIsRunning: false,
   });
 
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -120,7 +130,13 @@ export function useAuctionChannel(
         }));
       })
       .on('broadcast', { event: 'BIDDING_CLOSED' }, () => {
-        setState((prev) => ({ ...prev, biddingStatus: 'closed' }));
+        setState((prev) => ({
+          ...prev,
+          biddingStatus: 'closed',
+          timerEndsAt: null,
+          timerDurationMs: 0,
+          timerIsRunning: false,
+        }));
       })
       .on('broadcast', { event: 'TEAM_SOLD' }, ({ payload }) => {
         setState((prev) => ({
@@ -140,6 +156,9 @@ export function useAuctionChannel(
           currentHighestBid: 0,
           currentHighestBidderName: null,
           auctionStatus: payload.isComplete ? 'completed' : prev.auctionStatus,
+          timerEndsAt: null,
+          timerDurationMs: 0,
+          timerIsRunning: false,
         }));
       })
       .on('broadcast', { event: 'TEAM_SKIPPED' }, ({ payload }) => {
@@ -150,6 +169,9 @@ export function useAuctionChannel(
           bidHistory: [],
           currentHighestBid: 0,
           currentHighestBidderName: null,
+          timerEndsAt: null,
+          timerDurationMs: 0,
+          timerIsRunning: false,
         }));
       })
       .on('broadcast', { event: 'SALE_UNDONE' }, ({ payload }) => {
@@ -167,10 +189,43 @@ export function useAuctionChannel(
         }));
       })
       .on('broadcast', { event: 'AUCTION_PAUSED' }, () => {
-        setState((prev) => ({ ...prev, auctionStatus: 'paused' }));
+        setState((prev) => ({
+          ...prev,
+          auctionStatus: 'paused',
+          timerEndsAt: null,
+          timerDurationMs: 0,
+          timerIsRunning: false,
+        }));
       })
       .on('broadcast', { event: 'AUCTION_COMPLETED' }, () => {
         setState((prev) => ({ ...prev, auctionStatus: 'completed' }));
+      })
+      .on('broadcast', { event: 'TEAM_ORDER_UPDATED' }, ({ payload }) => {
+        setState((prev) => ({ ...prev, teamOrder: payload.teamOrder }));
+      })
+      .on('broadcast', { event: 'TIMER_START' }, ({ payload }) => {
+        setState((prev) => ({
+          ...prev,
+          timerEndsAt: payload.endsAt,
+          timerDurationMs: payload.durationMs,
+          timerIsRunning: true,
+        }));
+      })
+      .on('broadcast', { event: 'TIMER_RESET' }, ({ payload }) => {
+        setState((prev) => ({
+          ...prev,
+          timerEndsAt: payload.endsAt,
+          timerDurationMs: payload.durationMs,
+          timerIsRunning: true,
+        }));
+      })
+      .on('broadcast', { event: 'TIMER_STOP' }, () => {
+        setState((prev) => ({
+          ...prev,
+          timerEndsAt: null,
+          timerDurationMs: 0,
+          timerIsRunning: false,
+        }));
       })
       .on('presence', { event: 'sync' }, () => {
         const presenceState = channel.presenceState();
