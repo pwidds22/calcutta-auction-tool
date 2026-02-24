@@ -30,7 +30,7 @@ function ProfitCell({
     <TableCell className="px-2 py-1.5 text-center">
       <div
         className={`text-xs font-medium tabular-nums ${
-          profit > 0 ? 'text-green-600' : profit < 0 ? 'text-red-500' : ''
+          profit > 0 ? 'text-emerald-400' : profit < 0 ? 'text-red-400' : ''
         }`}
       >
         {formatCurrency(profit)}
@@ -66,7 +66,7 @@ export const TeamTableRow = memo(function TeamTableRow({
   );
 
   return (
-    <TableRow className={team.isMyTeam ? 'bg-green-50' : undefined}>
+    <TableRow className={team.isMyTeam ? 'bg-emerald-500/10' : undefined}>
       <TableCell className="px-2 py-1.5 text-xs">{team.seed}</TableCell>
       <TableCell className="px-2 py-1.5 text-xs font-medium whitespace-nowrap">
         {team.name}
@@ -82,7 +82,7 @@ export const TeamTableRow = memo(function TeamTableRow({
         />
       ))}
 
-      <TableCell className="px-2 py-1.5 text-right text-xs font-medium tabular-nums text-blue-600">
+      <TableCell className="px-2 py-1.5 text-right text-xs font-medium tabular-nums text-emerald-400">
         {formatCurrency(team.fairValue * 0.95)}
       </TableCell>
       <TableCell className="px-2 py-1.5 text-right text-xs font-medium tabular-nums">

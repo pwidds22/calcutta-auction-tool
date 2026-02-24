@@ -415,3 +415,58 @@ These formulas are the heart of the product — port to TypeScript with unit tes
 
 **Blockers:**
 - None. Rebrand complete, deployed, and live.
+
+### Session: 2026-02-24 — Phase 3: Landing Page + Dark Theme + Brand System
+
+**Completed:**
+- Built full production landing page with 8 new components:
+  - `v2/components/landing/hero-section.tsx` — Dark hero, radial emerald glow, product preview mock table
+  - `v2/components/landing/features-section.tsx` — 3-column: Devigged Odds, Fair Value, Profit Projections
+  - `v2/components/landing/how-it-works-section.tsx` — 4-step flow with emerald connectors
+  - `v2/components/landing/social-proof-section.tsx` — Stats-based trust signals (64 Teams, 6 Rounds, $29.99)
+  - `v2/components/landing/pricing-section.tsx` — $29.99 card with emerald glow, competitor comparison
+  - `v2/components/landing/cta-section.tsx` — Final CTA with emerald-tinted section
+  - `v2/components/layout/navbar.tsx` — Marketing navbar (sticky, glass blur, mobile hamburger)
+  - `v2/components/layout/footer.tsx` — Dark footer with brand + links
+- Implemented dark brand theme globally:
+  - `v2/app/globals.css` — `.dark.landing-theme` CSS vars (emerald primary, dark charcoal bg, oklch colors)
+  - `v2/app/layout.tsx` — Added `dark landing-theme` to `<html>`, rich SEO metadata (OG tags, keywords)
+  - CSS specificity fix: `.dark.landing-theme` (0-2-0) overrides `.dark` (0-1-0)
+- Fixed all hardcoded light-mode colors across auction components:
+  - `v2/components/auction/team-table-row.tsx` — green-50/green-600 → emerald-500/10, emerald-400
+  - `v2/components/auction/summary-stats-cards.tsx` — green/red-600 → emerald/red-400
+  - `v2/components/auction/payout-rules-editor.tsx` — percentage badges → emerald/amber dark variants
+  - `v2/components/auth/{login-form,register-form}.tsx` — error states → red-500/10, red-400
+- Created shared navigation + layout system:
+  - `v2/components/layout/app-navbar.tsx` — Authenticated navbar (CE logo, Auction/Profile links, Sign Out, mobile menu)
+  - `v2/app/(auth)/layout.tsx` — Auth layout with CE logo + "Back to home" link
+  - `v2/app/(protected)/layout.tsx` — Protected layout wrapping all auth'd pages with AppNavbar
+- Restyled all pages for brand consistency:
+  - `v2/app/page.tsx` — Full landing page composition (8 sections)
+  - `v2/app/(protected)/payment/page.tsx` — Emerald glow card, amber badge, green CTA
+  - `v2/app/(protected)/profile/page.tsx` — Account details, payment status indicator, support section
+  - `v2/components/auction/auction-tool.tsx` — Removed inline header (navbar handles navigation)
+  - `v2/app/(auth)/{login,register}/page.tsx` — Simplified (layout handles centering + branding)
+- Build passes, all 34 tests pass
+
+**User Review Scores:**
+- Landing: 9/10, Login: 8/10, Register: 8/10, Payment: 9/10, Profile: 8.5/10, Auction: 8.5/10
+- User verdict: "Massive improvement. Ready to ship."
+
+**Nice-to-Have Polish (not blockers, saved for future session):**
+- Login/Register card borders — bump to `border-white/10` for visibility
+- Remove email from auction status bar (redundant with navbar)
+- Sign Out in app-navbar — subtle red/muted-red color
+- Register page — add value prop line ("Free to create. Pay only when you're ready.")
+- Mobile responsiveness audit — auction table horizontal scroll
+- Feature cards — subtle hover animation (scale or border glow)
+
+**Next Steps (Next Session):**
+- Deploy to Vercel (push to main triggers auto-deploy)
+- Fix Stripe Payment Link redirect (Stripe dashboard configuration)
+- Blog migration (MDX), email existing customers, end-to-end testing
+- Update 2026 March Madness odds when bracket is set
+- Address nice-to-have polish items above
+
+**Blockers:**
+- None. Landing page + dark theme complete. Site is ready to ship.

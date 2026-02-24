@@ -1,22 +1,25 @@
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
+import { Navbar } from '@/components/layout/navbar'
+import { Footer } from '@/components/layout/footer'
+import { HeroSection } from '@/components/landing/hero-section'
+import { FeaturesSection } from '@/components/landing/features-section'
+import { HowItWorksSection } from '@/components/landing/how-it-works-section'
+import { SocialProofSection } from '@/components/landing/social-proof-section'
+import { PricingSection } from '@/components/landing/pricing-section'
+import { CtaSection } from '@/components/landing/cta-section'
 
 export default function HomePage() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 p-4">
-      <h1 className="text-4xl font-bold">Calcutta Edge</h1>
-      <p className="max-w-md text-center text-muted-foreground">
-        Win your March Madness Calcutta with data-driven strategy. Fair values,
-        bid recommendations, and round-by-round profit projections.
-      </p>
-      <div className="flex gap-4">
-        <Button asChild>
-          <Link href="/register">Get Started</Link>
-        </Button>
-        <Button variant="outline" asChild>
-          <Link href="/login">Sign In</Link>
-        </Button>
-      </div>
+    <div className="flex min-h-screen flex-col">
+      <Navbar />
+      <main className="flex-1">
+        <HeroSection />
+        <FeaturesSection />
+        <HowItWorksSection />
+        <SocialProofSection />
+        <PricingSection />
+        <CtaSection />
+      </main>
+      <Footer />
     </div>
   )
 }

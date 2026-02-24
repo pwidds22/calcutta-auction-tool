@@ -9,9 +9,6 @@ import { SummaryStatsCards } from './summary-stats-cards';
 import { TeamTable } from './team-table';
 import { initializeTeams } from '@/lib/calculations/initialize';
 import { MARCH_MADNESS_2026_TEAMS } from '@/lib/data/march-madness-2026';
-import { Button } from '@/components/ui/button';
-import { logout } from '@/actions/auth';
-import { Separator } from '@/components/ui/separator';
 import type { SavedTeamData, PayoutRules } from '@/lib/calculations/types';
 import { DEFAULT_PAYOUT_RULES } from '@/lib/calculations/types';
 
@@ -57,30 +54,18 @@ function AuctionToolInner({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Status bar */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Calcutta Auction Tool</h1>
-          <p className="text-sm text-muted-foreground">{userEmail}</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-muted-foreground">
-            {isSaving
-              ? 'Saving...'
-              : lastSaved
-                ? `Saved ${lastSaved.toLocaleTimeString()}`
-                : ''}
-            {error && <span className="text-red-500"> Error: {error}</span>}
-          </span>
-          <form action={logout}>
-            <Button variant="outline" size="sm" type="submit">
-              Sign Out
-            </Button>
-          </form>
-        </div>
+        <p className="text-sm text-white/40">{userEmail}</p>
+        <span className="text-xs text-white/30">
+          {isSaving
+            ? 'Saving...'
+            : lastSaved
+              ? `Saved ${lastSaved.toLocaleTimeString()}`
+              : ''}
+          {error && <span className="text-red-400"> Error: {error}</span>}
+        </span>
       </div>
-
-      <Separator />
 
       {/* Pot size */}
       <PotSizeSection />

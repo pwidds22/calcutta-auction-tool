@@ -12,9 +12,5 @@ export default async function LoginPage() {
     redirect('/auction')
   }
 
-  return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <LoginForm />
-    </div>
-  )
+  return <LoginForm />
 }

@@ -59,8 +59,8 @@ export function PayoutRulesEditor() {
           <span
             className={`rounded-full px-2 py-0.5 text-xs font-medium ${
               Math.abs(totalPercent - 100) < 0.01
-                ? 'bg-green-100 text-green-700'
-                : 'bg-amber-100 text-amber-700'
+                ? 'bg-emerald-500/15 text-emerald-400'
+                : 'bg-amber-500/15 text-amber-400'
             }`}
           >
             {totalPercent.toFixed(1)}%
@@ -124,8 +124,8 @@ export function PayoutRulesEditor() {
               <span
                 className={`font-semibold ${
                   Math.abs(totalPercent - 100) < 0.01
-                    ? 'text-green-600'
-                    : 'text-amber-600'
+                    ? 'text-emerald-400'
+                    : 'text-amber-400'
                 }`}
               >
                 {totalPercent.toFixed(1)}%

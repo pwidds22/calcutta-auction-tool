@@ -116,9 +116,34 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* Brand theme: emerald/gold on dark charcoal — higher specificity to override .dark */
+.dark.landing-theme {
+  --background: oklch(0.135 0.005 260);
+  --foreground: oklch(0.97 0 0);
+  --card: oklch(0.175 0.005 260);
+  --card-foreground: oklch(0.97 0 0);
+  --popover: oklch(0.175 0.005 260);
+  --popover-foreground: oklch(0.97 0 0);
+  --primary: oklch(0.70 0.17 162);
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.21 0.005 260);
+  --secondary-foreground: oklch(0.97 0 0);
+  --muted: oklch(0.21 0.005 260);
+  --muted-foreground: oklch(0.55 0 0);
+  --accent: oklch(0.21 0.01 162);
+  --accent-foreground: oklch(0.97 0 0);
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.70 0.17 162);
+  --destructive: oklch(0.704 0.191 22.216);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
+  }
+  html {
+    scroll-behavior: smooth;
   }
   body {
     @apply bg-background text-foreground;
