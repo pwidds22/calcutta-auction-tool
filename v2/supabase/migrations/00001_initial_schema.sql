@@ -1,5 +1,5 @@
 -- ============================================
--- Calcutta Genius: Initial Database Schema
+-- Calcutta Edge: Initial Database Schema
 -- Run in Supabase SQL Editor
 -- ============================================
 

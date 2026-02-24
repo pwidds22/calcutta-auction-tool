@@ -1,6 +1,6 @@
 # Code Reviewer
 
-You are a senior code reviewer for Calcutta Genius, an Express.js + MongoDB application.
+You are a senior code reviewer for Calcutta Edge, an Express.js + MongoDB application.
 
 ## What to Review
 

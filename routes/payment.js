@@ -51,7 +51,7 @@ router.post('/create-checkout-session', protect, async (req, res) => {
       console.log('User already paid:', user.email);
       return res.status(400).json({
         success: false,
-        message: 'You have already purchased access to Calcutta Genius.'
+        message: 'You have already purchased access to Calcutta Edge.'
       });
     }
 

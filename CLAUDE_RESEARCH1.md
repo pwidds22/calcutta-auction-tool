@@ -1,6 +1,6 @@
-# CalcuttaGenius faces a niche goldmine with almost no competition
+# CalcuttaEdge faces a niche goldmine with almost no competition
 
-Patrick's $150 in revenue from 15 customers with zero marketing is a strong signal, not a weak one. **The Calcutta auction tool market has no dominant platform, no meaningful competition beyond Pool Genius's add-on tool, and serves an affluent audience that routinely stakes $1,000–$100,000+ per pool.** The $14.99 price point dramatically undervalues the product relative to money at stake. With strategic pricing adjustments, content marketing, and expansion to golf Calcuttas, CalcuttaGenius could realistically reach $10,000–$25,000 in annual revenue within two years — and significantly more if it moves into auction hosting.
+Patrick's $150 in revenue from 15 customers with zero marketing is a strong signal, not a weak one. **The Calcutta auction tool market has no dominant platform, no meaningful competition beyond Pool Genius's add-on tool, and serves an affluent audience that routinely stakes $1,000–$100,000+ per pool.** The $14.99 price point dramatically undervalues the product relative to money at stake. With strategic pricing adjustments, content marketing, and expansion to golf Calcuttas, CalcuttaEdge could realistically reach $10,000–$25,000 in annual revenue within two years — and significantly more if it moves into auction hosting.
 
 The broader context matters: roughly 56 million Americans fill out March Madness brackets, but the Calcutta auction niche likely involves fewer than 500,000 participants. That sounds small until you consider these participants average dramatically higher spending ($100–$50,000+ per person per pool) and demonstrate the exact profile — affluent, analytically minded, competitive — that pays for premium tools without blinking. Pool Genius charges $39–$98 for access to their Calcutta tool as part of broader packages, and they're the only real competitor. The social media landscape, YouTube content, and community infrastructure around Calcuttas is essentially vacant.
 
@@ -12,13 +12,13 @@ Pool Genius (by TeamRankings) is the closest competitor and the market's dominan
 
 Their Calcutta tool launched in 2022 and was broken out as a standalone product in 2024. It's available through the **Bracket Picks PLUS** package or annual subscriptions ($98/year for Pool Picks, higher for All-Access). Individual products run $39–$49 per season. The tool provides team valuations as a percentage of the total pot, customizable scoring rules, dual dollar-value displays, and live draft tracking — but it does not host the actual auction. It's purely an advisory and calculation tool. Pool Genius also supplies content and technology to ESPN, Action Network, Yahoo Sports, FanDuel, and BetMGM, and markets primarily through **200,000+ pages of free sports data** on TeamRankings.com that drive organic search traffic.
 
-The critical insight for Patrick: Pool Genius treats Calcutta as a minor add-on bundled into a much larger product suite. They don't market it heavily, they don't host auctions, and they don't focus on the Calcutta experience. **CalcuttaGenius has the advantage of specialization** — a domain name perfectly matched to the niche, a product that can combine strategy and hosting, and the ability to focus all energy on becoming the definitive Calcutta platform.
+The critical insight for Patrick: Pool Genius treats Calcutta as a minor add-on bundled into a much larger product suite. They don't market it heavily, they don't host auctions, and they don't focus on the Calcutta experience. **CalcuttaEdge has the advantage of specialization** — a domain name perfectly matched to the niche, a product that can combine strategy and hosting, and the ability to focus all energy on becoming the definitive Calcutta platform.
 
 ---
 
 ## The hosting platform landscape is wide open
 
-The distinction between Calcutta "tools" and Calcutta "hosting platforms" reveals the market's biggest gap. Strategy tools (Pool Genius, CalcuttaGenius) help participants calculate fair values and make better bids. Hosting platforms (CalcuttaTime, AuctionPro) manage the live auction process — bidding, tracking, payouts. No platform does both well.
+The distinction between Calcutta "tools" and Calcutta "hosting platforms" reveals the market's biggest gap. Strategy tools (Pool Genius, CalcuttaEdge) help participants calculate fair values and make better bids. Hosting platforms (CalcuttaTime, AuctionPro) manage the live auction process — bidding, tracking, payouts. No platform does both well.
 
 **CalcuttaTime.com**, operated by Rose Technologies in Chicago, markets itself for March Madness, golf majors, and F1 races, with silent and custom auctions "coming soon." However, it has an extremely low online footprint — zero Reddit mentions, no app store presence, no reviews, no discernible pricing. It appears to be a very early-stage product with minimal traction.
 
@@ -50,7 +50,7 @@ Multiple signals confirm growing interest: media outlets including Action Networ
 
 ## Adding bracket picks would be a mistake; golf Calcuttas are the real prize
 
-The NCAA bracket pick market is massively saturated. ESPN's Tournament Challenge set a record in 2025 with **24.4 million completed brackets**. CBS, Yahoo, NCAA.com, DraftKings, and Bet365 all offer free bracket contests with substantial prize pools. Pool Genius has dominated paid bracket picks for 26 years with $2.5 million+ in verified subscriber winnings. Adding bracket picks to CalcuttaGenius would put it in direct competition with free platforms serving tens of millions and an entrenched paid competitor with two decades of track record. It would dilute the Calcutta specialist positioning that is CalcuttaGenius's core advantage.
+The NCAA bracket pick market is massively saturated. ESPN's Tournament Challenge set a record in 2025 with **24.4 million completed brackets**. CBS, Yahoo, NCAA.com, DraftKings, and Bet365 all offer free bracket contests with substantial prize pools. Pool Genius has dominated paid bracket picks for 26 years with $2.5 million+ in verified subscriber winnings. Adding bracket picks to CalcuttaEdge would put it in direct competition with free platforms serving tens of millions and an entrenched paid competitor with two decades of track record. It would dilute the Calcutta specialist positioning that is CalcuttaEdge's core advantage.
 
 The far smarter expansion is into **multi-sport Calcuttas**, which deepens the niche rather than abandoning it. Golf Calcuttas represent the single largest opportunity: they are a staple at nearly every private country club in America, with standard member-guest Calcutta pots reaching **$20,000–$30,000+** at mid-tier clubs. The Masters, PGA Championship, U.S. Open, and The Open each drive dedicated Calcutta activity. Horse racing Calcuttas (Kentucky Derby, Melbourne Cup, Breeders' Cup) tap the format's literal origins. NFL Playoff Calcuttas serve 14 teams among 7+ bidders, with the Bet The Process podcast documenting pools exceeding $500,000. The 2026 FIFA World Cup in the U.S., Canada, and Mexico — with an expanded 48-team field — presents a massive one-time opportunity.
 
@@ -72,9 +72,9 @@ No competitor currently offers a unified, multi-sport Calcutta platform. PoolGen
 
 The marketing landscape for Calcutta tools is remarkably vacant. No dedicated Calcutta subreddit exists. No social media account besides @BTPCalcutta regularly discusses Calcuttas. YouTube has almost zero Calcutta tutorial content. No forum or community hub serves the Calcutta audience specifically. This is both a challenge (small existing audience) and an opportunity (zero competition for attention).
 
-The highest-leverage marketing channels for CalcuttaGenius:
+The highest-leverage marketing channels for CalcuttaEdge:
 
-- **SEO and content marketing** should be the foundation. Target keywords like "march madness calcutta strategy," "calcutta auction calculator," "calcutta payout structure," "how to run a calcutta auction," and "masters golf calcutta." Create 5–10 pillar blog posts and a free payout calculator as a lead magnet. CalcuttaGenius.com already has a keyword-perfect domain name — a significant SEO advantage.
+- **SEO and content marketing** should be the foundation. Target keywords like "march madness calcutta strategy," "calcutta auction calculator," "calcutta payout structure," "how to run a calcutta auction," and "masters golf calcutta." Create 5–10 pillar blog posts and a free payout calculator as a lead magnet. CalcuttaEdge.com already has a keyword-perfect domain name — a significant SEO advantage.
 - **Bet The Process podcast partnership** is the single highest-ROI marketing move available. BTP is THE Calcutta audience — analytically minded bettors who run high-stakes Calcuttas across multiple sports. A sponsorship or tool partnership with Jeff Ma and Rufus Peabody could drive hundreds of qualified leads.
 - **Reddit engagement** in r/sportsbook, r/CollegeBasketball, and r/golf with genuinely helpful strategy content (not spam) during the 4–6 weeks before March Madness. Time the push precisely.
 - **YouTube tutorials** represent an almost completely unoccupied space. "How to Run Your First Calcutta Auction" and "March Madness Calcutta Strategy in 10 Minutes" would face virtually no competition.
@@ -95,7 +95,7 @@ The recommended pricing structure uses a freemium-to-premium funnel:
 - **Annual Premium ($49.99–$79.99/year)**: All events across all sports, advanced analytics, historical data, and strategy guides
 - **Commissioner tier ($99.99–$149.99/year)**: Everything above plus auction hosting, group management, live bidding interface, and payout calculation
 
-The Commissioner tier is strategically critical because it captures the pool organizer — the person who decides what tools the entire group uses. If the commissioner hosts via CalcuttaGenius, all 8–16 participants see the platform, creating organic acquisition for the individual strategy tool.
+The Commissioner tier is strategically critical because it captures the pool organizer — the person who decides what tools the entire group uses. If the commissioner hosts via CalcuttaEdge, all 8–16 participants see the platform, creating organic acquisition for the individual strategy tool.
 
 ---
 

@@ -1,7 +1,7 @@
-# Calcutta Genius - Claude Code Context
+# Calcutta Edge - Claude Code Context
 
 ## Project Overview
-Calcutta Genius (calcuttagenius.com) is a Calcutta auction platform — combining strategy analytics with live auction hosting. Users get fair value calculations, bid recommendations, round-by-round profit projections, and (soon) real-time auction hosting.
+Calcutta Edge (calcuttaedge.com) is a Calcutta auction platform — combining strategy analytics with live auction hosting. Users get fair value calculations, bid recommendations, round-by-round profit projections, and (soon) real-time auction hosting.
 
 **Target market**: Calcutta auction participants across March Madness, golf majors, NFL playoffs, and more. Affluent, analytically-minded audience with $500-$100K+ at stake per pool.
 
@@ -103,8 +103,8 @@ These formulas are the heart of the product — port to TypeScript with unit tes
 - Express app, port 5000 (dev) / 10000 (prod)
 - Stripe webhook route registered before `express.json()` (critical order)
 - **Known tech debt**: Webhook handler duplicated at lines ~48 and ~272
-- CORS: localhost + calcuttagenius.com + www subdomain
-- Cookie-based JWT auth with domain-aware settings (.calcuttagenius.com in prod)
+- CORS: localhost + calcuttaedge.com + www subdomain
+- Cookie-based JWT auth with domain-aware settings (.calcuttaedge.com in prod)
 
 ### Legacy Required Environment Variables
 - `MONGO_URI`, `JWT_SECRET`, `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `FRONTEND_URL`
@@ -243,7 +243,7 @@ These formulas are the heart of the product — port to TypeScript with unit tes
 
 **Completed:**
 - Initialized Next.js 16 (App Router, TypeScript, Tailwind, shadcn/ui) in `v2/` subdirectory
-- Created Supabase project "Calcutta Genius" (`xtkdwyrxllqmgoedfotf`, us-east-1) via MCP
+- Created Supabase project "Calcutta Edge" (`xtkdwyrxllqmgoedfotf`, us-east-1) via MCP
 - Applied full DB migration: `profiles` + `auction_data` tables, RLS policies, auto-create trigger
   - Migration file: `v2/supabase/migrations/00001_initial_schema.sql`
 - Built 4 Supabase client utilities: `v2/lib/supabase/{client,server,middleware,admin}.ts`
@@ -295,10 +295,10 @@ These formulas are the heart of the product — port to TypeScript with unit tes
 - Cleaned up `v2/next.config.ts` — removed `turbopack.root` workaround that would break in Vercel's deploy context
 - Removed hardcoded live Stripe Payment Link URL from `v2/lib/stripe/config.ts` — now requires `NEXT_PUBLIC_STRIPE_PAYMENT_LINK_URL` env var
 - Moved Windows-only binary packages (`@tailwindcss/oxide-win32-x64-msvc`, `lightningcss-win32-x64-msvc`) from `dependencies` to `optionalDependencies` in `v2/package.json` — fixes Vercel Linux build (npm silently skips incompatible optional deps)
-- Deployed v2 to Vercel: **calcutta-genius.vercel.app** (root directory: `v2`)
+- Deployed v2 to Vercel: **calcuttaedge.com** (root directory: `v2`)
 - Configured all environment variables in Vercel (Supabase + Stripe live keys)
 - Verified landing page, auth pages, and route protection working in production
-- Set up Stripe webhook endpoint in live mode: `checkout.session.completed` → `https://calcutta-genius.vercel.app/api/webhooks/stripe`
+- Set up Stripe webhook endpoint in live mode: `checkout.session.completed` → `https://calcuttaedge.com/api/webhooks/stripe`
 - Added `STRIPE_WEBHOOK_SECRET` to Vercel env vars and redeployed
 
 **Key Files Modified:**
@@ -307,7 +307,7 @@ These formulas are the heart of the product — port to TypeScript with unit tes
 - `v2/package.json` — Windows binaries moved to `optionalDependencies`
 
 **Infrastructure:**
-- Vercel project: `calcutta-auction-tool` at `calcutta-genius.vercel.app`
+- Vercel project: `calcutta-edge` at `calcuttaedge.com`
 - Stripe webhook: live mode, `checkout.session.completed` event
 - Auto-deploys on push to `main` via GitHub integration
 
@@ -317,7 +317,7 @@ These formulas are the heart of the product — port to TypeScript with unit tes
 - Vercel MCP `deploy_to_vercel` tool only provides instructions, doesn't actually deploy — use dashboard or CLI
 
 **Next Steps (Next Session):**
-- **Domain**: User researching new brand name (will NOT be calcuttagenius.com). Finalize domain choice, add to Vercel, configure DNS. Add this to Phase 3 tasks.
+- **Domain**: Rebranded to Calcutta Edge, calcuttaedge.com purchased and configured.
 - **Phase 2**: Port calculation logic from `js/auction-tool.js` to TypeScript (`v2/lib/calculations/`)
 - Build auction tool UI (team table, payout rules editor, pot size, profit projections)
 - Wire up Supabase CRUD for save/load

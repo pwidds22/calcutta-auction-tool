@@ -28,6 +28,6 @@ If the user mentions feedback or bugs:
 
 ## Project Quick Reference
 - **Dev server**: `npm run dev` (port 5000)
-- **Production**: Render at calcuttagenius.com (port 10000)
+- **Production**: Vercel at calcuttaedge.com (legacy still on Render)
 - **Stack**: Express + MongoDB + Stripe + JWT auth
 - **Critical**: Webhook route must be before `express.json()` in server.js

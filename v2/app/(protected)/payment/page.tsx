@@ -31,7 +31,7 @@ export default async function PaymentPage() {
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Unlock Calcutta Genius</CardTitle>
+          <CardTitle>Unlock Calcutta Edge</CardTitle>
           <CardDescription>
             Get fair value calculations, bid recommendations, and round-by-round
             profit projections for March Madness 2026.

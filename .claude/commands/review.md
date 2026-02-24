@@ -23,7 +23,7 @@ Tell the user to copy this to Claude Web (claude.ai) for review:
 
 ---
 
-**Review Request for Calcutta Genius**
+**Review Request for Calcutta Edge**
 
 Branch: `[branch name from above]`
 Commit: `[commit message from above]`

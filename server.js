@@ -173,10 +173,10 @@ const allowedOrigins = [
   'http://127.0.0.1:5000',  // development
   'http://127.0.0.1:3000',  // development alternative port
   'https://calcutta-auction-tool.onrender.com',  // production
-  'https://calcuttagenius.com',  // custom domain
-  'http://calcuttagenius.com',   // custom domain without https
-  'https://www.calcuttagenius.com',  // www subdomain
-  'http://www.calcuttagenius.com'    // www subdomain without https
+  'https://calcuttaedge.com',  // custom domain
+  'http://calcuttaedge.com',   // custom domain without https
+  'https://www.calcuttaedge.com',  // www subdomain
+  'http://www.calcuttaedge.com'    // www subdomain without https
 ];
 
 // CORS middleware
@@ -220,8 +220,8 @@ app.use((req, res, next) => {
     };
 
     // Set domain only for production with custom domain
-    if (req.get('host')?.includes('calcuttagenius.com')) {
-      defaultOptions.domain = '.calcuttagenius.com';
+    if (req.get('host')?.includes('calcuttaedge.com')) {
+      defaultOptions.domain = '.calcuttaedge.com';
     }
 
     // Log cookie settings in development

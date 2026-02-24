@@ -33,7 +33,7 @@ export function RegisterForm() {
       <CardHeader>
         <CardTitle>Create Account</CardTitle>
         <CardDescription>
-          Sign up for Calcutta Genius to get started
+          Sign up for Calcutta Edge to get started
         </CardDescription>
       </CardHeader>
       <CardContent>

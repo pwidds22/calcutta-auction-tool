@@ -35,7 +35,7 @@ Several states require affiliate licenses BEFORE promoting sportsbooks:
 
 **DFS promotion avoids this** — DFS classified differently from sports betting in most states.
 
-## Realistic Numbers for CalcuttaGenius
+## Realistic Numbers for CalcuttaEdge
 At 5,000 March Madness visitors:
 - ~300 clicks on sportsbook link (6%)
 - ~60 registrations (20% of clicks)

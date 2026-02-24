@@ -33,7 +33,7 @@ export function LoginForm() {
       <CardHeader>
         <CardTitle>Sign In</CardTitle>
         <CardDescription>
-          Enter your email and password to access Calcutta Genius
+          Enter your email and password to access Calcutta Edge
         </CardDescription>
       </CardHeader>
       <CardContent>

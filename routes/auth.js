@@ -270,8 +270,8 @@ const sendTokenResponse = (user, statusCode, res, req) => {
   const host = req.get('host');
   if (host) {
     // If it's a custom domain, include the domain in cookie options
-    if (host.includes('calcuttagenius.com')) {
-      options.domain = '.calcuttagenius.com';
+    if (host.includes('calcuttaedge.com')) {
+      options.domain = '.calcuttaedge.com';
     }
   }
 

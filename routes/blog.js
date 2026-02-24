@@ -38,7 +38,7 @@ router.get('/:slug', async (req, res) => {
                 </script>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>${title} - Calcutta Genius</title>
+                <title>${title} - Calcutta Edge</title>
                 <meta name="description" content="${description}">
                 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
                 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -48,7 +48,7 @@ router.get('/:slug', async (req, res) => {
                 <!-- Navigation -->
                 <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
                     <div class="container">
-                        <a class="navbar-brand" href="/home">Calcutta Genius</a>
+                        <a class="navbar-brand" href="/home">Calcutta Edge</a>
                         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                             <span class="navbar-toggler-icon"></span>
                         </button>
@@ -97,7 +97,7 @@ router.get('/:slug', async (req, res) => {
                     <div class="container">
                         <div class="row">
                             <div class="col-md-6">
-                                <h5>Calcutta Genius</h5>
+                                <h5>Calcutta Edge</h5>
                                 <p>The ultimate tool for March Madness Calcutta auctions.</p>
                             </div>
                             <div class="col-md-3">
@@ -113,13 +113,13 @@ router.get('/:slug', async (req, res) => {
                             <div class="col-md-3">
                                 <h5>Contact</h5>
                                 <ul class="list-unstyled">
-                                    <li><a href="mailto:support@calcuttagenius.com" class="text-white">support@calcuttagenius.com</a></li>
+                                    <li><a href="mailto:support@calcuttaedge.com" class="text-white">support@calcuttaedge.com</a></li>
                                 </ul>
                             </div>
                         </div>
                         <hr class="my-4">
                         <div class="text-center">
-                            <p class="mb-0">&copy; 2024 Calcutta Genius. All rights reserved.</p>
+                            <p class="mb-0">&copy; 2024 Calcutta Edge. All rights reserved.</p>
                         </div>
                     </div>
                 </footer>

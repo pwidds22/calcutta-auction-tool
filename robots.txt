@@ -11,4 +11,4 @@ Disallow: /payment-cancel
 Disallow: /auction
 Disallow: /profile
 
-Sitemap: https://calcuttagenius.com/sitemap.xml 
+Sitemap: https://calcuttaedge.com/sitemap.xml 

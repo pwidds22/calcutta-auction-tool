@@ -1,9 +1,9 @@
-# Calcutta Genius Roadmap
+# Calcutta Edge Roadmap
 
 ## Vision
-Transform CalcuttaGenius from a $14.99 single-use March Madness calculator into the definitive Calcutta auction platform — combining strategy analytics with live auction hosting across multiple sports.
+Transform Calcutta Edge from a $14.99 single-use March Madness calculator into the definitive Calcutta auction platform — combining strategy analytics with live auction hosting across multiple sports.
 
-**No dominant platform exists.** Pool Genius treats Calcutta as an afterthought ($39-98 bundled). AuctionPro is free but primitive. Most groups still use Google Sheets. CalcuttaGenius can own this niche.
+**No dominant platform exists.** Pool Genius treats Calcutta as an afterthought ($39-98 bundled). AuctionPro is free but primitive. Most groups still use Google Sheets. Calcutta Edge can own this niche.
 
 ---
 
@@ -73,7 +73,7 @@ _New stack, auth, database, deployed._
 - [ ] Verify auth flow works end-to-end on Vercel
 
 ### Key Decisions
-- Keep `calcuttagenius.com` as the domain (excellent SEO value)
+- Domain: `calcuttaedge.com` (purchased and configured)
 - Use Supabase's `@supabase/ssr` for Next.js cookie-based auth
 - `profiles` table auto-created on user signup via database trigger
 
@@ -129,7 +129,7 @@ _Ship it for March Madness 2026._
   - Meta tags, Open Graph, structured data
   - Sitemap generation
   - Target keywords: "calcutta auction calculator", "march madness calcutta strategy"
-- [ ] DNS cutover: `calcuttagenius.com` from Render → Vercel
+- [x] DNS cutover: `calcuttaedge.com` → Vercel
 - [ ] Stripe webhook testing with `stripe listen --forward-to`
 - [ ] Email existing 15 customers about the upgrade + new pricing
 - [ ] End-to-end testing (register → pay → use tool → save data)

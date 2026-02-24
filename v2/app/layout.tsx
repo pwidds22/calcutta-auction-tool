@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Calcutta Genius - March Madness Auction Strategy",
+  title: "Calcutta Edge - March Madness Auction Strategy",
   description:
     "Fair value calculations, bid recommendations, and profit projections for your Calcutta auction.",
 };
