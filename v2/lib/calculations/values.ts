@@ -1,5 +1,4 @@
-import type { Team, PayoutRules } from './types';
-import { PAYOUT_TO_ROUND } from './types';
+import type { Team, PayoutRules, TournamentConfig } from './types';
 
 /**
  * Calculate team values based on devigged odds and payout rules.
@@ -9,22 +8,24 @@ import { PAYOUT_TO_ROUND } from './types';
  *   valuePercentage = sum of all roundValues
  *   fairValue = valuePercentage * potSize
  *
- * Note: payoutRules.roundOf64 maps to odds.r32 (winning R64 = advancing TO R32).
+ * Payout rules are keyed by round key (e.g., 'r32', 's16').
  *
  * Mutates teams in place and returns them.
  */
 export function calculateTeamValues(
   teams: Team[],
   payoutRules: PayoutRules,
-  potSize: number
+  potSize: number,
+  config: TournamentConfig
 ): Team[] {
   for (const team of teams) {
     let totalValue = 0;
-    const roundValues = { r32: 0, s16: 0, e8: 0, f4: 0, f2: 0, champ: 0 };
+    const roundValues: Record<string, number> = {};
 
-    for (const [payoutKey, roundKey] of PAYOUT_TO_ROUND) {
-      const value = team.odds[roundKey] * ((payoutRules[payoutKey] as number) / 100);
-      roundValues[roundKey] = value;
+    for (const round of config.rounds) {
+      const payout = (payoutRules[round.key] ?? 0) / 100;
+      const value = team.odds[round.key] * payout;
+      roundValues[round.key] = value;
       totalValue += value;
     }
 

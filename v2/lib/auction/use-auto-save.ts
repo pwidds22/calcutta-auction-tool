@@ -23,6 +23,7 @@ export function useAutoSave() {
         teams: getTeamsForSave(state.teams),
         payoutRules: state.payoutRules,
         estimatedPotSize: state.estimatedPotSize,
+        eventType: state.config?.id,
       });
       if (result?.error) {
         setError(result.error);
@@ -34,7 +35,7 @@ export function useAutoSave() {
     } finally {
       setIsSaving(false);
     }
-  }, [state.teams, state.payoutRules, state.estimatedPotSize, dispatch]);
+  }, [state.teams, state.payoutRules, state.estimatedPotSize, state.config?.id, dispatch]);
 
   useEffect(() => {
     if (!state.isDirty || state.isLoading) return;

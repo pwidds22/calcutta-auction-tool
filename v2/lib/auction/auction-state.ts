@@ -1,13 +1,13 @@
 import type {
   Team,
   PayoutRules,
-  RegionFilter,
+  TournamentConfig,
+  GroupFilter,
   StatusFilter,
   SortOption,
   SortDirection,
   SavedTeamData,
 } from '@/lib/calculations/types';
-import { DEFAULT_PAYOUT_RULES } from '@/lib/calculations/types';
 import { calculateTeamValues } from '@/lib/calculations/values';
 import { calculateProjectedPotSize } from '@/lib/calculations/pot';
 
@@ -18,7 +18,8 @@ export interface AuctionState {
   payoutRules: PayoutRules;
   estimatedPotSize: number;
   projectedPotSize: number;
-  regionFilter: RegionFilter;
+  config: TournamentConfig | null;
+  groupFilter: GroupFilter;
   statusFilter: StatusFilter;
   sortOption: SortOption;
   sortDirection: SortDirection;
@@ -30,10 +31,11 @@ export interface AuctionState {
 
 export const INITIAL_STATE: AuctionState = {
   teams: [],
-  payoutRules: DEFAULT_PAYOUT_RULES,
+  payoutRules: {},
   estimatedPotSize: 10000,
   projectedPotSize: 0,
-  regionFilter: 'All',
+  config: null,
+  groupFilter: 'All',
   statusFilter: 'All',
   sortOption: 'seed',
   sortDirection: 'asc',
@@ -46,12 +48,12 @@ export const INITIAL_STATE: AuctionState = {
 // ─── Actions ─────────────────────────────────────────────────────────
 
 export type AuctionAction =
-  | { type: 'SET_INITIAL_DATA'; teams: Team[]; payoutRules: PayoutRules; estimatedPotSize: number }
+  | { type: 'SET_INITIAL_DATA'; teams: Team[]; payoutRules: PayoutRules; estimatedPotSize: number; config: TournamentConfig }
   | { type: 'UPDATE_PURCHASE_PRICE'; teamId: number; price: number }
   | { type: 'TOGGLE_MY_TEAM'; teamId: number; isMyTeam: boolean }
   | { type: 'UPDATE_PAYOUT_RULES'; payoutRules: PayoutRules }
   | { type: 'UPDATE_ESTIMATED_POT_SIZE'; potSize: number }
-  | { type: 'SET_REGION_FILTER'; filter: RegionFilter }
+  | { type: 'SET_GROUP_FILTER'; filter: GroupFilter }
   | { type: 'SET_STATUS_FILTER'; filter: StatusFilter }
   | { type: 'SET_SORT'; option: SortOption; direction: SortDirection }
   | { type: 'SET_SEARCH_TERM'; term: string }
@@ -61,9 +63,10 @@ export type AuctionAction =
 // ─── Helpers ─────────────────────────────────────────────────────────
 
 function recalculateValues(state: AuctionState): AuctionState {
+  if (!state.config) return state;
   const potSize =
     state.projectedPotSize > 0 ? state.projectedPotSize : state.estimatedPotSize;
-  calculateTeamValues(state.teams, state.payoutRules, potSize);
+  calculateTeamValues(state.teams, state.payoutRules, potSize, state.config);
   return state;
 }
 
@@ -85,6 +88,7 @@ export function auctionReducer(
         teams: action.teams,
         payoutRules: action.payoutRules,
         estimatedPotSize: action.estimatedPotSize,
+        config: action.config,
         isLoading: false,
         isDirty: false,
       };
@@ -99,7 +103,6 @@ export function auctionReducer(
         return {
           ...t,
           purchasePrice: action.price,
-          // Reset isMyTeam if price set to 0 (legacy lines 1461-1463)
           isMyTeam: action.price === 0 ? false : t.isMyTeam,
         };
       });
@@ -136,8 +139,8 @@ export function auctionReducer(
       return newState;
     }
 
-    case 'SET_REGION_FILTER':
-      return { ...state, regionFilter: action.filter };
+    case 'SET_GROUP_FILTER':
+      return { ...state, groupFilter: action.filter };
 
     case 'SET_STATUS_FILTER':
       return { ...state, statusFilter: action.filter };
@@ -168,9 +171,9 @@ export function getEffectivePotSize(state: AuctionState): number {
 export function getFilteredTeams(state: AuctionState): Team[] {
   let filtered = [...state.teams];
 
-  // Region filter
-  if (state.regionFilter !== 'All') {
-    filtered = filtered.filter((t) => t.region === state.regionFilter);
+  // Group filter
+  if (state.groupFilter !== 'All') {
+    filtered = filtered.filter((t) => t.group === state.groupFilter);
   }
 
   // Status filter
@@ -188,7 +191,7 @@ export function getFilteredTeams(state: AuctionState): Team[] {
     filtered = filtered.filter(
       (t) =>
         t.name.toLowerCase().includes(term) ||
-        t.region.toLowerCase().includes(term) ||
+        t.group.toLowerCase().includes(term) ||
         t.seed.toString().includes(term)
     );
   }
@@ -202,13 +205,13 @@ export function getFilteredTeams(state: AuctionState): Team[] {
         break;
       case 'seed':
         result = a.seed - b.seed;
-        if (result === 0) result = a.region.localeCompare(b.region);
+        if (result === 0) result = a.group.localeCompare(b.group);
         break;
       case 'valuePercentage':
         result = (a.valuePercentage || 0) - (b.valuePercentage || 0);
         break;
-      case 'region':
-        result = a.region.localeCompare(b.region);
+      case 'group':
+        result = a.group.localeCompare(b.group);
         break;
       default:
         result = a.seed - b.seed;

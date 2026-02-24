@@ -470,3 +470,61 @@ These formulas are the heart of the product — port to TypeScript with unit tes
 
 **Blockers:**
 - None. Landing page + dark theme complete. Site is ready to ship.
+
+### Session: 2026-02-24 — Strategic Pivot: Multi-Tournament Abstraction (Phase A COMPLETE)
+
+**Strategic Decisions Made:**
+- Platform should support ALL Calcutta tournaments (golf, NFL, FIFA, custom), not just March Madness
+- Live auction hosting moved from "Phase 4: Post-March Madness" to pre-March Madness (distribution flywheel)
+- New revenue tier: done-for-you custom tournament solutions ($200-500+ per event)
+- Free hosting = distribution flywheel; Strategy tool = paid product ($29.99); Custom = high-touch upsell
+- Timeline: Selection Sunday 3/15, first game 3/17 (~19 days)
+
+**Completed — Phase A: Tournament Abstraction:**
+- Created tournament configuration system (fully dynamic, tournament-agnostic):
+  - `v2/lib/tournaments/types.ts` — `TournamentConfig`, `BaseTeam`, `Team`, `PayoutRules` with dynamic `RoundKey`/`GroupKey` (strings, not hardcoded unions)
+  - `v2/lib/tournaments/configs/march-madness-2026.ts` — Full config (rounds, groups, bracket devigging, payout defaults) + 64 teams with `group` instead of `region`
+  - `v2/lib/tournaments/registry.ts` — `getTournament()`, `getActiveTournament()`, `listTournaments()`
+  - `v2/lib/tournaments/index.ts` — Barrel export
+- Refactored entire calculation engine to accept `TournamentConfig`:
+  - `v2/lib/calculations/types.ts` — Slimmed to re-export from tournaments/types (backward compat)
+  - `v2/lib/calculations/odds.ts` — Strategy pattern: `bracket` / `global` / `group` / `none` devigging
+  - `v2/lib/calculations/values.ts` — Iterates `config.rounds` instead of hardcoded `PAYOUT_TO_ROUND`
+  - `v2/lib/calculations/profits.ts` — Loops `config.rounds` instead of 6 hardcoded variables
+  - `v2/lib/calculations/initialize.ts` — Dynamic zero-init from `config.rounds`
+- Refactored state management:
+  - `v2/lib/auction/auction-state.ts` — `regionFilter` → `groupFilter`, `config` stored in state, dynamic `PayoutRules`
+  - `v2/lib/auction/auction-context.tsx` — Exposes `config` through context
+  - `v2/lib/auction/use-auto-save.ts` — Passes tournament ID to save action
+- Refactored all 6 auction UI components for dynamic config:
+  - `v2/components/auction/auction-tool.tsx` — Accepts `TournamentConfig` + `BaseTeam[]` props (no hardcoded import)
+  - `v2/components/auction/team-table.tsx` — Groups/rounds from config, dynamic labels
+  - `v2/components/auction/team-table-row.tsx` — Iterates `config.rounds`, uses `team.group`
+  - `v2/components/auction/payout-rules-editor.tsx` — Rules from `config.rounds` + `config.propBets`
+- Updated routes + actions:
+  - `v2/app/(protected)/auction/page.tsx` — Uses `getActiveTournament()` from registry
+  - `v2/actions/auction.ts` — Already tournament-aware via `eventType` param
+- Updated all 34 tests for config-driven API (all passing)
+- Deleted old hardcoded data: `v2/lib/data/march-madness-2026.ts`
+- Build passes, 34 tests pass, zero remaining hardcoded NCAA references in logic/types
+
+**Key Technical Achievement:**
+- Adding a new tournament (golf, NFL, custom) now requires ONLY a new config file in `v2/lib/tournaments/configs/` — zero code changes
+- Devigging strategy is pluggable: `bracket` (NCAA), `global` (golf/NFL), `group` (World Cup), `none` (custom)
+- Plan file with full implementation details: `C:\Users\pwidd\.claude\plans\mutable-dancing-kurzweil.md`
+
+**Next Steps (Next Session):**
+- **Phase B: Live Auction Hosting** (Days 5-12 per plan)
+  - DB migration: `auction_sessions`, `auction_participants`, `auction_bids` tables + RLS
+  - Supabase Realtime: Broadcast for bids/events, Presence for who's online
+  - Commissioner flow: `/host`, `/host/create`, `/host/[sessionId]`
+  - Participant flow: `/join`, `/live/[sessionId]`
+  - Strategy integration: paid users see fair values during live bidding (conversion funnel)
+- **Phase C: Landing + Pricing Update** (Days 13-15)
+  - Rebrand landing from "March Madness calculator" → "Calcutta auction platform"
+  - 3-tier pricing: Free hosting / Strategy $29.99 / Custom Solution (contact us)
+- **Phase D: Buffer + Launch** (Days 16-19)
+  - E2E testing, odds update on Selection Sunday (3/15), deploy
+
+**Blockers:**
+- None. Tournament abstraction complete. Ready for live hosting build.

@@ -6,8 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { formatCurrency, formatPercent } from '@/lib/calculations/format';
 import { calculateRoundProfits } from '@/lib/calculations/profits';
-import type { Team, PayoutRules, RoundKey } from '@/lib/calculations/types';
-import { ROUND_KEYS } from '@/lib/calculations/types';
+import { useAuction } from '@/lib/auction/auction-context';
+import type { Team, PayoutRules } from '@/lib/calculations/types';
 
 interface TeamTableRowProps {
   team: Team;
@@ -49,7 +49,12 @@ export const TeamTableRow = memo(function TeamTableRow({
   onPriceChange,
   onMyTeamToggle,
 }: TeamTableRowProps) {
-  const profits = calculateRoundProfits(team.purchasePrice, payoutRules, potSize);
+  const { config } = useAuction();
+  const rounds = config?.rounds ?? [];
+
+  const profits = config
+    ? calculateRoundProfits(team.purchasePrice, payoutRules, potSize, config)
+    : {};
 
   const handlePriceChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,14 +76,14 @@ export const TeamTableRow = memo(function TeamTableRow({
       <TableCell className="px-2 py-1.5 text-xs font-medium whitespace-nowrap">
         {team.name}
       </TableCell>
-      <TableCell className="px-2 py-1.5 text-xs">{team.region}</TableCell>
+      <TableCell className="px-2 py-1.5 text-xs">{team.group}</TableCell>
 
-      {ROUND_KEYS.map((round: RoundKey) => (
+      {rounds.map((round) => (
         <ProfitCell
-          key={round}
-          profit={profits[round]}
-          odds={team.odds[round]}
-          roundValue={team.roundValues[round]}
+          key={round.key}
+          profit={profits[round.key] ?? 0}
+          odds={team.odds[round.key] ?? 0}
+          roundValue={team.roundValues[round.key] ?? 0}
         />
       ))}
 

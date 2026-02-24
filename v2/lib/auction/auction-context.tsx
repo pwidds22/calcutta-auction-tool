@@ -18,7 +18,7 @@ import {
   type AuctionAction,
   type SummaryStats,
 } from './auction-state';
-import type { Team } from '@/lib/calculations/types';
+import type { Team, TournamentConfig } from '@/lib/calculations/types';
 
 interface AuctionContextValue {
   state: AuctionState;
@@ -26,6 +26,7 @@ interface AuctionContextValue {
   filteredTeams: Team[];
   summaryStats: SummaryStats;
   effectivePotSize: number;
+  config: TournamentConfig | null;
 }
 
 const AuctionContext = createContext<AuctionContextValue | null>(null);
@@ -35,7 +36,7 @@ export function AuctionProvider({ children }: { children: ReactNode }) {
 
   const filteredTeams = useMemo(() => getFilteredTeams(state), [
     state.teams,
-    state.regionFilter,
+    state.groupFilter,
     state.statusFilter,
     state.sortOption,
     state.sortDirection,
@@ -54,7 +55,7 @@ export function AuctionProvider({ children }: { children: ReactNode }) {
   ]);
 
   const value = useMemo(
-    () => ({ state, dispatch, filteredTeams, summaryStats, effectivePotSize }),
+    () => ({ state, dispatch, filteredTeams, summaryStats, effectivePotSize, config: state.config }),
     [state, filteredTeams, summaryStats, effectivePotSize]
   );
 

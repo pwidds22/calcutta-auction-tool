@@ -1,11 +1,4 @@
-import type { Team, RoundKey, Region } from './types';
-import {
-  R32_MATCHUPS,
-  S16_QUADRANTS,
-  E8_HALVES,
-  LEFT_SIDE_REGIONS,
-  RIGHT_SIDE_REGIONS,
-} from './types';
+import type { Team, RoundKey, TournamentConfig } from './types';
 
 /**
  * Convert American odds to implied probability.
@@ -59,99 +52,147 @@ function devigGroup(
 }
 
 /**
- * Structure-aware devigging for the entire NCAA tournament bracket.
- *
- * Each round is devigged within the appropriate grouping:
- * - R32: by matchup pair (2 teams) per region
- * - S16: by quadrant (4 teams) per region
- * - E8: by half (8 teams) per region
- * - F4: by region (16 teams)
- * - F2: by bracket side (32 teams — East+West vs South+Midwest)
- * - Championship: globally (all 64 teams)
- *
- * Each round is capped so a team's probability can't exceed the prior round.
+ * Bracket-aware devigging (NCAA-style).
+ * Each round is devigged within the appropriate grouping level
+ * as defined by the tournament's BracketDevigConfig.
  */
-export function devigRoundOdds(teams: Team[]): void {
-  const regions: Region[] = ['East', 'West', 'South', 'Midwest'];
+function devigBracket(teams: Team[], config: TournamentConfig): void {
+  const bc = config.bracketDevigConfig!;
+  const rounds = config.rounds;
 
-  // Process each region
-  for (const region of regions) {
-    const regionTeams = teams.filter((t) => t.region === region);
+  for (let i = 0; i < rounds.length; i++) {
+    const round = rounds[i];
+    const capRound = i > 0 ? rounds[i - 1].key : undefined;
+    const grouping = bc.roundGroupings[round.key];
 
-    // R32: devig by matchup pairs
-    for (const [seedA, seedB] of R32_MATCHUPS) {
-      const matchup = regionTeams.filter(
-        (t) => t.seed === seedA || t.seed === seedB
-      );
-      if (matchup.length >= 2) {
-        devigGroup(matchup, 'r32');
+    if (grouping === 'matchup') {
+      for (const group of config.groups) {
+        const groupTeams = teams.filter((t) => t.group === group.key);
+        for (const [seedA, seedB] of bc.matchupPairs) {
+          const matchup = groupTeams.filter(
+            (t) => t.seed === seedA || t.seed === seedB
+          );
+          if (matchup.length >= 2) {
+            devigGroup(matchup, round.key);
+          }
+        }
       }
-    }
-
-    // S16: devig by quadrants, cap at R32
-    for (const quadrantSeeds of S16_QUADRANTS) {
-      const quadrant = regionTeams.filter((t) =>
-        quadrantSeeds.includes(t.seed)
+    } else if (grouping === 'quadrant') {
+      for (const group of config.groups) {
+        const groupTeams = teams.filter((t) => t.group === group.key);
+        for (const quadSeeds of bc.quadrants) {
+          const quad = groupTeams.filter((t) => quadSeeds.includes(t.seed));
+          devigGroup(quad, round.key, capRound);
+        }
+      }
+    } else if (grouping === 'half') {
+      for (const group of config.groups) {
+        const groupTeams = teams.filter((t) => t.group === group.key);
+        for (const halfSeeds of bc.halves) {
+          const half = groupTeams.filter((t) => halfSeeds.includes(t.seed));
+          devigGroup(half, round.key, capRound);
+        }
+      }
+    } else if (grouping === 'region') {
+      for (const group of config.groups) {
+        const groupTeams = teams.filter((t) => t.group === group.key);
+        devigGroup(groupTeams, round.key, capRound);
+      }
+    } else if (grouping === 'side') {
+      const leftTeams = teams.filter((t) =>
+        bc.bracketSides.left.includes(t.group)
       );
-      devigGroup(quadrant, 's16', 'r32');
+      const rightTeams = teams.filter((t) =>
+        bc.bracketSides.right.includes(t.group)
+      );
+      devigGroup(leftTeams, round.key, capRound);
+      devigGroup(rightTeams, round.key, capRound);
+    } else if (grouping === 'global') {
+      devigGroup(teams, round.key, capRound);
     }
-
-    // E8: devig by halves, cap at S16
-    for (const halfSeeds of E8_HALVES) {
-      const half = regionTeams.filter((t) => halfSeeds.includes(t.seed));
-      devigGroup(half, 'e8', 's16');
-    }
-
-    // F4: devig by full region, cap at E8
-    devigGroup(regionTeams, 'f4', 'e8');
   }
+}
 
-  // F2: devig by bracket side, cap at F4
-  const leftSide = teams.filter((t) =>
-    LEFT_SIDE_REGIONS.includes(t.region)
-  );
-  const rightSide = teams.filter((t) =>
-    RIGHT_SIDE_REGIONS.includes(t.region)
-  );
-  devigGroup(leftSide, 'f2', 'f4');
-  devigGroup(rightSide, 'f2', 'f4');
+/**
+ * Global devigging: normalize all teams for each round.
+ * Simple strategy for tournaments without bracket structure (golf, NFL).
+ */
+function devigGlobal(teams: Team[], config: TournamentConfig): void {
+  for (let i = 0; i < config.rounds.length; i++) {
+    const round = config.rounds[i];
+    const capRound = i > 0 ? config.rounds[i - 1].key : undefined;
+    devigGroup(teams, round.key, capRound);
+  }
+}
 
-  // Championship: devig globally, cap at F2
-  devigGroup(teams, 'champ', 'f2');
+/**
+ * Group-based devigging: normalize within groups per round.
+ * Useful for World Cup group stage or similar structures.
+ */
+function devigByGroup(teams: Team[], config: TournamentConfig): void {
+  for (let i = 0; i < config.rounds.length; i++) {
+    const round = config.rounds[i];
+    const capRound = i > 0 ? config.rounds[i - 1].key : undefined;
+    for (const group of config.groups) {
+      const groupTeams = teams.filter((t) => t.group === group.key);
+      devigGroup(groupTeams, round.key, capRound);
+    }
+  }
+}
+
+/**
+ * Dispatch to the correct devigging strategy based on tournament config.
+ */
+export function devigRoundOdds(teams: Team[], config: TournamentConfig): void {
+  switch (config.devigStrategy) {
+    case 'bracket':
+      devigBracket(teams, config);
+      break;
+    case 'global':
+      devigGlobal(teams, config);
+      break;
+    case 'group':
+      devigByGroup(teams, config);
+      break;
+    case 'none':
+      // Use raw probabilities as devigged odds
+      for (const team of teams) {
+        for (const round of config.rounds) {
+          team.odds[round.key] = team.rawImpliedProbabilities[round.key];
+        }
+      }
+      break;
+  }
 }
 
 /**
  * Calculate implied probabilities for all teams.
- * 1. Converts American odds → raw implied probabilities (includes vig)
- * 2. Devigs by tournament structure → fair probabilities
+ * 1. Converts American odds -> raw implied probabilities (includes vig)
+ * 2. Devigs by tournament structure -> fair probabilities
  *
  * Mutates teams in place and returns them.
  */
-export function calculateImpliedProbabilities(teams: Team[]): Team[] {
+export function calculateImpliedProbabilities(
+  teams: Team[],
+  config: TournamentConfig
+): Team[] {
+  const roundKeys = config.rounds.map((r) => r.key);
+
   for (const team of teams) {
-    // Default odds if missing
-    const ao = team.americanOdds ?? {
-      r32: -1000,
-      s16: +150,
-      e8: +300,
-      f4: +600,
-      f2: +1200,
-      champ: +2500,
-    };
+    const ao = team.americanOdds;
+    const raw: Record<string, number> = {};
+    const odds: Record<string, number> = {};
 
-    team.rawImpliedProbabilities = {
-      r32: americanOddsToImpliedProbability(ao.r32),
-      s16: americanOddsToImpliedProbability(ao.s16),
-      e8: americanOddsToImpliedProbability(ao.e8),
-      f4: americanOddsToImpliedProbability(ao.f4),
-      f2: americanOddsToImpliedProbability(ao.f2),
-      champ: americanOddsToImpliedProbability(ao.champ),
-    };
+    for (const key of roundKeys) {
+      raw[key] = americanOddsToImpliedProbability(ao[key] ?? 0);
+      odds[key] = 0;
+    }
 
-    team.odds = { r32: 0, s16: 0, e8: 0, f4: 0, f2: 0, champ: 0 };
+    team.rawImpliedProbabilities = raw;
+    team.odds = odds;
   }
 
-  devigRoundOdds(teams);
+  devigRoundOdds(teams, config);
 
   return teams;
 }

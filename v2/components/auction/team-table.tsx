@@ -20,19 +20,23 @@ import {
 import { Button } from '@/components/ui/button';
 import { TeamTableRow } from './team-table-row';
 import { ArrowUpDown } from 'lucide-react';
-import type { RegionFilter, StatusFilter, SortOption } from '@/lib/calculations/types';
+import type { GroupFilter, StatusFilter, SortOption } from '@/lib/calculations/types';
 
-const REGIONS: RegionFilter[] = ['All', 'East', 'West', 'South', 'Midwest'];
 const STATUSES: StatusFilter[] = ['All', 'Available', 'Taken', 'My Teams'];
-const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: 'seed', label: 'Seed' },
-  { value: 'name', label: 'Name' },
-  { value: 'valuePercentage', label: 'Value' },
-  { value: 'region', label: 'Region' },
-];
 
 export function TeamTable() {
-  const { state, dispatch, filteredTeams, effectivePotSize } = useAuction();
+  const { state, dispatch, filteredTeams, effectivePotSize, config } = useAuction();
+
+  const groups: GroupFilter[] = config
+    ? ['All', ...config.groups.map((g) => g.key)]
+    : ['All'];
+
+  const sortOptions: { value: SortOption; label: string }[] = [
+    { value: 'seed', label: 'Seed' },
+    { value: 'name', label: 'Name' },
+    { value: 'valuePercentage', label: 'Value' },
+    { value: 'group', label: config?.groupLabel ?? 'Group' },
+  ];
 
   const handlePriceChange = useCallback(
     (teamId: number, price: number) => {
@@ -56,23 +60,25 @@ export function TeamTable() {
     });
   };
 
+  const rounds = config?.rounds ?? [];
+
   return (
     <div className="space-y-3">
       {/* Filter bar */}
       <div className="flex flex-wrap items-center gap-3">
         <Select
-          value={state.regionFilter}
+          value={state.groupFilter}
           onValueChange={(v) =>
-            dispatch({ type: 'SET_REGION_FILTER', filter: v as RegionFilter })
+            dispatch({ type: 'SET_GROUP_FILTER', filter: v as GroupFilter })
           }
         >
           <SelectTrigger className="w-[130px]">
-            <SelectValue placeholder="Region" />
+            <SelectValue placeholder={config?.groupLabel ?? 'Group'} />
           </SelectTrigger>
           <SelectContent>
-            {REGIONS.map((r) => (
-              <SelectItem key={r} value={r}>
-                {r}
+            {groups.map((g) => (
+              <SelectItem key={g} value={g}>
+                {g}
               </SelectItem>
             ))}
           </SelectContent>
@@ -110,7 +116,7 @@ export function TeamTable() {
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
           <SelectContent>
-            {SORT_OPTIONS.map((s) => (
+            {sortOptions.map((s) => (
               <SelectItem key={s.value} value={s.value}>
                 {s.label}
               </SelectItem>
@@ -124,7 +130,7 @@ export function TeamTable() {
 
         <Input
           type="text"
-          placeholder="Search teams..."
+          placeholder={`Search ${config?.teamLabel?.toLowerCase() ?? 'team'}s...`}
           value={state.searchTerm}
           onChange={(e) =>
             dispatch({ type: 'SET_SEARCH_TERM', term: e.target.value })
@@ -133,7 +139,7 @@ export function TeamTable() {
         />
 
         <span className="ml-auto text-xs text-muted-foreground">
-          {filteredTeams.length} teams
+          {filteredTeams.length} {config?.teamLabel?.toLowerCase() ?? 'team'}s
         </span>
       </div>
 
@@ -144,9 +150,9 @@ export function TeamTable() {
             {/* Group headers */}
             <TableRow className="bg-muted/50">
               <TableHead colSpan={3} className="text-center text-xs font-semibold">
-                Team Info
+                {config?.teamLabel ?? 'Team'} Info
               </TableHead>
-              <TableHead colSpan={6} className="text-center text-xs font-semibold">
+              <TableHead colSpan={rounds.length} className="text-center text-xs font-semibold">
                 Profit After Reaching Round
               </TableHead>
               <TableHead colSpan={3} className="text-center text-xs font-semibold">
@@ -159,14 +165,13 @@ export function TeamTable() {
             {/* Column headers */}
             <TableRow>
               <TableHead className="px-2 text-xs w-12">Seed</TableHead>
-              <TableHead className="px-2 text-xs">Team</TableHead>
-              <TableHead className="px-2 text-xs w-16">Region</TableHead>
-              <TableHead className="px-2 text-center text-xs">R32</TableHead>
-              <TableHead className="px-2 text-center text-xs">S16</TableHead>
-              <TableHead className="px-2 text-center text-xs">E8</TableHead>
-              <TableHead className="px-2 text-center text-xs">F4</TableHead>
-              <TableHead className="px-2 text-center text-xs">F2</TableHead>
-              <TableHead className="px-2 text-center text-xs">Champ</TableHead>
+              <TableHead className="px-2 text-xs">{config?.teamLabel ?? 'Team'}</TableHead>
+              <TableHead className="px-2 text-xs w-16">{config?.groupLabel ?? 'Group'}</TableHead>
+              {rounds.map((round) => (
+                <TableHead key={round.key} className="px-2 text-center text-xs">
+                  {round.label}
+                </TableHead>
+              ))}
               <TableHead className="px-2 text-right text-xs">Bid</TableHead>
               <TableHead className="px-2 text-right text-xs">Fair Val</TableHead>
               <TableHead className="px-2 text-right text-xs w-24">Price</TableHead>

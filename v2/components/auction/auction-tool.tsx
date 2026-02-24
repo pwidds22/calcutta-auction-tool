@@ -8,15 +8,15 @@ import { PayoutRulesEditor } from './payout-rules-editor';
 import { SummaryStatsCards } from './summary-stats-cards';
 import { TeamTable } from './team-table';
 import { initializeTeams } from '@/lib/calculations/initialize';
-import { MARCH_MADNESS_2026_TEAMS } from '@/lib/data/march-madness-2026';
-import type { SavedTeamData, PayoutRules } from '@/lib/calculations/types';
-import { DEFAULT_PAYOUT_RULES } from '@/lib/calculations/types';
+import type { SavedTeamData, PayoutRules, TournamentConfig, BaseTeam } from '@/lib/calculations/types';
 
 interface AuctionToolInnerProps {
   initialTeams: SavedTeamData[];
   initialPayoutRules: PayoutRules;
   initialPotSize: number;
   userEmail: string;
+  config: TournamentConfig;
+  baseTeams: BaseTeam[];
 }
 
 function AuctionToolInner({
@@ -24,6 +24,8 @@ function AuctionToolInner({
   initialPayoutRules,
   initialPotSize,
   userEmail,
+  config,
+  baseTeams,
 }: AuctionToolInnerProps) {
   const { state, dispatch } = useAuction();
   const { isSaving, lastSaved, error } = useAutoSave();
@@ -31,16 +33,18 @@ function AuctionToolInner({
   // Initialize on mount
   useEffect(() => {
     const teams = initializeTeams(
-      MARCH_MADNESS_2026_TEAMS,
+      baseTeams,
       initialTeams,
       initialPayoutRules,
-      initialPotSize
+      initialPotSize,
+      config
     );
     dispatch({
       type: 'SET_INITIAL_DATA',
       teams,
       payoutRules: initialPayoutRules,
       estimatedPotSize: initialPotSize,
+      config,
     });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

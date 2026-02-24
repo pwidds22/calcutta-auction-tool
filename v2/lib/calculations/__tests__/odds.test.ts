@@ -2,11 +2,11 @@ import { describe, it, expect } from 'vitest';
 import {
   americanOddsToImpliedProbability,
   impliedProbabilityToAmericanOdds,
-  calculateImpliedProbabilities,
 } from '../odds';
-import { MARCH_MADNESS_2026_TEAMS } from '@/lib/data/march-madness-2026';
+import { MARCH_MADNESS_2026_TEAMS, MARCH_MADNESS_2026_CONFIG } from '@/lib/tournaments/configs/march-madness-2026';
 import { initializeTeams } from '../initialize';
-import { DEFAULT_PAYOUT_RULES } from '../types';
+
+const config = MARCH_MADNESS_2026_CONFIG;
 
 describe('americanOddsToImpliedProbability', () => {
   it('converts positive odds (underdog)', () => {
@@ -57,67 +57,65 @@ describe('calculateImpliedProbabilities + devigging', () => {
   const teams = initializeTeams(
     MARCH_MADNESS_2026_TEAMS,
     [],
-    DEFAULT_PAYOUT_RULES,
-    10000
+    config.defaultPayoutRules,
+    10000,
+    config
   );
 
   it('populates rawImpliedProbabilities for all teams', () => {
     for (const team of teams) {
-      expect(team.rawImpliedProbabilities.r32).toBeGreaterThan(0);
-      expect(team.rawImpliedProbabilities.champ).toBeGreaterThan(0);
+      expect(team.rawImpliedProbabilities['r32']).toBeGreaterThan(0);
+      expect(team.rawImpliedProbabilities['champ']).toBeGreaterThan(0);
     }
   });
 
   it('populates devigged odds for all teams', () => {
     for (const team of teams) {
-      expect(team.odds.r32).toBeGreaterThan(0);
-      expect(team.odds.champ).toBeGreaterThan(0);
+      expect(team.odds['r32']).toBeGreaterThan(0);
+      expect(team.odds['champ']).toBeGreaterThan(0);
     }
   });
 
   it('R32 matchup pairs sum to ~1.0 after devigging', () => {
-    const eastTeams = teams.filter((t) => t.region === 'East');
+    const eastTeams = teams.filter((t) => t.group === 'East');
     // 1-seed vs 16-seed
     const seed1 = eastTeams.find((t) => t.seed === 1)!;
     const seed16 = eastTeams.find((t) => t.seed === 16)!;
-    expect(seed1.odds.r32 + seed16.odds.r32).toBeCloseTo(1.0, 4);
+    expect(seed1.odds['r32'] + seed16.odds['r32']).toBeCloseTo(1.0, 4);
   });
 
   it('championship probabilities sum to ~1.0 across all 64 teams (with capping loss)', () => {
-    const totalChamp = teams.reduce((sum, t) => sum + t.odds.champ, 0);
+    const totalChamp = teams.reduce((sum, t) => sum + t.odds['champ'], 0);
     // Capping reduces total slightly below 1.0 — this is expected behavior
     expect(totalChamp).toBeGreaterThan(0.95);
     expect(totalChamp).toBeLessThanOrEqual(1.0);
   });
 
   it('round probabilities decrease monotonically (r32 >= s16 >= ... >= champ)', () => {
+    const roundKeys = config.rounds.map((r) => r.key);
     for (const team of teams) {
-      expect(team.odds.r32).toBeGreaterThanOrEqual(team.odds.s16 - 0.0001);
-      expect(team.odds.s16).toBeGreaterThanOrEqual(team.odds.e8 - 0.0001);
-      expect(team.odds.e8).toBeGreaterThanOrEqual(team.odds.f4 - 0.0001);
-      expect(team.odds.f4).toBeGreaterThanOrEqual(team.odds.f2 - 0.0001);
-      expect(team.odds.f2).toBeGreaterThanOrEqual(team.odds.champ - 0.0001);
+      for (let i = 1; i < roundKeys.length; i++) {
+        expect(team.odds[roundKeys[i - 1]]).toBeGreaterThanOrEqual(
+          team.odds[roundKeys[i]] - 0.0001
+        );
+      }
     }
   });
 
   it('devigged R32 probability is reasonable relative to raw', () => {
-    // In most matchups, overround > 1 so devigged <= raw.
-    // But when overround < 1 (underround), devigged can be slightly higher.
-    // Just verify that devigged values are in a sensible range.
     for (const team of teams) {
-      expect(team.odds.r32).toBeGreaterThan(0);
-      expect(team.odds.r32).toBeLessThanOrEqual(1);
+      expect(team.odds['r32']).toBeGreaterThan(0);
+      expect(team.odds['r32']).toBeLessThanOrEqual(1);
     }
   });
 
   it('1-seeds have highest championship odds in their region', () => {
-    const regions = ['East', 'West', 'South', 'Midwest'] as const;
-    for (const region of regions) {
-      const regionTeams = teams.filter((t) => t.region === region);
-      const seed1 = regionTeams.find((t) => t.seed === 1)!;
-      for (const other of regionTeams) {
+    for (const group of config.groups) {
+      const groupTeams = teams.filter((t) => t.group === group.key);
+      const seed1 = groupTeams.find((t) => t.seed === 1)!;
+      for (const other of groupTeams) {
         if (other.seed !== 1) {
-          expect(seed1.odds.champ).toBeGreaterThan(other.odds.champ);
+          expect(seed1.odds['champ']).toBeGreaterThan(other.odds['champ']);
         }
       }
     }

@@ -1,16 +1,18 @@
 import { describe, it, expect } from 'vitest';
 import { calculateProjectedPotSize } from '../pot';
 import { initializeTeams } from '../initialize';
-import { MARCH_MADNESS_2026_TEAMS } from '@/lib/data/march-madness-2026';
-import { DEFAULT_PAYOUT_RULES } from '../types';
+import { MARCH_MADNESS_2026_TEAMS, MARCH_MADNESS_2026_CONFIG } from '@/lib/tournaments/configs/march-madness-2026';
+
+const config = MARCH_MADNESS_2026_CONFIG;
 
 describe('calculateProjectedPotSize', () => {
   it('returns 0 when no teams are purchased', () => {
     const teams = initializeTeams(
       MARCH_MADNESS_2026_TEAMS,
       [],
-      DEFAULT_PAYOUT_RULES,
-      10000
+      config.defaultPayoutRules,
+      10000,
+      config
     );
     expect(calculateProjectedPotSize(teams)).toBe(0);
   });
@@ -19,8 +21,9 @@ describe('calculateProjectedPotSize', () => {
     const teams = initializeTeams(
       MARCH_MADNESS_2026_TEAMS,
       [],
-      DEFAULT_PAYOUT_RULES,
-      10000
+      config.defaultPayoutRules,
+      10000,
+      config
     );
 
     // Buy team 0 for $100
@@ -38,8 +41,9 @@ describe('calculateProjectedPotSize', () => {
     const teams = initializeTeams(
       MARCH_MADNESS_2026_TEAMS,
       [],
-      DEFAULT_PAYOUT_RULES,
-      10000
+      config.defaultPayoutRules,
+      10000,
+      config
     );
 
     teams[0].purchasePrice = 200;
@@ -56,8 +60,9 @@ describe('calculateProjectedPotSize', () => {
     const teams = initializeTeams(
       MARCH_MADNESS_2026_TEAMS,
       [],
-      DEFAULT_PAYOUT_RULES,
-      10000
+      config.defaultPayoutRules,
+      10000,
+      config
     );
 
     teams[0].purchasePrice = 100;
