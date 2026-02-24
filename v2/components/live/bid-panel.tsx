@@ -1,0 +1,125 @@
+'use client';
+
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { placeBid } from '@/actions/bidding';
+import { Gavel } from 'lucide-react';
+
+interface BidPanelProps {
+  sessionId: string;
+  biddingStatus: string;
+  currentHighestBid: number;
+  currentHighestBidderName: string | null;
+  userId: string;
+}
+
+const INCREMENTS = [5, 10, 25, 50, 100];
+
+export function BidPanel({
+  sessionId,
+  biddingStatus,
+  currentHighestBid,
+  currentHighestBidderName,
+  userId,
+}: BidPanelProps) {
+  const [bidAmount, setBidAmount] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const minBid = currentHighestBid + 1;
+
+  const handleBid = async () => {
+    const amount = Number(bidAmount);
+    if (!amount || amount < minBid) {
+      setError(`Bid must be at least $${minBid}`);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    const result = await placeBid(sessionId, amount);
+    if (result.error) setError(result.error);
+    else setBidAmount('');
+    setLoading(false);
+  };
+
+  const handleIncrement = (inc: number) => {
+    const base = currentHighestBid || 0;
+    setBidAmount(String(base + inc));
+  };
+
+  const isOpen = biddingStatus === 'open';
+
+  return (
+    <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+      {/* Current high bid */}
+      <div className="mb-3 text-center">
+        {currentHighestBid > 0 ? (
+          <>
+            <p className="text-xs text-white/40">Current High Bid</p>
+            <p className="text-2xl font-bold text-emerald-400">
+              ${currentHighestBid.toLocaleString()}
+            </p>
+            {currentHighestBidderName && (
+              <p className="text-xs text-white/40">
+                by {currentHighestBidderName}
+              </p>
+            )}
+          </>
+        ) : (
+          <>
+            <p className="text-xs text-white/40">
+              {isOpen ? 'No bids yet — be the first!' : 'Waiting for bidding to open'}
+            </p>
+          </>
+        )}
+      </div>
+
+      {/* Bid input */}
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-white/40">
+            $
+          </span>
+          <input
+            type="number"
+            value={bidAmount}
+            onChange={(e) => setBidAmount(e.target.value)}
+            placeholder={isOpen ? String(minBid) : '—'}
+            disabled={!isOpen || loading}
+            min={minBid}
+            className="h-10 w-full rounded-md border border-white/10 bg-white/[0.04] pl-7 pr-3 text-sm text-white placeholder:text-white/20 focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 disabled:opacity-40"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleBid();
+            }}
+          />
+        </div>
+        <Button
+          onClick={handleBid}
+          disabled={!isOpen || loading || !bidAmount}
+          className="gap-1.5 bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-40"
+        >
+          <Gavel className="size-4" />
+          Bid
+        </Button>
+      </div>
+
+      {/* Quick increments */}
+      {isOpen && (
+        <div className="mt-2 flex gap-1.5">
+          {INCREMENTS.map((inc) => (
+            <button
+              key={inc}
+              onClick={() => handleIncrement(inc)}
+              className="flex-1 rounded-md bg-white/[0.04] py-1 text-xs text-white/50 transition-colors hover:bg-white/[0.08] hover:text-white/70"
+            >
+              +${inc}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
+    </div>
+  );
+}

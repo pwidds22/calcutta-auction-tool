@@ -5,10 +5,11 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { logout } from '@/actions/auth'
-import { Menu, X, BarChart3, User, LogOut } from 'lucide-react'
+import { Menu, X, BarChart3, User, LogOut, Radio } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const NAV_LINKS = [
+  { label: 'Host', href: '/host', icon: Radio },
   { label: 'Auction', href: '/auction', icon: BarChart3 },
   { label: 'Profile', href: '/profile', icon: User },
 ]

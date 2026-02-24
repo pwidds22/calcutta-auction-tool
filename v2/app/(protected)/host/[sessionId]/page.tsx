@@ -1,0 +1,33 @@
+import { redirect } from 'next/navigation';
+import { getSessionState } from '@/actions/session';
+import { getTournament } from '@/lib/tournaments/registry';
+import { CommissionerView } from '@/components/live/commissioner-view';
+
+export default async function CommissionerPage({
+  params,
+}: {
+  params: Promise<{ sessionId: string }>;
+}) {
+  const { sessionId } = await params;
+
+  const result = await getSessionState(sessionId);
+  if ('error' in result) redirect('/host');
+  if (!result.isCommissioner) redirect(`/live/${sessionId}`);
+
+  const tournament = getTournament(result.session.tournament_id);
+  if (!tournament) redirect('/host');
+
+  return (
+    <CommissionerView
+      session={result.session}
+      participants={result.participants}
+      participantMap={result.participantMap}
+      winningBids={result.winningBids}
+      currentBids={result.currentBids}
+      config={tournament.config}
+      baseTeams={tournament.teams}
+      userId={result.userId}
+      hasPaid={result.hasPaid}
+    />
+  );
+}

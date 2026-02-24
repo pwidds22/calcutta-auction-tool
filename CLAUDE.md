@@ -528,3 +528,69 @@ These formulas are the heart of the product — port to TypeScript with unit tes
 
 **Blockers:**
 - None. Tournament abstraction complete. Ready for live hosting build.
+
+### Session: 2026-02-25 — Phase B: Live Auction Hosting (BUILD COMPLETE, NEEDS E2E TESTING)
+
+**Completed — Phase B: Live Auction Hosting:**
+- Applied DB migration via Supabase MCP (3 new tables + RLS + indexes):
+  - `v2/supabase/migrations/00002_live_auction_hosting.sql`
+  - `auction_sessions` — room state, team order, bidding status, highest bid tracking
+  - `auction_participants` — per-session membership with display names
+  - `auction_bids` — full bid history with `is_winning_bid` flag
+- Built server-side broadcast utility for serverless functions:
+  - `v2/lib/supabase/broadcast.ts` — Supabase Realtime HTTP API (no persistent WebSocket needed)
+- Built session management server actions:
+  - `v2/actions/session.ts` — createSession, joinSession, getSessionState, updateTeamOrder, getMyHostedSessions
+  - 6-char join codes using unambiguous characters (no I/O/1/0)
+- Built bidding server actions (all server-validated):
+  - `v2/actions/bidding.ts` — startAuction, presentTeam, openBidding, placeBid, closeBidding, sellTeam, skipTeam, undoLastSale, pauseAuction, completeAuction
+  - `placeBid` uses atomic conditional DB update (`.lt('current_highest_bid', amount)`) for race condition safety
+  - `sellTeam` includes auto-sync: updates paid participants' `auction_data` via admin client (winner=isMyTeam:true, others=isMyTeam:false)
+- Built Realtime channel hook:
+  - `v2/lib/auction/live/use-auction-channel.ts` — Broadcast events + Presence tracking, initialState from server for reconnection
+- Built 15 UI components in `v2/components/live/`:
+  - Commissioner: `commissioner-view.tsx`, `bidding-controls.tsx`, `team-queue.tsx`
+  - Participant: `participant-view.tsx`, `bid-panel.tsx`, `my-portfolio.tsx`
+  - Shared: `team-spotlight.tsx`, `bid-ladder.tsx`, `participant-list.tsx`, `results-table.tsx`, `auction-status-bar.tsx`, `strategy-overlay.tsx`
+  - Forms: `host-dashboard.tsx`, `create-session-form.tsx`, `join-session-form.tsx`
+- Built 5 route pages:
+  - `v2/app/(protected)/host/page.tsx` — Host dashboard (list hosted/joined sessions)
+  - `v2/app/(protected)/host/create/page.tsx` — Create session form
+  - `v2/app/(protected)/host/[sessionId]/page.tsx` — Commissioner control panel
+  - `v2/app/(protected)/join/page.tsx` — Join session form (enter code + display name)
+  - `v2/app/(protected)/live/[sessionId]/page.tsx` — Participant live view
+- Updated `v2/components/layout/app-navbar.tsx` — added "Host" link with Radio icon
+- No middleware changes needed — existing logic already gates only `/auction` behind payment
+- Build passes clean, all 34 existing tests pass
+
+**Key Architecture Decisions:**
+- Broadcast + DB as source of truth (Broadcast for real-time UX, DB for reconnection recovery)
+- Server-validated bids (prevents cheating, atomic race condition handling)
+- Strategy tool and live hosting are standalone but auto-sync when used together
+- Strategy overlay shows fair value + suggested bid + edge % during live bidding (paid users only; upsell banner for free)
+- Separate state systems: AuctionState (strategy tool) vs AuctionChannelState (live auction), bridged via `auction_data` table
+
+**New Files (24 new, 1 modified):**
+- `v2/supabase/migrations/00002_live_auction_hosting.sql`
+- `v2/actions/session.ts`, `v2/actions/bidding.ts`
+- `v2/lib/supabase/broadcast.ts`, `v2/lib/auction/live/use-auction-channel.ts`
+- `v2/components/live/` (15 components)
+- `v2/app/(protected)/host/`, `v2/app/(protected)/join/`, `v2/app/(protected)/live/` (5 pages)
+- Modified: `v2/components/layout/app-navbar.tsx`
+
+**Known Issues:**
+- Hydration warning on login page is caused by Norton Password Manager browser extension adding `data-np-*` attributes — NOT a code bug, harmless, doesn't appear in production
+- Realtime broadcast from server actions (HTTP API approach) needs E2E testing with two browser tabs
+- Server-side broadcast topic format may need adjustment if events don't flow between tabs
+
+**Next Steps (Next Session):**
+- **E2E test the full live auction flow**: create session → join from second tab → bid → sell → verify real-time events
+- Debug broadcast if events don't flow (check topic format: `realtime:auction:{id}` vs `auction:{id}`)
+- Test auto-sync: after selling a team in live auction, verify `auction_data` table updates → strategy tool shows data
+- Test reconnection: refresh participant mid-auction, verify state recovers from DB
+- **Phase C: Landing + Pricing Update** — rebrand landing page for multi-tournament platform, 3-tier pricing
+- **Phase D: Deploy + Launch** — push to Vercel, update March Madness odds on Selection Sunday (3/15)
+- Plan file: `C:\Users\pwidd\.claude\plans\lovely-inventing-bengio.md`
+
+**Blockers:**
+- None. Build complete, needs E2E testing.
