@@ -1,7 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { logout } from '@/actions/auth'
-import { Button } from '@/components/ui/button'
+import { loadAuctionData } from '@/actions/auction'
+import { AuctionTool } from '@/components/auction/auction-tool'
+import { DEFAULT_PAYOUT_RULES } from '@/lib/calculations/types'
 
 export default async function AuctionPage() {
   const supabase = await createClient()
@@ -11,22 +12,17 @@ export default async function AuctionPage() {
 
   if (!user) redirect('/login')
 
+  // Load saved auction data (null if first visit)
+  const auctionData = await loadAuctionData()
+
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Calcutta Auction Tool</h1>
-        <form action={logout}>
-          <Button variant="outline" type="submit">
-            Sign Out
-          </Button>
-        </form>
-      </div>
-      <p className="mt-4 text-muted-foreground">Logged in as {user.email}</p>
-      <div className="mt-8 rounded-lg border p-8 text-center">
-        <p className="text-lg text-muted-foreground">
-          Auction tool coming soon (Phase 2)
-        </p>
-      </div>
+    <div className="container mx-auto max-w-[1400px] px-4 py-6">
+      <AuctionTool
+        initialTeams={auctionData?.teams ?? []}
+        initialPayoutRules={auctionData?.payoutRules ?? DEFAULT_PAYOUT_RULES}
+        initialPotSize={auctionData?.estimatedPotSize ?? 10000}
+        userEmail={user.email!}
+      />
     </div>
   )
 }

@@ -325,3 +325,61 @@ These formulas are the heart of the product — port to TypeScript with unit tes
 
 **Blockers:**
 - None. Phase 1 fully complete. Ready for Phase 2.
+
+### Session: 2026-02-23 — Phase 2 Core Product Build (COMPLETE)
+
+**Completed:**
+- Ported ALL calculation logic from legacy `js/auction-tool.js` (2068 lines) to TypeScript modules:
+  - `v2/lib/calculations/types.ts` — All interfaces, constants, bracket structure (RoundKey, Team, PayoutRules, etc.)
+  - `v2/lib/calculations/odds.ts` — American odds conversion + structure-aware devigging (R32 pairs → S16 quadrants → E8 halves → F4 regions → F2 bracket sides → Championship global, with per-round capping)
+  - `v2/lib/calculations/values.ts` — Team value calculation (`valuePercentage = SUM(odds[round] * payoutRules[round] / 100)`), fair values, suggested bids
+  - `v2/lib/calculations/profits.ts` — Round-by-round cumulative profit projections
+  - `v2/lib/calculations/pot.ts` — Projected pot inference (`totalPaid / totalValuePercentage`)
+  - `v2/lib/calculations/format.ts` — Currency/percent formatting
+  - `v2/lib/calculations/initialize.ts` — Orchestrator: base teams + saved state → fully hydrated teams
+  - `v2/lib/calculations/index.ts` — Barrel export
+- Wrote **34 unit tests** across 4 test files, all passing:
+  - `v2/lib/calculations/__tests__/odds.test.ts` (15 tests)
+  - `v2/lib/calculations/__tests__/values.test.ts` (9 tests)
+  - `v2/lib/calculations/__tests__/profits.test.ts` (6 tests)
+  - `v2/lib/calculations/__tests__/pot.test.ts` (4 tests)
+- Ported 64 NCAA teams with American odds: `v2/lib/data/march-madness-2026.ts`
+- Built state management with React useReducer + Context:
+  - `v2/lib/auction/auction-state.ts` — State, reducer, selectors (filtering, sorting, summary stats)
+  - `v2/lib/auction/auction-context.tsx` — React context provider with memoized derived values
+  - `v2/lib/auction/use-auto-save.ts` — Debounced (1.5s) auto-save to Supabase
+- Built full auction tool UI (6 components):
+  - `v2/components/auction/auction-tool.tsx` — Main wrapper (init, layout, save status)
+  - `v2/components/auction/pot-size-section.tsx` — Estimated/projected/effective pot size
+  - `v2/components/auction/payout-rules-editor.tsx` — Collapsible rules editor with % validation
+  - `v2/components/auction/summary-stats-cards.tsx` — My Teams / Opponents / Available stats
+  - `v2/components/auction/team-table.tsx` — Filter bar + 13-column data table
+  - `v2/components/auction/team-table-row.tsx` — Memoized row with profit cells, inline price input, checkbox
+- Built Supabase CRUD server actions: `v2/actions/auction.ts` (load, save/upsert, reset)
+- Wired up auction page: `v2/app/(protected)/auction/page.tsx` (server component → client AuctionTool)
+- Installed shadcn components: table, select, checkbox, badge, separator, tooltip
+- Installed Vitest + configured: `v2/vitest.config.ts`, test scripts in package.json
+- Build passes, all 34 tests pass, dev server loads auction tool successfully
+
+**Key Technical Decisions:**
+- Pure functions for all calculations (testable, no side effects)
+- React useReducer + Context for state (no external deps needed for 64 rows)
+- Reducer recalculates derived values (projected pot, team values) on every relevant mutation
+- Auto-save debounced at 1.5s to avoid Supabase spam
+- React.memo on table rows for selective re-rendering
+- Vitest (not Jest) for native TS/ESM support
+
+**Known Issues:**
+- Stripe Payment Link redirect after payment not working locally — redirects back to /payment instead of /auction. Need to investigate Stripe Payment Link redirect URL configuration.
+- Windows `os=linux` in `~/.npmrc` drops platform-specific binaries on `npm install` — had to force-install `lightningcss-win32-x64-msvc` and `@rollup/rollup-win32-x64-msvc`
+- DB default payout rules in migration have props at 5% each (total > 100%) — TypeScript defaults used instead (props at 0%)
+
+**Next Steps (Next Session):**
+- Fix Stripe Payment Link redirect (needs redirect URL configured in Stripe dashboard)
+- Visual polish: responsive layout, dark mode support, loading states
+- Phase 3: Landing page, pricing tiers, blog migration, SEO, domain setup
+- Deploy Phase 2 to Vercel (push to main triggers auto-deploy)
+- Update 2026 March Madness odds when bracket is set
+
+**Blockers:**
+- None. Phase 2 core product complete and functional.
