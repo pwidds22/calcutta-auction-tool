@@ -1,4 +1,5 @@
-import { LineChart, Calculator, TrendingUp } from 'lucide-react'
+import Link from 'next/link'
+import { LineChart, Calculator, TrendingUp, Layers } from 'lucide-react'
 
 const FEATURES = [
   {
@@ -22,6 +23,13 @@ const FEATURES = [
       'See your projected profit at every stage of the tournament. Track how your portfolio performs round by round as the bracket unfolds.',
     detail: 'Round-by-round cumulative P&L tracking',
   },
+  {
+    icon: Layers,
+    title: 'Live Strategy Overlay',
+    description:
+      'See fair values and edge calculations in real-time during your live auction. Know instantly if a bid is a steal or a trap.',
+    detail: 'Integrated with live auction hosting',
+  },
 ]
 
 export function FeaturesSection() {
@@ -30,17 +38,17 @@ export function FeaturesSection() {
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 md:py-28">
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-xs font-semibold uppercase tracking-widest text-emerald-400">
-            The edge
+            Strategy analytics
           </p>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-            Analytics that used to require a quant on your team
+            Know what every team is worth before you bid
           </h2>
           <p className="mt-4 text-base text-white/50">
-            Professional-grade Calcutta strategy, accessible to everyone. No spreadsheets. No guesswork.
+            Pair with free hosting or use standalone. $29.99/event.
           </p>
         </div>
 
-        <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-8">
+        <div className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 md:gap-8">
           {FEATURES.map((feature) => (
             <div
               key={feature.title}
@@ -58,6 +66,15 @@ export function FeaturesSection() {
               </p>
             </div>
           ))}
+        </div>
+
+        <div className="mt-8 text-center">
+          <Link
+            href="/register"
+            className="text-sm font-medium text-emerald-400 hover:text-emerald-300 transition-colors"
+          >
+            Try free preview &rarr;
+          </Link>
         </div>
       </div>
     </section>

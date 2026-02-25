@@ -2,22 +2,22 @@ const STEPS = [
   {
     number: '01',
     title: 'Create Account',
-    description: 'Sign up in 30 seconds. No credit card required to start.',
+    description: 'Free. No credit card required.',
   },
   {
     number: '02',
-    title: 'Set Your Pool\'s Rules',
-    description: 'Enter your payout structure and pot size. We handle the math.',
+    title: 'Host or Join',
+    description: 'Create a live auction or join one with a code. Free forever.',
   },
   {
     number: '03',
-    title: 'See True Values',
-    description: 'Fair values, suggested bids, and profit projections update instantly.',
+    title: 'Unlock Strategy',
+    description: 'See fair values, suggested bids, and profit projections for $29.99.',
   },
   {
     number: '04',
-    title: 'Win Your Auction',
-    description: 'Walk in with the data edge nobody else at the table has.',
+    title: 'Dominate Your Auction',
+    description: 'Bid with confidence. Track your portfolio. Win.',
   },
 ]
 

@@ -1,18 +1,18 @@
 const STATS = [
   {
-    value: '64',
-    label: 'Teams Analyzed',
-    detail: 'Full bracket coverage',
+    value: 'Free',
+    label: 'Auction Hosting',
+    detail: 'No credit card required',
   },
   {
-    value: '6',
-    label: 'Rounds of Projections',
-    detail: 'R32 through Championship',
+    value: 'Real-Time',
+    label: 'Live Bidding',
+    detail: 'Instant updates across all devices',
   },
   {
     value: '$29.99',
-    label: 'One-Time Price',
-    detail: 'No subscription, no upsells',
+    label: 'Strategy Analytics',
+    detail: 'One-time per event',
   },
 ]
 

@@ -15,6 +15,7 @@ interface TeamTableRowProps {
   potSize: number;
   onPriceChange: (teamId: number, price: number) => void;
   onMyTeamToggle: (teamId: number, isMyTeam: boolean) => void;
+  locked?: boolean;
 }
 
 function ProfitCell({
@@ -48,6 +49,7 @@ export const TeamTableRow = memo(function TeamTableRow({
   potSize,
   onPriceChange,
   onMyTeamToggle,
+  locked,
 }: TeamTableRowProps) {
   const { config } = useAuction();
   const rounds = config?.rounds ?? [];
@@ -69,6 +71,37 @@ export const TeamTableRow = memo(function TeamTableRow({
     },
     [team.id, onMyTeamToggle]
   );
+
+  if (locked) {
+    return (
+      <TableRow className="opacity-60">
+        <TableCell className="px-2 py-1.5 text-xs">{team.seed}</TableCell>
+        <TableCell className="px-2 py-1.5 text-xs font-medium whitespace-nowrap">
+          {team.name}
+        </TableCell>
+        <TableCell className="px-2 py-1.5 text-xs">{team.group}</TableCell>
+        {rounds.map((round) => (
+          <TableCell key={round.key} className="px-2 py-1.5 text-center">
+            <div className="text-xs select-none blur-[3px]">$---.--</div>
+            <div className="text-[10px] select-none blur-[3px]">--.-%</div>
+          </TableCell>
+        ))}
+        <TableCell className="px-2 py-1.5 text-right text-xs select-none blur-[3px]">$---.--</TableCell>
+        <TableCell className="px-2 py-1.5 text-right text-xs select-none blur-[3px]">$---.--</TableCell>
+        <TableCell className="px-2 py-1.5">
+          <Input
+            type="number"
+            placeholder="0"
+            disabled
+            className="h-7 w-20 text-right text-xs tabular-nums opacity-50"
+          />
+        </TableCell>
+        <TableCell className="px-2 py-1.5 text-center">
+          <Checkbox disabled />
+        </TableCell>
+      </TableRow>
+    );
+  }
 
   return (
     <TableRow className={team.isMyTeam ? 'bg-emerald-500/10' : undefined}>

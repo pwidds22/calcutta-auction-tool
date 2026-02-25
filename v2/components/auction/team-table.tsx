@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
+import Link from 'next/link';
 import { useAuction } from '@/lib/auction/auction-context';
 import {
   Table,
@@ -19,13 +20,15 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { TeamTableRow } from './team-table-row';
-import { ArrowUpDown } from 'lucide-react';
+import { ArrowUpDown, Lock } from 'lucide-react';
 import type { GroupFilter, StatusFilter, SortOption } from '@/lib/calculations/types';
+
+const PREVIEW_SEED_CUTOFF = 2; // Show seeds 1 and 2 in free preview
 
 const STATUSES: StatusFilter[] = ['All', 'Available', 'Taken', 'My Teams'];
 
 export function TeamTable() {
-  const { state, dispatch, filteredTeams, effectivePotSize, config } = useAuction();
+  const { state, dispatch, filteredTeams, effectivePotSize, config, hasPaid } = useAuction();
 
   const groups: GroupFilter[] = config
     ? ['All', ...config.groups.map((g) => g.key)]
@@ -186,11 +189,31 @@ export function TeamTable() {
                 potSize={effectivePotSize}
                 onPriceChange={handlePriceChange}
                 onMyTeamToggle={handleMyTeamToggle}
+                locked={!hasPaid && team.seed > PREVIEW_SEED_CUTOFF}
               />
             ))}
           </TableBody>
         </Table>
       </div>
+
+      {/* Unlock CTA for unpaid users */}
+      {!hasPaid && (
+        <div className="flex flex-col items-center gap-3 rounded-lg border border-white/[0.06] bg-white/[0.02] p-6 text-center">
+          <Lock className="h-5 w-5 text-white/40" />
+          <p className="text-sm font-medium text-white">
+            See the full picture. Unlock all {filteredTeams.length} teams.
+          </p>
+          <p className="text-xs text-white/50">
+            Fair values, bid recommendations, and profit projections for every team.
+          </p>
+          <Link
+            href="/payment"
+            className="rounded-md bg-emerald-600 px-6 py-2 text-sm font-medium text-white hover:bg-emerald-500 transition-colors"
+          >
+            Unlock Full Access — $29.99
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

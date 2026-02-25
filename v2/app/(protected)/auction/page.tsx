@@ -12,6 +12,13 @@ export default async function AuctionPage() {
 
   if (!user) redirect('/login')
 
+  // Check payment status
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('has_paid')
+    .eq('id', user.id)
+    .single()
+
   // Get the active tournament
   const { config, teams: baseTeams } = getActiveTournament()
 
@@ -27,6 +34,7 @@ export default async function AuctionPage() {
         userEmail={user.email!}
         config={config}
         baseTeams={baseTeams}
+        hasPaid={profile?.has_paid ?? false}
       />
     </div>
   )

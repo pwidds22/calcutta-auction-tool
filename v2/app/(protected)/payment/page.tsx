@@ -6,11 +6,12 @@ import { Check, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
 const FEATURES = [
+  'All 64 teams with full analytics',
   'Devigged odds from real sportsbook lines',
-  'Fair value for all 64 teams',
+  'Fair value calculations',
   'Suggested bid prices',
   'Round-by-round profit projections',
-  'Projected pot size inference',
+  'Live strategy overlay during auctions',
   'Auto-save to your account',
 ]
 
@@ -38,14 +39,14 @@ export default async function PaymentPage() {
 
         <div className="relative overflow-hidden rounded-xl border border-emerald-500/20 bg-white/[0.03] p-8 shadow-2xl shadow-emerald-500/[0.03]">
           <div className="flex items-center justify-between">
-            <h1 className="text-lg font-semibold text-white">Unlock Calcutta Edge</h1>
+            <h1 className="text-lg font-semibold text-white">Unlock Full Strategy Access</h1>
             <span className="inline-flex items-center rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-0.5 text-xs font-medium text-amber-400">
               March Madness 2026
             </span>
           </div>
           <p className="mt-1 text-sm text-white/40">
-            Get fair value calculations, bid recommendations, and round-by-round
-            profit projections.
+            You&apos;ve seen the preview. Here&apos;s the full picture &mdash; fair values,
+            bid recommendations, and profit projections for every team.
           </p>
 
           <div className="mt-6">

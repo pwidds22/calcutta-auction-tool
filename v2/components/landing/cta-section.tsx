@@ -11,18 +11,21 @@ export function CtaSection() {
       <div className="relative mx-auto max-w-6xl px-4 py-20 sm:px-6 md:py-28">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-            Your Calcutta pool is coming up.
-            <br />
-            Are you ready?
+            Your next Calcutta starts here.
           </h2>
           <p className="mt-4 text-base text-white/40">
-            The teams. The odds. The edge. All in one tool.
+            Host for free. Play to win.
           </p>
-          <div className="mt-8">
+          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Button size="lg" asChild className="gap-2">
               <Link href="/register">
-                Create Your Free Account
+                Host Your Auction Free
                 <ArrowRight className="size-4" />
+              </Link>
+            </Button>
+            <Button variant="outline" size="lg" asChild className="border-white/10 bg-transparent text-white hover:bg-white/[0.06] hover:text-white">
+              <Link href="/register">
+                Try Strategy Preview
               </Link>
             </Button>
           </div>

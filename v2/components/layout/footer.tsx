@@ -1,7 +1,9 @@
 import Link from 'next/link'
 
 const PRODUCT_LINKS = [
-  { label: 'Features', href: '#features' },
+  { label: 'Host Auction', href: '/host' },
+  { label: 'Join Auction', href: '/join' },
+  { label: 'Strategy Tool', href: '/auction' },
   { label: 'Pricing', href: '#pricing' },
   { label: 'Sign In', href: '/login' },
   { label: 'Create Account', href: '/register' },
@@ -21,7 +23,7 @@ export function Footer() {
               <span className="text-sm font-semibold tracking-tight text-white">Calcutta Edge</span>
             </div>
             <p className="text-sm text-white/40 leading-relaxed">
-              Strategy analytics for Calcutta auction players who take their pools seriously.
+              The Calcutta auction platform. Host free. Win with analytics.
             </p>
           </div>
 

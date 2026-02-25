@@ -27,11 +27,12 @@ interface AuctionContextValue {
   summaryStats: SummaryStats;
   effectivePotSize: number;
   config: TournamentConfig | null;
+  hasPaid: boolean;
 }
 
 const AuctionContext = createContext<AuctionContextValue | null>(null);
 
-export function AuctionProvider({ children }: { children: ReactNode }) {
+export function AuctionProvider({ children, hasPaid = true }: { children: ReactNode; hasPaid?: boolean }) {
   const [state, dispatch] = useReducer(auctionReducer, INITIAL_STATE);
 
   const filteredTeams = useMemo(() => getFilteredTeams(state), [
@@ -55,8 +56,8 @@ export function AuctionProvider({ children }: { children: ReactNode }) {
   ]);
 
   const value = useMemo(
-    () => ({ state, dispatch, filteredTeams, summaryStats, effectivePotSize, config: state.config }),
-    [state, filteredTeams, summaryStats, effectivePotSize]
+    () => ({ state, dispatch, filteredTeams, summaryStats, effectivePotSize, config: state.config, hasPaid }),
+    [state, filteredTeams, summaryStats, effectivePotSize, hasPaid]
   );
 
   return (

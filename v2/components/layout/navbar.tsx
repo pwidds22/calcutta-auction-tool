@@ -7,9 +7,10 @@ import { Menu, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const NAV_LINKS = [
-  { label: 'Features', href: '#features' },
-  { label: 'How It Works', href: '#how-it-works' },
-  { label: 'Pricing', href: '#pricing' },
+  { label: 'Host Free', href: '#hosting', highlight: true },
+  { label: 'Features', href: '#features', highlight: false },
+  { label: 'How It Works', href: '#how-it-works', highlight: false },
+  { label: 'Pricing', href: '#pricing', highlight: false },
 ]
 
 export function Navbar() {
@@ -32,7 +33,10 @@ export function Navbar() {
             <a
               key={link.href}
               href={link.href}
-              className="px-3 py-1.5 text-sm text-white/50 transition-colors hover:text-white"
+              className={cn(
+                'px-3 py-1.5 text-sm transition-colors hover:text-white',
+                link.highlight ? 'font-medium text-emerald-400 hover:text-emerald-300' : 'text-white/50'
+              )}
             >
               {link.label}
             </a>
@@ -72,7 +76,10 @@ export function Navbar() {
               key={link.href}
               href={link.href}
               onClick={() => setMobileOpen(false)}
-              className="block rounded-md px-3 py-2 text-sm text-white/50 transition-colors hover:bg-white/[0.04] hover:text-white"
+              className={cn(
+                'block rounded-md px-3 py-2 text-sm transition-colors hover:bg-white/[0.04] hover:text-white',
+                link.highlight ? 'font-medium text-emerald-400' : 'text-white/50'
+              )}
             >
               {link.label}
             </a>
