@@ -102,6 +102,8 @@ export function ParticipantView({
       soldTeams: initialSoldTeams,
       auctionStatus: session.status,
       teamOrder: session.team_order,
+      timerEndsAt: session.timer_ends_at,
+      timerDurationMs: session.timer_duration_ms,
     },
   });
 
@@ -118,14 +120,7 @@ export function ParticipantView({
     onExpire: useCallback(() => {}, []),
   });
 
-  // Initialize timer from DB state on mount (for page refresh)
-  useEffect(() => {
-    if (session.timer_ends_at && session.timer_duration_ms && new Date(session.timer_ends_at) > new Date()) {
-      timer.start(session.timer_ends_at, session.timer_duration_ms);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
+  // Sync timer state from channel (includes DB-initialized state on mount)
   useEffect(() => {
     if (channel.timerIsRunning && channel.timerEndsAt) {
       timer.start(channel.timerEndsAt, channel.timerDurationMs);

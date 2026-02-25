@@ -53,6 +53,8 @@ export interface UseAuctionChannelOptions {
     soldTeams: SoldTeam[];
     auctionStatus: string;
     teamOrder?: number[];
+    timerEndsAt?: string | null;
+    timerDurationMs?: number | null;
   };
 }
 
@@ -74,9 +76,9 @@ export function useAuctionChannel(
     isConnected: false,
     onlineUsers: [],
     teamOrder: initialState.teamOrder ?? null,
-    timerEndsAt: null,
-    timerDurationMs: 0,
-    timerIsRunning: false,
+    timerEndsAt: initialState.timerEndsAt ?? null,
+    timerDurationMs: initialState.timerDurationMs ?? 0,
+    timerIsRunning: !!(initialState.timerEndsAt && initialState.timerDurationMs && new Date(initialState.timerEndsAt) > new Date()),
   });
 
   const channelRef = useRef<RealtimeChannel | null>(null);
