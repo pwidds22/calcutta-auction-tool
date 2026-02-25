@@ -171,13 +171,13 @@ export function TeamTable() {
               <TableHead className="px-2 text-xs">{config?.teamLabel ?? 'Team'}</TableHead>
               <TableHead className="px-2 text-xs w-16">{config?.groupLabel ?? 'Group'}</TableHead>
               {rounds.map((round) => (
-                <TableHead key={round.key} className="px-2 text-center text-xs">
+                <TableHead key={round.key} className="px-2 text-center text-xs" title={round.payoutLabel ?? round.label}>
                   {round.label}
                 </TableHead>
               ))}
-              <TableHead className="px-2 text-right text-xs">Bid</TableHead>
-              <TableHead className="px-2 text-right text-xs">Fair Val</TableHead>
-              <TableHead className="px-2 text-right text-xs w-24">Price</TableHead>
+              <TableHead className="px-2 text-right text-xs" title="Suggested bid (95% of fair value)">Bid</TableHead>
+              <TableHead className="px-2 text-right text-xs" title="Fair value based on odds and pot size">Fair Val</TableHead>
+              <TableHead className="px-2 text-right text-xs w-24" title="Actual purchase price">Price</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

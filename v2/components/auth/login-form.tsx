@@ -13,10 +13,13 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 
 export function LoginForm() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const searchParams = useSearchParams()
+  const passwordUpdated = searchParams.get('message') === 'password_updated'
 
   async function handleSubmit(formData: FormData) {
     setIsLoading(true)
@@ -29,7 +32,7 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md border border-white/10">
       <CardHeader>
         <CardTitle>Sign In</CardTitle>
         <CardDescription>
@@ -38,6 +41,11 @@ export function LoginForm() {
       </CardHeader>
       <CardContent>
         <form action={handleSubmit} className="space-y-4">
+          {passwordUpdated && (
+            <div className="rounded-md bg-emerald-500/10 p-3 text-sm text-emerald-400">
+              Password updated successfully. Sign in with your new password.
+            </div>
+          )}
           {error && (
             <div className="rounded-md bg-red-500/10 p-3 text-sm text-red-400">
               {error}
@@ -48,7 +56,15 @@ export function LoginForm() {
             <Input id="email" name="email" type="email" required />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">Password</Label>
+              <Link
+                href="/forgot-password"
+                className="text-xs text-muted-foreground hover:text-primary transition-colors"
+              >
+                Forgot password?
+              </Link>
+            </div>
             <Input id="password" name="password" type="password" required />
           </div>
           <Button type="submit" className="w-full" disabled={isLoading}>

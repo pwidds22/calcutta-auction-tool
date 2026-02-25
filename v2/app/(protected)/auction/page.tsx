@@ -31,7 +31,6 @@ export default async function AuctionPage() {
         initialTeams={auctionData?.teams ?? []}
         initialPayoutRules={auctionData?.payoutRules ?? config.defaultPayoutRules}
         initialPotSize={auctionData?.estimatedPotSize ?? config.defaultPotSize}
-        userEmail={user.email!}
         config={config}
         baseTeams={baseTeams}
         hasPaid={profile?.has_paid ?? false}

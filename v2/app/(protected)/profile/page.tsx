@@ -56,7 +56,10 @@ export default async function ProfilePage() {
                     Active
                   </span>
                 ) : (
-                  <span className="text-amber-400">Unpaid</span>
+                  <span className="inline-flex items-center gap-1.5 text-amber-400">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                    Unpaid
+                  </span>
                 )}
               </p>
             </div>
@@ -72,6 +75,25 @@ export default async function ProfilePage() {
           )}
         </div>
       </div>
+
+      {/* Upgrade CTA for unpaid users */}
+      {!profile?.has_paid && (
+        <div className="mt-8 space-y-1">
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-white/30">Upgrade</h2>
+          <div className="mt-3 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.04] px-5 py-5">
+            <h3 className="text-sm font-semibold text-white">Unlock Full Strategy Access</h3>
+            <p className="mt-1 text-sm text-white/50">
+              Get devigged odds, fair value calculations, bid recommendations, and round-by-round profit projections for every team.
+            </p>
+            <Button asChild className="mt-4 gap-2 bg-emerald-600 hover:bg-emerald-700">
+              <Link href="/payment">
+                Unlock — $29.99
+                <ArrowRight className="size-4" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Support */}
       <div className="mt-8 space-y-1">

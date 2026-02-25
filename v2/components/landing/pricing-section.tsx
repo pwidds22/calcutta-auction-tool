@@ -97,7 +97,7 @@ export function PricingSection() {
                 <p className="mt-1 text-sm text-white/40">{tier.description}</p>
 
                 <div className="mt-5">
-                  <span className="text-3xl font-bold tracking-tight text-white font-mono">{tier.price}</span>
+                  <span className={`text-3xl font-bold tracking-tight font-mono ${tier.price === '$0' ? 'text-emerald-400' : 'text-white'}`}>{tier.price}</span>
                   <p className="mt-0.5 text-xs text-white/40">{tier.priceDetail}</p>
                 </div>
 

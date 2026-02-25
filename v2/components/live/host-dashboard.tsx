@@ -50,6 +50,9 @@ function SessionCard({
           <span className="text-xs font-mono text-white/40">
             {session.join_code}
           </span>
+          <span className="text-xs text-white/30">
+            {new Date(session.created_at).toLocaleDateString()}
+          </span>
         </div>
       </div>
       <ArrowRight className="size-4 text-white/30" />

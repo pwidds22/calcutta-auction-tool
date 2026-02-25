@@ -55,7 +55,7 @@ export function AppNavbar() {
               variant="ghost"
               size="sm"
               type="submit"
-              className="gap-1.5 text-white/40 hover:text-white hover:bg-white/[0.06]"
+              className="gap-1.5 text-red-400/60 hover:text-red-400 hover:bg-red-500/[0.06]"
             >
               <LogOut className="size-3.5" />
               Sign Out
@@ -102,7 +102,7 @@ export function AppNavbar() {
               variant="outline"
               size="sm"
               type="submit"
-              className="w-full gap-1.5 border-white/10 text-white/60 hover:bg-white/[0.06] hover:text-white"
+              className="w-full gap-1.5 border-red-400/20 text-red-400/60 hover:bg-red-500/[0.06] hover:text-red-400"
             >
               <LogOut className="size-3.5" />
               Sign Out
