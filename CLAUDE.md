@@ -797,3 +797,55 @@ These formulas are the heart of the product — port to TypeScript with unit tes
 
 **Blockers:**
 - None. Phase C complete and deployed. Ready for UI polish fixes.
+
+### Session: 2026-02-25 — UI Polish: 11 Review Fixes + Forgot Password Flow
+
+**Completed — 11 UI Polish Fixes:**
+1. **Remove email from auction status bar** — removed `userEmail` prop entirely (`v2/components/auction/auction-tool.tsx`, `v2/app/(protected)/auction/page.tsx`)
+2. **Fix upgrade banner mobile stacking** — `flex-col sm:flex-row` with full-width button on mobile (`v2/components/auction/auction-tool.tsx`)
+3. **Forgot password flow** — full Supabase-powered reset flow:
+   - Server actions: `resetPassword()` + `updatePassword()` in `v2/actions/auth.ts`
+   - New forms: `v2/components/auth/forgot-password-form.tsx`, `v2/components/auth/reset-password-form.tsx`
+   - New pages: `v2/app/(auth)/forgot-password/page.tsx`, `v2/app/(auth)/reset-password/page.tsx`
+   - Middleware: added `/forgot-password` + `/reset-password` to public routes (`v2/middleware.ts`)
+   - Login form: "Forgot password?" link + success message after reset (`v2/components/auth/login-form.tsx`)
+   - Flow: forgot → email → Supabase recovery email → `/auth/callback?next=/reset-password` → new password → `/login?message=password_updated`
+4. **Register page value prop** — "Free to create an account. Pay only when you're ready." (`v2/components/auth/register-form.tsx`)
+5. **Card borders on auth pages** — `border border-white/10` on login, register, forgot-password, reset-password forms
+6. **Sign Out subtle red** — `text-red-400/60 hover:text-red-400` on desktop + mobile (`v2/components/layout/app-navbar.tsx`)
+7. **Host dashboard session metadata** — created date shown on session cards (`v2/components/live/host-dashboard.tsx`)
+8. **Profile upgrade CTA** — amber dot on "Unpaid" status + "Unlock Full Strategy Access" card for unpaid users (`v2/app/(protected)/profile/page.tsx`)
+9. **$0 emerald on Free tier** — `text-emerald-400` on Free pricing card (`v2/components/landing/pricing-section.tsx`)
+10. **Join page helper text** — heading + description above join form (`v2/app/(protected)/join/page.tsx`)
+11. **Column header tooltips** — `title` attributes on round headers (payoutLabel) + Bid/Fair Val/Price headers (`v2/components/auction/team-table.tsx`)
+
+**Files Created (4):**
+- `v2/components/auth/forgot-password-form.tsx`
+- `v2/components/auth/reset-password-form.tsx`
+- `v2/app/(auth)/forgot-password/page.tsx`
+- `v2/app/(auth)/reset-password/page.tsx`
+
+**Files Modified (12):**
+- `v2/actions/auth.ts`, `v2/middleware.ts`
+- `v2/app/(protected)/auction/page.tsx`, `v2/app/(protected)/join/page.tsx`, `v2/app/(protected)/profile/page.tsx`
+- `v2/components/auction/auction-tool.tsx`, `v2/components/auction/team-table.tsx`
+- `v2/components/auth/login-form.tsx`, `v2/components/auth/register-form.tsx`
+- `v2/components/landing/pricing-section.tsx`
+- `v2/components/layout/app-navbar.tsx`
+- `v2/components/live/host-dashboard.tsx`
+
+**Commit:** `0756fbb` — UI polish: forgot password flow, auth page borders, mobile fixes, 11 review items
+
+**Remaining from UI Review Queue:**
+- Verify Stripe Payment Link redirect works in production (P2)
+- Verify landing page mobile navbar hamburger renders (P1 — believed working, needs manual check)
+
+**Next Steps (Next Session):**
+- **E2E testing**: sell team, skip team, undo last sale, complete auction, auto-sync to strategy tool
+- **Test forgot password flow** end-to-end (requires Supabase email delivery + `NEXT_PUBLIC_SITE_URL` env var in Vercel)
+- **Deploy to Vercel** — push to main triggers auto-deploy
+- **Phase D: Buffer + Launch** — final testing, odds update on Selection Sunday (3/15), deploy
+
+**Blockers:**
+- `NEXT_PUBLIC_SITE_URL` env var needs to be set in Vercel for password reset emails to link correctly (should be `https://calcuttaedge.com`)
+- Forgot password flow not yet E2E tested (Supabase email delivery needed)
