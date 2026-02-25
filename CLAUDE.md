@@ -656,3 +656,75 @@ These formulas are the heart of the product — port to TypeScript with unit tes
 **Blockers:**
 - Timer implementation needs research on standard Calcutta auction timer conventions (typical durations, reset behavior)
 - Timer reliability is critical — user's previous tool had bugs where timer jumped unexpectedly
+
+### Session: 2026-02-25 — Live Auction Features: Timer, Commissioner Bidding, Shuffle, Increments + Bug Fixes
+
+**Completed — 4 New Features:**
+1. **Commissioner Bidding** — added `BidPanel` + `MyPortfolio` to `v2/components/live/commissioner-view.tsx`
+2. **Configurable Bid Increments** — 3 presets (Casual/Standard/Big Money) stored in `auction_sessions.settings` jsonb
+   - New types: `v2/lib/auction/live/types.ts` (SessionSettings, TimerSettings, BID_INCREMENT_PRESETS)
+   - Updated: `v2/components/live/create-session-form.tsx` (preset selector + timer toggle UI)
+   - Updated: `v2/actions/session.ts` (accepts `settings` param)
+   - Updated: `v2/components/live/bid-panel.tsx` (dynamic `bidIncrements` prop)
+3. **Randomize Team Order** — Fisher-Yates shuffle button in lobby
+   - Updated: `v2/actions/session.ts` (`updateTeamOrder` now broadcasts `TEAM_ORDER_UPDATED`)
+   - Updated: `v2/lib/auction/live/use-auction-channel.ts` (handles `TEAM_ORDER_UPDATED`, timer events)
+   - Updated: `v2/components/live/commissioner-view.tsx` (shuffle button, dynamic `activeTeamOrder`)
+4. **Auto-Timer with Countdown** — absolute timestamp-based, requestAnimationFrame for 60fps
+   - New: `v2/lib/auction/live/use-timer.ts` (timer hook with commissioner auto-close on expiry)
+   - New: `v2/components/live/timer-display.tsx` (progress bar, color transitions: emerald→amber→red)
+   - Updated: `v2/actions/bidding.ts` (TIMER_START/RESET/STOP broadcasts + DB persistence)
+   - Updated: `v2/components/live/bidding-controls.tsx` ("Close Early" label when timer running)
+
+**Completed — 6 Bug Fixes (from user testing):**
+1. **Bid increment labels unclear** — renamed to "Quick Bid Buttons" with `+$` prefix notation
+2. **Team queue only visible to commissioner** — added `TeamQueue` to participant view with 3-6-3 grid layout
+3. **Pause/resume resets to team 1** — `startAuction()` now preserves `current_team_idx` when resuming from paused
+4. **Duplicate key errors on refresh** — `MyPortfolio` + `ResultsTable` use composite keys `${teamId}-${idx}`
+5. **Timer lost on page refresh** — added `timer_ends_at` + `timer_duration_ms` columns to `auction_sessions`, persisted/cleared in all bidding actions, read on page load
+6. **Timer killed by channel sync on mount** — timer DB state flows through channel's `initialState` so `timerIsRunning` is true on mount (no race condition with sync effect)
+
+**DB Changes (applied via Supabase MCP):**
+- Added `timer_ends_at timestamptz` and `timer_duration_ms integer` columns to `auction_sessions`
+- Updated migration file: `v2/supabase/migrations/00002_live_auction_hosting.sql`
+
+**Files Created (3):**
+- `v2/lib/auction/live/types.ts` — SessionSettings, TimerSettings, BID_INCREMENT_PRESETS
+- `v2/lib/auction/live/use-timer.ts` — requestAnimationFrame timer hook
+- `v2/components/live/timer-display.tsx` — visual countdown component
+
+**Files Modified (9):**
+- `v2/actions/bidding.ts` — timer broadcasts, DB persistence, pause/resume fix
+- `v2/actions/session.ts` — settings param, team order broadcast
+- `v2/lib/auction/live/use-auction-channel.ts` — timer + teamOrder state, initial timer from DB
+- `v2/components/live/commissioner-view.tsx` — BidPanel, MyPortfolio, shuffle, timer, DB timer init
+- `v2/components/live/participant-view.tsx` — TeamQueue, 3-6-3 layout, timer, DB timer init
+- `v2/components/live/bidding-controls.tsx` — timerIsRunning prop
+- `v2/components/live/bid-panel.tsx` — dynamic bidIncrements prop
+- `v2/components/live/create-session-form.tsx` — preset selector, timer toggle
+- `v2/components/live/my-portfolio.tsx` + `results-table.tsx` — composite keys
+
+**Commits:**
+- `9fa11ad` — Live auction features: timer, commissioner bidding, shuffle, bid increments
+- `64cacc4` — Fix 5 bugs from live auction testing: timer persistence, pause/resume, team queue fairness
+- `3e0ad10` — Fix timer not showing on refresh — initialize channel state from DB timer fields
+
+**User Testing Results:**
+- Commissioner bidding: WORKING
+- Timer countdown + auto-close: WORKING
+- Timer persistence on refresh: WORKING
+- Pause/resume at correct team: WORKING
+- Team queue visible to all: WORKING
+- Bid increment presets: WORKING
+- Shuffle in lobby: WORKING
+- Known non-issue: Norton Password Manager causes harmless hydration warning (`data-np-autofill-submit`)
+
+**Next Steps (Next Session):**
+- **Deploy to Vercel** — push to main triggers auto-deploy
+- **Continue E2E testing**: sell team, skip, undo, complete auction, auto-sync to strategy tool
+- **Phase C: Landing + Pricing Update** — rebrand landing for multi-tournament platform, 3-tier pricing
+- **Phase D: Buffer + Launch** — E2E testing, odds update on Selection Sunday (3/15), deploy
+- **Rotation draft** — deferred to post-launch (fundamentally different auction mode)
+
+**Blockers:**
+- None. All 4 features implemented and tested. Ready for deploy + continued E2E testing.
