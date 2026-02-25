@@ -36,11 +36,11 @@ export function ResultsTable({ soldTeams, baseTeams }: ResultsTableProps) {
         ) : (
           <table className="w-full text-sm">
             <tbody>
-              {[...soldTeams].reverse().map((sold) => {
+              {[...soldTeams].reverse().map((sold, idx) => {
                 const team = teamMap.get(sold.teamId);
                 return (
                   <tr
-                    key={sold.teamId}
+                    key={`${sold.teamId}-${idx}`}
                     className="border-b border-white/[0.04] last:border-0"
                   >
                     <td className="px-3 py-1.5 text-white/70">

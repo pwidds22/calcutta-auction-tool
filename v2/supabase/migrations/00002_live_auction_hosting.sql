@@ -23,6 +23,8 @@ create table public.auction_sessions (
   current_highest_bid numeric default 0,
   current_highest_bidder_id uuid references public.profiles(id),
   settings jsonb default '{}'::jsonb,
+  timer_ends_at timestamptz default null,
+  timer_duration_ms integer default null,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );

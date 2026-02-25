@@ -155,8 +155,11 @@ export function CreateSessionForm({ tournaments }: CreateSessionFormProps) {
         <div>
           <label className="block text-sm font-medium text-white/60 mb-1.5">
             <DollarSign className="inline size-3.5 mr-1" />
-            Bid Increments
+            Quick Bid Buttons
           </label>
+          <p className="text-xs text-white/30 mb-2">
+            Shortcuts participants tap to raise the bid quickly.
+          </p>
           <div className="grid grid-cols-3 gap-2">
             {(Object.entries(BID_INCREMENT_PRESETS) as [BidIncrementPreset, typeof BID_INCREMENT_PRESETS[BidIncrementPreset]][]).map(
               ([key, preset]) => (
@@ -177,7 +180,7 @@ export function CreateSessionForm({ tournaments }: CreateSessionFormProps) {
             )}
           </div>
           <p className="mt-1.5 text-xs text-white/30">
-            Quick bid buttons: {BID_INCREMENT_PRESETS[bidPreset].values.map((v) => `$${v}`).join(', ')}
+            Buttons shown: {BID_INCREMENT_PRESETS[bidPreset].values.map((v) => `+$${v}`).join(', ')}
           </p>
         </div>
 

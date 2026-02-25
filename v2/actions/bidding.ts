@@ -18,7 +18,7 @@ export async function startAuction(sessionId: string) {
 
   const { data: session } = await supabase
     .from('auction_sessions')
-    .select('commissioner_id, status, team_order')
+    .select('commissioner_id, status, team_order, current_team_idx')
     .eq('id', sessionId)
     .single();
 
@@ -28,11 +28,14 @@ export async function startAuction(sessionId: string) {
     return { error: 'Cannot start auction in current state' };
   if (!session.team_order?.length) return { error: 'No teams in order' };
 
+  // When resuming from paused, keep current team position; from lobby, start at 0
+  const resumeIdx = session.status === 'paused' ? session.current_team_idx : 0;
+
   const { error } = await supabase
     .from('auction_sessions')
     .update({
       status: 'active',
-      current_team_idx: 0,
+      current_team_idx: resumeIdx,
       bidding_status: 'waiting',
       current_highest_bid: 0,
       current_highest_bidder_id: null,
@@ -42,8 +45,8 @@ export async function startAuction(sessionId: string) {
   if (error) return { error: error.message };
 
   await broadcastToChannel(channelName(sessionId), 'AUCTION_STARTED', {
-    currentTeamIdx: 0,
-    teamId: session.team_order[0],
+    currentTeamIdx: resumeIdx,
+    teamId: session.team_order[resumeIdx],
   });
 
   return { success: true };
@@ -121,6 +124,13 @@ export async function openBidding(sessionId: string) {
   if (settings?.timer?.enabled) {
     const durationMs = settings.timer.initialDurationSec * 1000;
     const endsAt = new Date(Date.now() + durationMs).toISOString();
+
+    // Persist timer to DB for reconnection
+    await supabase
+      .from('auction_sessions')
+      .update({ timer_ends_at: endsAt, timer_duration_ms: durationMs })
+      .eq('id', sessionId);
+
     await broadcastToChannel(channelName(sessionId), 'TIMER_START', {
       endsAt,
       durationMs,
@@ -204,6 +214,13 @@ export async function placeBid(sessionId: string, amount: number) {
   if (settings?.timer?.enabled) {
     const durationMs = settings.timer.resetDurationSec * 1000;
     const endsAt = new Date(Date.now() + durationMs).toISOString();
+
+    // Persist timer to DB for reconnection
+    await admin
+      .from('auction_sessions')
+      .update({ timer_ends_at: endsAt, timer_duration_ms: durationMs })
+      .eq('id', sessionId);
+
     await broadcastToChannel(channelName(sessionId), 'TIMER_RESET', {
       endsAt,
       durationMs,
@@ -233,7 +250,7 @@ export async function closeBidding(sessionId: string) {
 
   const { error } = await supabase
     .from('auction_sessions')
-    .update({ bidding_status: 'closed' })
+    .update({ bidding_status: 'closed', timer_ends_at: null, timer_duration_ms: null })
     .eq('id', sessionId);
 
   if (error) return { error: error.message };
@@ -312,6 +329,8 @@ export async function sellTeam(sessionId: string) {
       bidding_status: 'waiting',
       current_highest_bid: 0,
       current_highest_bidder_id: null,
+      timer_ends_at: null,
+      timer_duration_ms: null,
       ...(isLastTeam ? { status: 'completed' } : {}),
     })
     .eq('id', sessionId);
@@ -434,6 +453,8 @@ export async function skipTeam(sessionId: string) {
       bidding_status: 'waiting',
       current_highest_bid: 0,
       current_highest_bidder_id: null,
+      timer_ends_at: null,
+      timer_duration_ms: null,
     })
     .eq('id', sessionId);
 
@@ -523,7 +544,7 @@ export async function pauseAuction(sessionId: string) {
 
   await supabase
     .from('auction_sessions')
-    .update({ status: 'paused', bidding_status: 'waiting' })
+    .update({ status: 'paused', bidding_status: 'waiting', timer_ends_at: null, timer_duration_ms: null })
     .eq('id', sessionId);
 
   await broadcastToChannel(channelName(sessionId), 'TIMER_STOP', {});

@@ -37,11 +37,11 @@ export function MyPortfolio({ soldTeams, baseTeams, userId }: MyPortfolioProps) 
           </p>
         ) : (
           <div className="p-2 space-y-0.5">
-            {myTeams.map((sold) => {
+            {myTeams.map((sold, idx) => {
               const team = teamMap.get(sold.teamId);
               return (
                 <div
-                  key={sold.teamId}
+                  key={`${sold.teamId}-${idx}`}
                   className="flex items-center justify-between rounded-md px-3 py-1.5"
                 >
                   <span className="text-sm text-white/70">

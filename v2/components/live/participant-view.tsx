@@ -10,6 +10,7 @@ import { AuctionStatusBar } from './auction-status-bar';
 import { TeamSpotlight } from './team-spotlight';
 import { BidPanel } from './bid-panel';
 import { BidLadder } from './bid-ladder';
+import { TeamQueue } from './team-queue';
 import { ParticipantList } from './participant-list';
 import { ResultsTable } from './results-table';
 import { MyPortfolio } from './my-portfolio';
@@ -31,6 +32,8 @@ interface ParticipantViewProps {
     estimated_pot_size: number;
     tournament_id: string;
     settings: SessionSettings;
+    timer_ends_at: string | null;
+    timer_duration_ms: number | null;
   };
   participants: Array<{
     user_id: string;
@@ -115,6 +118,14 @@ export function ParticipantView({
     onExpire: useCallback(() => {}, []),
   });
 
+  // Initialize timer from DB state on mount (for page refresh)
+  useEffect(() => {
+    if (session.timer_ends_at && session.timer_duration_ms && new Date(session.timer_ends_at) > new Date()) {
+      timer.start(session.timer_ends_at, session.timer_duration_ms);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (channel.timerIsRunning && channel.timerEndsAt) {
       timer.start(channel.timerEndsAt, channel.timerDurationMs);
@@ -165,8 +176,20 @@ export function ParticipantView({
       )}
 
       <div className="grid grid-cols-12 gap-4">
-        {/* Main area */}
-        <div className="col-span-12 space-y-4 lg:col-span-8">
+        {/* Left: Team Queue */}
+        <div className="col-span-12 lg:col-span-3">
+          <TeamQueue
+            sessionId={session.id}
+            teamOrder={activeTeamOrder}
+            baseTeams={baseTeams}
+            soldTeams={channel.soldTeams}
+            currentTeamIdx={channel.currentTeamIdx}
+            auctionStatus={channel.auctionStatus}
+          />
+        </div>
+
+        {/* Center: Auction area */}
+        <div className="col-span-12 space-y-4 lg:col-span-6">
           <TeamSpotlight
             team={currentTeam}
             config={config}
@@ -203,8 +226,8 @@ export function ParticipantView({
           />
         </div>
 
-        {/* Sidebar */}
-        <div className="col-span-12 space-y-4 lg:col-span-4">
+        {/* Right: Participants + Results */}
+        <div className="col-span-12 space-y-4 lg:col-span-3">
           <ParticipantList onlineUsers={channel.onlineUsers} />
           <MyPortfolio
             soldTeams={channel.soldTeams}

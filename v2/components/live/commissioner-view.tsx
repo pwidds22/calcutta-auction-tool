@@ -37,6 +37,8 @@ interface CommissionerViewProps {
     estimated_pot_size: number;
     tournament_id: string;
     settings: SessionSettings;
+    timer_ends_at: string | null;
+    timer_duration_ms: number | null;
   };
   participants: Array<{
     user_id: string;
@@ -136,6 +138,14 @@ export function CommissionerView({
       closeBidding(session.id);
     }, [session.id]),
   });
+
+  // Initialize timer from DB state on mount (for page refresh)
+  useEffect(() => {
+    if (session.timer_ends_at && session.timer_duration_ms && new Date(session.timer_ends_at) > new Date()) {
+      timer.start(session.timer_ends_at, session.timer_duration_ms);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Sync timer state from channel broadcasts
   useEffect(() => {
