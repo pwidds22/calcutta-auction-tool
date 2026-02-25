@@ -728,3 +728,72 @@ These formulas are the heart of the product — port to TypeScript with unit tes
 
 **Blockers:**
 - None. All 4 features implemented and tested. Ready for deploy + continued E2E testing.
+
+### Session: 2026-02-25 — Phase C: Landing Page Redesign + Free Preview + 3-Tier Pricing (COMPLETE)
+
+**Completed — Phase C Landing Redesign:**
+- Repositioned from "March Madness calculator" → "The Calcutta Auction Platform"
+- Free hosting is now the hero value prop; strategy tool ($29.99) is the upsell
+- March Madness 2026 as seasonal badge, not the entire identity
+
+**Completed — Free Preview Mode:**
+- Removed `/auction` from middleware `paidRoutes` — now auth-only, not payment-gated (`v2/middleware.ts`)
+- Added `hasPaid` boolean through AuctionContext (`v2/lib/auction/auction-context.tsx`)
+- Upgrade banner for unpaid users with "Unlock — $29.99" CTA (`v2/components/auction/auction-tool.tsx`)
+- Seeds 1-2 (8 teams) show full data; seeds 3+ blurred with CSS blur-[3px] (`v2/components/auction/team-table-row.tsx`)
+- Unlock CTA card below table for unpaid users (`v2/components/auction/team-table.tsx`)
+- Auction page fetches `has_paid` from profiles and passes to component (`v2/app/(protected)/auction/page.tsx`)
+
+**Completed — Landing Page Rewrite (7 sections):**
+- Hero: "Host Your Calcutta Auction. Win It Too." + live auction mock preview (`v2/components/landing/hero-section.tsx`)
+- **NEW** Hosting features: 4-card section — Real-Time Bidding, One-Click Setup, Commissioner Controls, Works for Any Pool (`v2/components/landing/hosting-features-section.tsx`)
+- Strategy features: reframed as "Strategy Analytics" upsell + 4th card "Live Strategy Overlay" (`v2/components/landing/features-section.tsx`)
+- How It Works: platform flow — Create Account → Host or Join → Unlock Strategy → Dominate (`v2/components/landing/how-it-works-section.tsx`)
+- Social Proof: Free / Real-Time / $29.99 stats (`v2/components/landing/social-proof-section.tsx`)
+- Pricing: 3-tier — Free Hosting / Strategy $29.99 (Most Popular) / Custom Solutions Contact Us (`v2/components/landing/pricing-section.tsx`)
+- CTA: "Your next Calcutta starts here." with Host + Preview buttons (`v2/components/landing/cta-section.tsx`)
+
+**Completed — Nav + SEO + Payment:**
+- Navbar: added "Host Free" emerald link (`v2/components/layout/navbar.tsx`)
+- Footer: added Host/Join/Strategy product links, updated tagline (`v2/components/layout/footer.tsx`)
+- SEO: updated metadata for platform positioning + hosting keywords (`v2/app/layout.tsx`)
+- Payment page: "Unlock Full Strategy Access" + "You've seen the preview" narrative (`v2/app/(protected)/payment/page.tsx`)
+- Page composition: added HostingFeaturesSection (`v2/app/page.tsx`)
+
+**Completed — Full UI Review via Claude:**
+- All 10 pages reviewed and scored (average 8.0/10)
+- Landing: 8.5, Login: 8.0, Register: 7.5, Strategy (paid): 8.5, Strategy (preview): 8.0
+- Payment: 9.0, Host Dashboard: 7.5, Create Session: 8.0, Join: 8.0, Profile: 7.0
+
+**Commits:**
+- `3b08bf4` — Phase C: Landing page redesign — hosting-first positioning, 3-tier pricing, free preview
+
+**Files Created (1):**
+- `v2/components/landing/hosting-features-section.tsx`
+
+**Files Modified (17):**
+- `v2/middleware.ts`, `v2/app/(protected)/auction/page.tsx`, `v2/app/(protected)/payment/page.tsx`
+- `v2/app/layout.tsx`, `v2/app/page.tsx`
+- `v2/components/auction/auction-tool.tsx`, `v2/components/auction/team-table.tsx`, `v2/components/auction/team-table-row.tsx`
+- `v2/components/landing/hero-section.tsx`, `v2/components/landing/features-section.tsx`, `v2/components/landing/how-it-works-section.tsx`, `v2/components/landing/social-proof-section.tsx`, `v2/components/landing/pricing-section.tsx`, `v2/components/landing/cta-section.tsx`
+- `v2/components/layout/navbar.tsx`, `v2/components/layout/footer.tsx`
+- `v2/lib/auction/auction-context.tsx`
+
+**Next Steps (Next Session) — UI Review Fixes (Priority Order):**
+- **P0**: Add `overflow-x-auto` to team table for mobile horizontal scroll (`v2/components/auction/team-table.tsx`)
+- **P1**: Fix/verify landing page mobile navbar hamburger menu renders (`v2/components/layout/navbar.tsx`)
+- **P1**: Add "Forgot password?" link/flow to login page
+- **P2**: Add value prop text to register page ("Free to create. Pay only when you're ready.")
+- **P2**: Fix preview banner layout stacking on mobile (text above, button below)
+- **P2**: Add session metadata to host dashboard cards (date, participants, tournament)
+- **P2**: Verify Stripe Payment Link redirect works in production
+- **P3**: Bump card borders to `border-white/10` on login/register pages
+- **P3**: Remove email from auction status bar (redundant with navbar)
+- **P3**: Add tooltips to column headers (R32, S16, etc.)
+- **P3**: Add "Upgrade to Strategy" CTA on profile page when unpaid
+- **P3**: Add helper text to join page and create session form
+- **P3**: Show "$0" prominently in Free Hosting pricing card for price anchoring
+- **P3**: Add color coding to profile payment status (green Active, amber Unpaid)
+
+**Blockers:**
+- None. Phase C complete and deployed. Ready for UI polish fixes.
