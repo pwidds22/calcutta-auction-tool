@@ -109,7 +109,7 @@ export function BidPanel({
 
       {/* Quick increments */}
       {isOpen && (
-        <div className="mt-2 flex gap-1.5">
+        <div className="mt-2 flex flex-wrap gap-1.5">
           {increments.map((inc) => (
             <button
               key={inc}

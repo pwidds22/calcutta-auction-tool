@@ -44,6 +44,33 @@ export const metadata: Metadata = {
   },
 };
 
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Calcutta Edge',
+  url: 'https://calcuttaedge.com',
+  description:
+    'Host your Calcutta auction for free with real-time bidding. Upgrade to strategy analytics with devigged odds and fair values.',
+  applicationCategory: 'SportsApplication',
+  operatingSystem: 'Any',
+  offers: [
+    {
+      '@type': 'Offer',
+      name: 'Free Hosting',
+      price: '0',
+      priceCurrency: 'USD',
+      description: 'Live auction hosting with real-time bidding, commissioner controls, and settlement tools.',
+    },
+    {
+      '@type': 'Offer',
+      name: 'Strategy Analytics',
+      price: '29.99',
+      priceCurrency: 'USD',
+      description: 'Devigged odds, fair value calculations, suggested bids, and round-by-round profit projections.',
+    },
+  ],
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -51,6 +78,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark landing-theme">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

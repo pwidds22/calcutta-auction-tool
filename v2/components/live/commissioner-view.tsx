@@ -19,7 +19,8 @@ import { ResultsTable } from './results-table';
 import { StrategyOverlay } from './strategy-overlay';
 import { TimerDisplay } from './timer-display';
 import { closeBidding } from '@/actions/bidding';
-import { AuctionComplete } from './auction-complete';
+import { TournamentDashboard } from './tournament-dashboard';
+import type { TournamentResult } from '@/actions/tournament-results';
 import { Shuffle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -61,6 +62,7 @@ interface CommissionerViewProps {
   baseTeams: BaseTeam[];
   userId: string;
   hasPaid: boolean;
+  tournamentResults: TournamentResult[];
 }
 
 export function CommissionerView({
@@ -73,6 +75,7 @@ export function CommissionerView({
   baseTeams,
   userId,
   hasPaid,
+  tournamentResults,
 }: CommissionerViewProps) {
   const myParticipant = participants.find((p) => p.user_id === userId);
 
@@ -170,18 +173,20 @@ export function CommissionerView({
       )}
 
       {channel.auctionStatus === 'completed' ? (
-        <AuctionComplete
+        <TournamentDashboard
+          sessionId={session.id}
           soldTeams={channel.soldTeams}
           baseTeams={baseTeams}
           sessionName={session.name}
           isCommissioner={true}
           config={config}
           payoutRules={session.payout_rules}
+          initialResults={tournamentResults}
         />
       ) : (
         <div className="grid grid-cols-12 gap-4">
-          {/* Left: Team Queue */}
-          <div className="col-span-12 lg:col-span-3">
+          {/* Left: Team Queue — pushed below on mobile */}
+          <div className="col-span-12 order-3 lg:order-none lg:col-span-3">
             {channel.auctionStatus === 'lobby' && (
               <Button
                 onClick={handleShuffle}
@@ -202,8 +207,8 @@ export function CommissionerView({
             />
           </div>
 
-          {/* Center: Auction area */}
-          <div className="col-span-12 space-y-4 lg:col-span-6">
+          {/* Center: Auction area — first on mobile */}
+          <div className="col-span-12 order-1 lg:order-none space-y-4 lg:col-span-6">
             <TeamSpotlight
               team={currentTeam}
               config={config}
@@ -252,8 +257,8 @@ export function CommissionerView({
             />
           </div>
 
-          {/* Right: Participants + Results */}
-          <div className="col-span-12 space-y-4 lg:col-span-3">
+          {/* Right: Participants + Results — second on mobile */}
+          <div className="col-span-12 order-2 lg:order-none space-y-4 lg:col-span-3">
             <ParticipantList onlineUsers={channel.onlineUsers} />
             <MyPortfolio
               soldTeams={channel.soldTeams}

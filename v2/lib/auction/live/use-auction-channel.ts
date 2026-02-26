@@ -229,6 +229,17 @@ export function useAuctionChannel(
           timerIsRunning: false,
         }));
       })
+      .on('broadcast', { event: 'RESULT_UPDATED' }, ({ payload }) => {
+        const handler = (window as unknown as Record<string, unknown>).__tournamentResultUpdate;
+        if (typeof handler === 'function') handler(payload);
+      })
+      .on('broadcast', { event: 'RESULTS_BULK_UPDATED' }, ({ payload }) => {
+        const handler = (window as unknown as Record<string, unknown>).__tournamentBulkUpdate;
+        if (typeof handler === 'function') handler(payload);
+      })
+      .on('broadcast', { event: 'TOURNAMENT_SETTLED' }, () => {
+        // Could trigger a refresh or state update — for now the leaderboard reflects this
+      })
       .on('presence', { event: 'sync' }, () => {
         const presenceState = channel.presenceState();
         const seen = new Set<string>();

@@ -172,6 +172,12 @@ export async function getSessionState(sessionId: string) {
 
   const isCommissioner = session.commissioner_id === user.id;
 
+  // Load tournament results (for post-auction tournament lifecycle)
+  const { data: tournamentResults } = await supabase
+    .from('tournament_results')
+    .select('team_id, round_key, result')
+    .eq('session_id', sessionId);
+
   // Check payment status for strategy overlay
   const { data: profile } = await supabase
     .from('profiles')
@@ -191,6 +197,11 @@ export async function getSessionState(sessionId: string) {
     participantMap,
     winningBids: winningBids ?? [],
     currentBids,
+    tournamentResults: (tournamentResults ?? []) as Array<{
+      team_id: number;
+      round_key: string;
+      result: 'won' | 'lost' | 'pending';
+    }>,
     isCommissioner,
     hasPaid: profile?.has_paid ?? false,
     userId: user.id,

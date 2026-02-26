@@ -16,7 +16,8 @@ import { ResultsTable } from './results-table';
 import { MyPortfolio } from './my-portfolio';
 import { StrategyOverlay } from './strategy-overlay';
 import { TimerDisplay } from './timer-display';
-import { AuctionComplete } from './auction-complete';
+import { TournamentDashboard } from './tournament-dashboard';
+import type { TournamentResult } from '@/actions/tournament-results';
 
 interface ParticipantViewProps {
   session: {
@@ -56,6 +57,7 @@ interface ParticipantViewProps {
   baseTeams: BaseTeam[];
   userId: string;
   hasPaid: boolean;
+  tournamentResults: TournamentResult[];
 }
 
 export function ParticipantView({
@@ -68,6 +70,7 @@ export function ParticipantView({
   baseTeams,
   userId,
   hasPaid,
+  tournamentResults,
 }: ParticipantViewProps) {
   const myParticipant = participants.find((p) => p.user_id === userId);
 
@@ -172,18 +175,20 @@ export function ParticipantView({
       )}
 
       {channel.auctionStatus === 'completed' ? (
-        <AuctionComplete
+        <TournamentDashboard
+          sessionId={session.id}
           soldTeams={channel.soldTeams}
           baseTeams={baseTeams}
           sessionName={session.name}
           isCommissioner={false}
           config={config}
           payoutRules={session.payout_rules}
+          initialResults={tournamentResults}
         />
       ) : (
         <div className="grid grid-cols-12 gap-4">
-          {/* Left: Team Queue */}
-          <div className="col-span-12 lg:col-span-3">
+          {/* Left: Team Queue — pushed below on mobile */}
+          <div className="col-span-12 order-3 lg:order-none lg:col-span-3">
             <TeamQueue
               sessionId={session.id}
               teamOrder={activeTeamOrder}
@@ -194,8 +199,8 @@ export function ParticipantView({
             />
           </div>
 
-          {/* Center: Auction area */}
-          <div className="col-span-12 space-y-4 lg:col-span-6">
+          {/* Center: Auction area — first on mobile */}
+          <div className="col-span-12 order-1 lg:order-none space-y-4 lg:col-span-6">
             <TeamSpotlight
               team={currentTeam}
               config={config}
@@ -232,8 +237,8 @@ export function ParticipantView({
             />
           </div>
 
-          {/* Right: Participants + Results */}
-          <div className="col-span-12 space-y-4 lg:col-span-3">
+          {/* Right: Participants + Results — second on mobile */}
+          <div className="col-span-12 order-2 lg:order-none space-y-4 lg:col-span-3">
             <ParticipantList onlineUsers={channel.onlineUsers} />
             <MyPortfolio
               soldTeams={channel.soldTeams}

@@ -28,6 +28,7 @@ export default async function CommissionerPage({
       baseTeams={tournament.teams}
       userId={result.userId}
       hasPaid={result.hasPaid}
+      tournamentResults={result.tournamentResults}
     />
   );
 }

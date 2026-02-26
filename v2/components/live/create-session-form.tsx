@@ -200,7 +200,7 @@ export function CreateSessionForm({ tournaments }: CreateSessionFormProps) {
           </p>
 
           {/* Preset selector */}
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             {presetEntries.map(([key, preset]) => (
               <button
                 key={key}
@@ -316,7 +316,7 @@ export function CreateSessionForm({ tournaments }: CreateSessionFormProps) {
           <p className="text-xs text-white/30 mb-2">
             Shortcuts participants tap to raise the bid quickly.
           </p>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             {(Object.entries(BID_INCREMENT_PRESETS) as [BidIncrementPreset, typeof BID_INCREMENT_PRESETS[BidIncrementPreset]][]).map(
               ([key, preset]) => (
                 <button

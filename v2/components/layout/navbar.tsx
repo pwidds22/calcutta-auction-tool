@@ -8,6 +8,8 @@ import { cn } from '@/lib/utils'
 
 const NAV_LINKS = [
   { label: 'Host Free', href: '#hosting', highlight: true },
+  { label: 'Events', href: '/events', highlight: false },
+  { label: 'Blog', href: '/blog', highlight: false },
   { label: 'Features', href: '#features', highlight: false },
   { label: 'How It Works', href: '#how-it-works', highlight: false },
   { label: 'Pricing', href: '#pricing', highlight: false },

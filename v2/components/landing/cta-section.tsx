@@ -24,8 +24,8 @@ export function CtaSection() {
               </Link>
             </Button>
             <Button variant="outline" size="lg" asChild className="border-white/10 bg-transparent text-white hover:bg-white/[0.06] hover:text-white">
-              <Link href="/register">
-                Try Strategy Preview
+              <Link href="/events">
+                Browse Events
               </Link>
             </Button>
           </div>

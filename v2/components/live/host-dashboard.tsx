@@ -67,7 +67,7 @@ export function HostDashboard({
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-bold text-white">Live Auctions</h1>
           <p className="mt-1 text-sm text-white/40">

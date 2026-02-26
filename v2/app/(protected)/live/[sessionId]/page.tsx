@@ -30,6 +30,7 @@ export default async function LiveAuctionPage({
       baseTeams={tournament.teams}
       userId={result.userId}
       hasPaid={result.hasPaid}
+      tournamentResults={result.tournamentResults}
     />
   );
 }

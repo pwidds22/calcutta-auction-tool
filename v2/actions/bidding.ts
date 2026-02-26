@@ -370,69 +370,73 @@ async function syncAuctionData(
   payoutRules?: Record<string, number>,
   estimatedPotSize?: number
 ) {
-  const { data: participants } = await admin
-    .from('auction_participants')
-    .select('user_id')
-    .eq('session_id', sessionId);
+  try {
+    const { data: participants } = await admin
+      .from('auction_participants')
+      .select('user_id')
+      .eq('session_id', sessionId);
 
-  if (!participants?.length) return;
+    if (!participants?.length) return;
 
-  const userIds = participants.map((p) => p.user_id);
-  const { data: profiles } = await admin
-    .from('profiles')
-    .select('id, has_paid')
-    .in('id', userIds);
+    const userIds = participants.map((p) => p.user_id);
+    const { data: profiles } = await admin
+      .from('profiles')
+      .select('id, has_paid')
+      .in('id', userIds);
 
-  const paidUsers = profiles?.filter((p) => p.has_paid).map((p) => p.id) ?? [];
+    const paidUsers = profiles?.filter((p) => p.has_paid).map((p) => p.id) ?? [];
 
-  for (const userId of paidUsers) {
-    const isWinner = userId === winnerId;
+    for (const userId of paidUsers) {
+      const isWinner = userId === winnerId;
 
-    const { data: existing } = await admin
-      .from('auction_data')
-      .select('teams')
-      .eq('user_id', userId)
-      .eq('event_type', tournamentId)
-      .single();
+      const { data: existing } = await admin
+        .from('auction_data')
+        .select('teams')
+        .eq('user_id', userId)
+        .eq('event_type', tournamentId)
+        .single();
 
-    const existingTeams: Array<{
-      id: number;
-      purchasePrice: number;
-      isMyTeam: boolean;
-    }> =
-      (existing?.teams as Array<{
+      const existingTeams: Array<{
         id: number;
         purchasePrice: number;
         isMyTeam: boolean;
-      }>) ?? [];
+      }> =
+        (existing?.teams as Array<{
+          id: number;
+          purchasePrice: number;
+          isMyTeam: boolean;
+        }>) ?? [];
 
-    const teamIdx = existingTeams.findIndex((t) => t.id === teamId);
-    const teamEntry = {
-      id: teamId,
-      purchasePrice: winAmount,
-      isMyTeam: isWinner,
-    };
+      const teamIdx = existingTeams.findIndex((t) => t.id === teamId);
+      const teamEntry = {
+        id: teamId,
+        purchasePrice: winAmount,
+        isMyTeam: isWinner,
+      };
 
-    if (teamIdx >= 0) {
-      existingTeams[teamIdx] = teamEntry;
-    } else {
-      existingTeams.push(teamEntry);
+      if (teamIdx >= 0) {
+        existingTeams[teamIdx] = teamEntry;
+      } else {
+        existingTeams.push(teamEntry);
+      }
+
+      const upsertPayload: Record<string, unknown> = {
+        user_id: userId,
+        event_type: tournamentId,
+        teams: existingTeams,
+      };
+      // Include payout rules and pot size so new rows get correct values
+      // instead of falling back to stale DB column defaults
+      if (payoutRules) upsertPayload.payout_rules = payoutRules;
+      if (estimatedPotSize) upsertPayload.estimated_pot_size = estimatedPotSize;
+
+      await admin.from('auction_data').upsert(
+        upsertPayload,
+        { onConflict: 'user_id,event_type' }
+      );
     }
-
-    const upsertPayload: Record<string, unknown> = {
-      user_id: userId,
-      event_type: tournamentId,
-      teams: existingTeams,
-    };
-    // Include payout rules and pot size so new rows get correct values
-    // instead of falling back to stale DB column defaults
-    if (payoutRules) upsertPayload.payout_rules = payoutRules;
-    if (estimatedPotSize) upsertPayload.estimated_pot_size = estimatedPotSize;
-
-    await admin.from('auction_data').upsert(
-      upsertPayload,
-      { onConflict: 'user_id,event_type' }
-    );
+  } catch (err) {
+    console.error('[syncAuctionData] Failed to sync auction data:', err);
   }
 }
 

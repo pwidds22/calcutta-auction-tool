@@ -5,6 +5,7 @@ import { HostingFeaturesSection } from '@/components/landing/hosting-features-se
 import { FeaturesSection } from '@/components/landing/features-section'
 import { HowItWorksSection } from '@/components/landing/how-it-works-section'
 import { SocialProofSection } from '@/components/landing/social-proof-section'
+import { EventsStripSection } from '@/components/landing/events-strip-section'
 import { PricingSection } from '@/components/landing/pricing-section'
 import { CtaSection } from '@/components/landing/cta-section'
 
@@ -18,6 +19,7 @@ export default function HomePage() {
         <FeaturesSection />
         <HowItWorksSection />
         <SocialProofSection />
+        <EventsStripSection />
         <PricingSection />
         <CtaSection />
       </main>

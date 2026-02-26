@@ -186,12 +186,12 @@ export function AuctionComplete({
             All Results (by seed)
           </h3>
         </div>
-        <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] overflow-hidden">
+        <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/[0.06] text-[10px] uppercase tracking-wider text-white/30">
                 <th className="px-3 py-2 text-left">Team</th>
-                <th className="px-3 py-2 text-left">Region</th>
+                <th className="hidden px-3 py-2 text-left sm:table-cell">Region</th>
                 <th className="px-3 py-2 text-left">Owner</th>
                 <th className="px-3 py-2 text-right">Price</th>
               </tr>
@@ -216,7 +216,7 @@ export function AuctionComplete({
                         </span>
                         {team?.name ?? `Team ${sold.teamId}`}
                       </td>
-                      <td className="px-3 py-1.5 text-xs text-white/30">
+                      <td className="hidden px-3 py-1.5 text-xs text-white/30 sm:table-cell">
                         {team?.group}
                       </td>
                       <td className="px-3 py-1.5 text-xs text-white/50">

@@ -40,7 +40,7 @@ export function TeamQueue({
           Team Queue ({teamOrder.length})
         </h3>
       </div>
-      <div className="max-h-[calc(100vh-16rem)] overflow-y-auto p-1.5">
+      <div className="max-h-[40vh] lg:max-h-[calc(100vh-16rem)] overflow-y-auto p-1.5">
         {teamOrder.map((teamId, idx) => {
           const team = teamMap.get(teamId);
           const sold = soldMap.get(teamId);
