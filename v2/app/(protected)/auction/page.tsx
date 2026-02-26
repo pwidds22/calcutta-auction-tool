@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { loadAuctionData } from '@/actions/auction'
 import { AuctionTool } from '@/components/auction/auction-tool'
 import { getActiveTournament } from '@/lib/tournaments/registry'
+import { normalizePayoutRules } from '@/lib/calculations/normalize'
 
 export default async function AuctionPage() {
   const supabase = await createClient()
@@ -25,11 +26,14 @@ export default async function AuctionPage() {
   // Load saved auction data (null if first visit)
   const auctionData = await loadAuctionData(config.id)
 
+  // Normalize payout rules: map legacy DB keys to current config keys
+  const payoutRules = normalizePayoutRules(auctionData?.payoutRules, config)
+
   return (
     <div className="container mx-auto max-w-[1400px] px-4 py-6">
       <AuctionTool
         initialTeams={auctionData?.teams ?? []}
-        initialPayoutRules={auctionData?.payoutRules ?? config.defaultPayoutRules}
+        initialPayoutRules={payoutRules}
         initialPotSize={auctionData?.estimatedPotSize ?? config.defaultPotSize}
         config={config}
         baseTeams={baseTeams}

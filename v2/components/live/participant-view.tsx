@@ -16,6 +16,7 @@ import { ResultsTable } from './results-table';
 import { MyPortfolio } from './my-portfolio';
 import { StrategyOverlay } from './strategy-overlay';
 import { TimerDisplay } from './timer-display';
+import { AuctionComplete } from './auction-complete';
 
 interface ParticipantViewProps {
   session: {
@@ -164,77 +165,88 @@ export function ParticipantView({
         auctionStatus={channel.auctionStatus}
       />
 
-      {!channel.isConnected && (
+      {!channel.isConnected && channel.auctionStatus !== 'completed' && (
         <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-2 text-center text-sm text-red-400">
           Reconnecting...
         </div>
       )}
 
-      <div className="grid grid-cols-12 gap-4">
-        {/* Left: Team Queue */}
-        <div className="col-span-12 lg:col-span-3">
-          <TeamQueue
-            sessionId={session.id}
-            teamOrder={activeTeamOrder}
-            baseTeams={baseTeams}
-            soldTeams={channel.soldTeams}
-            currentTeamIdx={channel.currentTeamIdx}
-            auctionStatus={channel.auctionStatus}
-          />
+      {channel.auctionStatus === 'completed' ? (
+        <AuctionComplete
+          soldTeams={channel.soldTeams}
+          baseTeams={baseTeams}
+          sessionName={session.name}
+          isCommissioner={false}
+          config={config}
+          payoutRules={session.payout_rules}
+        />
+      ) : (
+        <div className="grid grid-cols-12 gap-4">
+          {/* Left: Team Queue */}
+          <div className="col-span-12 lg:col-span-3">
+            <TeamQueue
+              sessionId={session.id}
+              teamOrder={activeTeamOrder}
+              baseTeams={baseTeams}
+              soldTeams={channel.soldTeams}
+              currentTeamIdx={channel.currentTeamIdx}
+              auctionStatus={channel.auctionStatus}
+            />
+          </div>
+
+          {/* Center: Auction area */}
+          <div className="col-span-12 space-y-4 lg:col-span-6">
+            <TeamSpotlight
+              team={currentTeam}
+              config={config}
+              teamIndex={channel.currentTeamIdx ?? 0}
+              totalTeams={activeTeamOrder.length}
+            />
+
+            <StrategyOverlay
+              hasPaid={hasPaid}
+              currentTeamId={currentTeamId}
+              currentHighestBid={channel.currentHighestBid}
+              config={config}
+              baseTeams={baseTeams}
+              payoutRules={session.payout_rules}
+              estimatedPotSize={session.estimated_pot_size}
+              soldTeams={channel.soldTeams}
+            />
+
+            <TimerDisplay timer={timer.state} />
+
+            <BidPanel
+              sessionId={session.id}
+              biddingStatus={channel.biddingStatus}
+              currentHighestBid={channel.currentHighestBid}
+              currentHighestBidderName={channel.currentHighestBidderName}
+              userId={userId}
+              bidIncrements={session.settings?.bidIncrements}
+            />
+
+            <BidLadder
+              bids={channel.bidHistory}
+              currentHighestBid={channel.currentHighestBid}
+              currentHighestBidderName={channel.currentHighestBidderName}
+            />
+          </div>
+
+          {/* Right: Participants + Results */}
+          <div className="col-span-12 space-y-4 lg:col-span-3">
+            <ParticipantList onlineUsers={channel.onlineUsers} />
+            <MyPortfolio
+              soldTeams={channel.soldTeams}
+              baseTeams={baseTeams}
+              userId={userId}
+            />
+            <ResultsTable
+              soldTeams={channel.soldTeams}
+              baseTeams={baseTeams}
+            />
+          </div>
         </div>
-
-        {/* Center: Auction area */}
-        <div className="col-span-12 space-y-4 lg:col-span-6">
-          <TeamSpotlight
-            team={currentTeam}
-            config={config}
-            teamIndex={channel.currentTeamIdx ?? 0}
-            totalTeams={activeTeamOrder.length}
-          />
-
-          <StrategyOverlay
-            hasPaid={hasPaid}
-            currentTeamId={currentTeamId}
-            currentHighestBid={channel.currentHighestBid}
-            config={config}
-            baseTeams={baseTeams}
-            payoutRules={session.payout_rules}
-            estimatedPotSize={session.estimated_pot_size}
-            soldTeams={channel.soldTeams}
-          />
-
-          <TimerDisplay timer={timer.state} />
-
-          <BidPanel
-            sessionId={session.id}
-            biddingStatus={channel.biddingStatus}
-            currentHighestBid={channel.currentHighestBid}
-            currentHighestBidderName={channel.currentHighestBidderName}
-            userId={userId}
-            bidIncrements={session.settings?.bidIncrements}
-          />
-
-          <BidLadder
-            bids={channel.bidHistory}
-            currentHighestBid={channel.currentHighestBid}
-            currentHighestBidderName={channel.currentHighestBidderName}
-          />
-        </div>
-
-        {/* Right: Participants + Results */}
-        <div className="col-span-12 space-y-4 lg:col-span-3">
-          <ParticipantList onlineUsers={channel.onlineUsers} />
-          <MyPortfolio
-            soldTeams={channel.soldTeams}
-            baseTeams={baseTeams}
-            userId={userId}
-          />
-          <ResultsTable
-            soldTeams={channel.soldTeams}
-            baseTeams={baseTeams}
-          />
-        </div>
-      </div>
+      )}
     </div>
   );
 }

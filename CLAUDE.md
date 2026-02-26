@@ -849,3 +849,56 @@ These formulas are the heart of the product — port to TypeScript with unit tes
 **Blockers:**
 - `NEXT_PUBLIC_SITE_URL` env var needs to be set in Vercel for password reset emails to link correctly (should be `https://calcuttaedge.com`)
 - Forgot password flow not yet E2E tested (Supabase email delivery needed)
+
+### Session: 2026-02-26 — Tier 1 Launch Fixes + Settlement Calculator
+
+**Completed — Tier 1 Must-Ship Items (from strategic plan):**
+1. **Fixed payout rules 0% bug** — Created `v2/lib/calculations/normalize.ts` to map legacy DB keys (`roundOf64` → `r32`, `sweet16` → `e8`, etc.) to tournament config keys. Applied in `v2/app/(protected)/auction/page.tsx`. Fixed `v2/actions/bidding.ts` `syncAuctionData()` to include `payout_rules` and `estimated_pot_size` in upserts (prevented new rows from using stale DB defaults). Added 7 unit tests in `v2/lib/calculations/__tests__/normalize.test.ts`. Total: 41 tests passing.
+2. **Commissioner payout rules configuration** — Created `v2/lib/tournaments/payout-presets.ts` with 3 research-based presets (Balanced, Top Heavy, With Props). Rewrote `v2/components/live/create-session-form.tsx` with preset selector cards + expandable custom editor with per-round/prop percentage inputs and total validation.
+3. **Post-auction completion screen** — Created `v2/components/live/auction-complete.tsx` (stats row, copy summary, export CSV, participant portfolios, full results table). Created `v2/lib/auction/live/export.ts` (CSV generation, text summary, client-side download). Integrated into both `v2/components/live/commissioner-view.tsx` and `v2/components/live/participant-view.tsx`.
+4. **Legal disclaimers** — Added entertainment/21+/gambling helpline disclaimer to `v2/components/layout/footer.tsx`. Added 21+ acknowledgment text to `v2/components/auth/register-form.tsx`.
+
+**Completed — Tier 2 Settlement Calculator:**
+5. **Settlement calculator** — Created `v2/lib/auction/live/settlement.ts` (pure calculation: per-participant total owed, per-team cumulative round-by-round payouts and profit projections). Created `v2/components/live/settlement-calculator.tsx` (expandable participant cards with per-team profit table, break-even indicator, payout structure reference). Integrated into `v2/components/live/auction-complete.tsx`.
+   - **Bug fix**: Initially used `session.estimated_pot_size` (pre-auction estimate) instead of actual pot. Fixed to compute `actualPot` from sum of sold team amounts.
+   - **Bug fix**: Removed misleading portfolio "Total" row and "Max Payout" that summed all teams as if they could all win simultaneously.
+
+**Market Research:**
+- User provided comprehensive `CLAUDE_BLUEPRINT.md` research document covering payout structures, tournament types, competitive landscape, legal compliance, and more.
+- Strategic plan created at `C:\Users\pwidd\.claude\plans\lazy-brewing-scone.md` — Tier 1 (must-ship for March Madness), Tier 2 (should-ship), Tier 3 (post-season).
+
+**Files Created (6):**
+- `v2/lib/calculations/normalize.ts` — Legacy payout rules key mapping
+- `v2/lib/calculations/__tests__/normalize.test.ts` — 7 unit tests
+- `v2/lib/tournaments/payout-presets.ts` — 3 payout presets (Balanced, Top Heavy, With Props)
+- `v2/components/live/auction-complete.tsx` — Post-auction completion dashboard
+- `v2/lib/auction/live/export.ts` — CSV/text export utilities
+- `v2/lib/auction/live/settlement.ts` — Settlement calculation logic
+- `v2/components/live/settlement-calculator.tsx` — Settlement calculator UI
+- `CLAUDE_BLUEPRINT.md` — Market research document (user-created)
+
+**Files Modified (9):**
+- `v2/app/(protected)/auction/page.tsx` — Added payout rules normalization
+- `v2/actions/bidding.ts` — syncAuctionData includes payout_rules + estimated_pot_size
+- `v2/components/live/create-session-form.tsx` — Rewritten with payout presets + custom editor
+- `v2/components/live/commissioner-view.tsx` — AuctionComplete on completion + config/payoutRules props
+- `v2/components/live/participant-view.tsx` — AuctionComplete on completion + config/payoutRules props
+- `v2/components/layout/footer.tsx` — Legal disclaimer
+- `v2/components/auth/register-form.tsx` — 21+ acknowledgment
+- `v2/lib/calculations/index.ts` — Added normalize export
+- `v2/lib/tournaments/index.ts` — Added payout-presets export
+
+**Next Steps (Next Session):**
+- **Tournament Results & Payout Management** — The big remaining feature:
+  - New DB table: `tournament_results` (team outcomes per round)
+  - Commissioner enters results manually as games happen
+  - Calculate actual payouts based on results + payout rules + pot
+  - Settlement ledger: net P&L per participant
+  - Payment tracking: who's paid/been paid, minimized transactions (Splitwise-style)
+- **Deploy to Vercel** — push to main triggers auto-deploy
+- **Set `NEXT_PUBLIC_SITE_URL`** in Vercel to `https://calcuttaedge.com` for forgot password emails
+- **Configure Stripe Payment Link redirect** to `https://calcuttaedge.com/auction`
+- **Odds update on Selection Sunday (3/15)** — Update `v2/lib/tournaments/configs/march-madness-2026.ts` with actual bracket
+
+**Blockers:**
+- None. All Tier 1 items complete. Settlement calculator built and tested. Ready for tournament lifecycle feature.

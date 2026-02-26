@@ -10,12 +10,15 @@ import {
   type BidIncrementPreset,
   type SessionSettings,
 } from '@/lib/auction/live/types';
-import { ArrowLeft, Gavel, Timer, DollarSign } from 'lucide-react';
+import { getPayoutPresets, type PayoutPreset } from '@/lib/tournaments/payout-presets';
+import { ArrowLeft, Gavel, Timer, DollarSign, Trophy, ChevronDown, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
 
 interface CreateSessionFormProps {
   tournaments: TournamentConfig[];
 }
+
+type PayoutMode = 'balanced' | 'topHeavy' | 'withProps' | 'custom';
 
 export function CreateSessionForm({ tournaments }: CreateSessionFormProps) {
   const router = useRouter();
@@ -36,7 +39,38 @@ export function CreateSessionForm({ tournaments }: CreateSessionFormProps) {
   const [initialDuration, setInitialDuration] = useState('20');
   const [resetDuration, setResetDuration] = useState('8');
 
+  // Payout rules
+  const [payoutMode, setPayoutMode] = useState<PayoutMode>('balanced');
+  const [customRules, setCustomRules] = useState<PayoutRules>({});
+  const [showCustomEditor, setShowCustomEditor] = useState(false);
+
   const selectedTournament = tournaments.find((t) => t.id === tournamentId);
+  const presets = selectedTournament ? getPayoutPresets(selectedTournament.id) : {};
+
+  const getActiveRules = (): PayoutRules => {
+    if (payoutMode === 'custom') return customRules;
+    return presets[payoutMode]?.rules ?? selectedTournament?.defaultPayoutRules ?? {};
+  };
+
+  const handlePresetSelect = (mode: PayoutMode) => {
+    setPayoutMode(mode);
+    if (mode !== 'custom' && presets[mode]) {
+      setCustomRules({ ...presets[mode].rules });
+    }
+  };
+
+  const handleCustomRuleChange = (key: string, value: string) => {
+    setCustomRules((prev) => ({ ...prev, [key]: parseFloat(value) || 0 }));
+  };
+
+  const rounds = selectedTournament?.rounds ?? [];
+  const propBets = selectedTournament?.propBets ?? [];
+  const activeRules = getActiveRules();
+
+  const totalPercent = rounds.reduce(
+    (sum, r) => sum + (activeRules[r.key] ?? 0) * r.teamsAdvancing,
+    0
+  ) + propBets.reduce((sum, p) => sum + (activeRules[p.key] ?? 0), 0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,7 +86,7 @@ export function CreateSessionForm({ tournaments }: CreateSessionFormProps) {
     setLoading(true);
     setError(null);
 
-    const payoutRules = selectedTournament.defaultPayoutRules as PayoutRules;
+    const payoutRules = getActiveRules();
 
     const settings: SessionSettings = {
       bidIncrements: [...BID_INCREMENT_PRESETS[bidPreset].values],
@@ -78,6 +112,10 @@ export function CreateSessionForm({ tournaments }: CreateSessionFormProps) {
       router.push(`/host/${result.sessionId}`);
     }
   };
+
+  const presetEntries: [PayoutMode, PayoutPreset][] = Object.entries(presets).map(
+    ([key, preset]) => [key as PayoutMode, preset]
+  );
 
   return (
     <div className="space-y-6">
@@ -149,6 +187,124 @@ export function CreateSessionForm({ tournaments }: CreateSessionFormProps) {
           <p className="mt-1 text-xs text-white/30">
             This is just an estimate — the real pot size is calculated from actual sales.
           </p>
+        </div>
+
+        {/* Payout Rules */}
+        <div>
+          <label className="block text-sm font-medium text-white/60 mb-1.5">
+            <Trophy className="inline size-3.5 mr-1" />
+            Payout Structure
+          </label>
+          <p className="text-xs text-white/30 mb-2">
+            How the pot is distributed across tournament rounds.
+          </p>
+
+          {/* Preset selector */}
+          <div className="grid grid-cols-3 gap-2">
+            {presetEntries.map(([key, preset]) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => handlePresetSelect(key)}
+                className={`rounded-md border px-3 py-2 text-left transition-colors ${
+                  payoutMode === key
+                    ? 'border-emerald-500/50 bg-emerald-500/10 text-white'
+                    : 'border-white/10 bg-white/[0.02] text-white/50 hover:border-white/20 hover:text-white/70'
+                }`}
+              >
+                <div className="text-xs font-medium">{preset.label}</div>
+                <div className="text-[10px] opacity-60">{preset.description}</div>
+              </button>
+            ))}
+          </div>
+
+          {/* Total and customize toggle */}
+          <div className="mt-2 flex items-center justify-between">
+            <span className="text-xs text-white/30">
+              Total payout:{' '}
+              <span
+                className={`font-medium ${
+                  Math.abs(totalPercent - 100) < 0.5
+                    ? 'text-emerald-400'
+                    : 'text-amber-400'
+                }`}
+              >
+                {totalPercent.toFixed(1)}%
+              </span>
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                if (!showCustomEditor) {
+                  setCustomRules({ ...activeRules });
+                  setPayoutMode('custom');
+                }
+                setShowCustomEditor(!showCustomEditor);
+              }}
+              className="flex items-center gap-1 text-xs text-white/40 hover:text-white/60 transition-colors"
+            >
+              Customize
+              {showCustomEditor ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />}
+            </button>
+          </div>
+
+          {/* Custom editor */}
+          {showCustomEditor && (
+            <div className="mt-3 rounded-md border border-white/10 bg-white/[0.02] p-3 space-y-3">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3 lg:grid-cols-6">
+                {rounds.map((round) => (
+                  <div key={round.key}>
+                    <label className="block text-[10px] text-white/40 mb-0.5">
+                      {round.payoutLabel}
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min={0}
+                        max={100}
+                        step={0.5}
+                        value={customRules[round.key] ?? 0}
+                        onChange={(e) => handleCustomRuleChange(round.key, e.target.value)}
+                        className="h-8 w-full rounded border border-white/10 bg-white/[0.04] px-2 pr-6 text-right text-xs text-white focus:border-emerald-500/50 focus:outline-none"
+                      />
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-white/30">
+                        %
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-[10px] text-white/20">
+                      {round.teamsAdvancing} {selectedTournament?.teamLabel?.toLowerCase() ?? 'team'}s = {((customRules[round.key] ?? 0) * round.teamsAdvancing).toFixed(1)}%
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {propBets.length > 0 && (
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4">
+                  {propBets.map((prop) => (
+                    <div key={prop.key}>
+                      <label className="block text-[10px] text-white/40 mb-0.5">
+                        {prop.label}
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          step={0.5}
+                          value={customRules[prop.key] ?? 0}
+                          onChange={(e) => handleCustomRuleChange(prop.key, e.target.value)}
+                          className="h-8 w-full rounded border border-white/10 bg-white/[0.04] px-2 pr-6 text-right text-xs text-white focus:border-emerald-500/50 focus:outline-none"
+                        />
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-white/30">
+                          %
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Bid Increments */}

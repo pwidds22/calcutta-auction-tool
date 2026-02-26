@@ -5,3 +5,4 @@ export * from './profits';
 export * from './pot';
 export * from './format';
 export * from './initialize';
+export * from './normalize';

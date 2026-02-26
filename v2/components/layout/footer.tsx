@@ -69,7 +69,14 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 border-t border-white/[0.04] pt-6">
+        <div className="mt-10 border-t border-white/[0.04] pt-6 space-y-3">
+          <p className="text-[11px] leading-relaxed text-white/15">
+            Calcutta Edge is an entertainment and organizational tool. The platform does not facilitate, process, or handle any financial transactions.
+            All financial decisions and pool participation are the sole responsibility of the users.
+            Users must be 21 years or older in their jurisdiction.
+            Not affiliated with any sportsbook or gambling operator.
+            If you or someone you know has a gambling problem, call 1-800-522-4700.
+          </p>
           <p className="text-xs text-white/20">
             &copy; {new Date().getFullYear()} Calcutta Edge. All rights reserved.
           </p>

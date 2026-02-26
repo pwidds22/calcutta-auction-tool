@@ -315,7 +315,9 @@ export async function sellTeam(sessionId: string) {
     session.tournament_id,
     teamId,
     winnerId,
-    winAmount
+    winAmount,
+    session.payout_rules,
+    session.estimated_pot_size
   );
 
   // 4. Advance to next team
@@ -364,7 +366,9 @@ async function syncAuctionData(
   tournamentId: string,
   teamId: number,
   winnerId: string,
-  winAmount: number
+  winAmount: number,
+  payoutRules?: Record<string, number>,
+  estimatedPotSize?: number
 ) {
   const { data: participants } = await admin
     .from('auction_participants')
@@ -415,12 +419,18 @@ async function syncAuctionData(
       existingTeams.push(teamEntry);
     }
 
+    const upsertPayload: Record<string, unknown> = {
+      user_id: userId,
+      event_type: tournamentId,
+      teams: existingTeams,
+    };
+    // Include payout rules and pot size so new rows get correct values
+    // instead of falling back to stale DB column defaults
+    if (payoutRules) upsertPayload.payout_rules = payoutRules;
+    if (estimatedPotSize) upsertPayload.estimated_pot_size = estimatedPotSize;
+
     await admin.from('auction_data').upsert(
-      {
-        user_id: userId,
-        event_type: tournamentId,
-        teams: existingTeams,
-      },
+      upsertPayload,
       { onConflict: 'user_id,event_type' }
     );
   }

@@ -63,6 +63,9 @@ export function RegisterForm() {
               Must be at least 6 characters
             </p>
           </div>
+          <p className="text-[11px] leading-relaxed text-white/25">
+            By creating an account, you confirm you are 21 years or older and agree that Calcutta Edge is for entertainment purposes only.
+          </p>
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? 'Creating account...' : 'Create Account'}
           </Button>
