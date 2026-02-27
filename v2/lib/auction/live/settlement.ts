@@ -43,6 +43,12 @@ export function calculateSettlement(
   const teamMap = new Map(baseTeams.map((t) => [t.id, t]));
   const actualPot = soldTeams.reduce((sum, t) => sum + t.amount, 0);
 
+  // Validate payout rules sum to ~100% (allow small floating point tolerance)
+  const totalPct = Object.values(payoutRules).reduce((sum: number, v) => sum + ((v as number) ?? 0), 0);
+  if (Math.abs(totalPct - 100) > 1) {
+    console.warn(`Settlement: payout rules sum to ${totalPct}%, expected ~100%. Payouts may be inaccurate.`);
+  }
+
   // Group sold teams by participant
   const byParticipant = new Map<string, { name: string; teams: SoldTeam[] }>();
   for (const sold of soldTeams) {

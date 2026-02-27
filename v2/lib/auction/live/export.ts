@@ -48,12 +48,16 @@ export function generateCSV(
 
   for (const sold of soldTeams) {
     const team = teamMap.get(sold.teamId);
+    // Escape double quotes in CSV fields by doubling them (RFC 4180)
+    const teamName = (team?.name ?? `Team ${sold.teamId}`).replace(/"/g, '""');
+    const winnerName = sold.winnerName.replace(/"/g, '""');
+    const groupName = (team?.group ?? '').replace(/"/g, '""');
     rows.push(
       [
-        `"${team?.name ?? `Team ${sold.teamId}`}"`,
+        `"${teamName}"`,
         team?.seed ?? '',
-        team?.group ?? '',
-        `"${sold.winnerName}"`,
+        `"${groupName}"`,
+        `"${winnerName}"`,
         sold.amount,
       ].join(',')
     );
@@ -62,7 +66,7 @@ export function generateCSV(
   const total = soldTeams.reduce((s, t) => s + t.amount, 0);
   rows.push('');
   rows.push(`"Total Pot",,,,${total}`);
-  rows.push(`"Session","${sessionName}"`);
+  rows.push(`"Session","${sessionName.replace(/"/g, '""')}"`);
 
   return rows.join('\n');
 }

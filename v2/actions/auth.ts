@@ -67,6 +67,15 @@ export async function resetPassword(formData: FormData) {
 
 export async function updatePassword(formData: FormData) {
   const supabase = await createClient()
+
+  // Verify the user has a valid session (recovery sessions are set via auth callback)
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return { error: 'Invalid or expired reset link. Please request a new one.' }
+  }
+
   const password = formData.get('password') as string
   const confirmPassword = formData.get('confirmPassword') as string
 
@@ -85,6 +94,9 @@ export async function updatePassword(formData: FormData) {
   if (error) {
     return { error: error.message }
   }
+
+  // Sign out after password change to force re-login with new credentials
+  await supabase.auth.signOut()
 
   return { success: true }
 }

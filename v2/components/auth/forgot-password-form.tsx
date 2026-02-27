@@ -14,8 +14,10 @@ import {
 } from '@/components/ui/card'
 import Link from 'next/link'
 
-export function ForgotPasswordForm() {
-  const [error, setError] = useState<string | null>(null)
+export function ForgotPasswordForm({ invalidLink }: { invalidLink?: boolean }) {
+  const [error, setError] = useState<string | null>(
+    invalidLink ? 'Your reset link has expired or is invalid. Please request a new one.' : null
+  )
   const [success, setSuccess] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 

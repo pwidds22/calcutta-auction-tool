@@ -102,13 +102,15 @@ export async function presentTeam(sessionId: string, teamIdx: number) {
 
   const { data: session } = await supabase
     .from('auction_sessions')
-    .select('commissioner_id, status, team_order')
+    .select('commissioner_id, status, team_order, bidding_status')
     .eq('id', sessionId)
     .single();
 
   if (!session || session.commissioner_id !== user.id)
     return { error: 'Not authorized' };
   if (session.status !== 'active') return { error: 'Auction not active' };
+  if (session.bidding_status === 'open')
+    return { error: 'Close bidding before presenting a new team' };
   if (teamIdx < 0 || teamIdx >= session.team_order.length)
     return { error: 'Invalid team index' };
 
@@ -572,30 +574,50 @@ export async function undoLastSale(sessionId: string) {
 
   if (!lastSale) return { error: 'No sales to undo' };
 
-  // Unmark winning bid and delete all bids for that team
+  // Unmark the winning bid (preserve bid history for audit trail)
   await admin
     .from('auction_bids')
-    .delete()
-    .eq('session_id', sessionId)
-    .eq('team_id', lastSale.team_id);
+    .update({ is_winning_bid: false })
+    .eq('id', lastSale.id);
 
-  // Move back to that team
+  // Find the team's index in the current order
   const teamIdx = session.team_order.indexOf(lastSale.team_id);
-  await admin
-    .from('auction_sessions')
-    .update({
-      current_team_idx: teamIdx >= 0 ? teamIdx : session.current_team_idx - 1,
-      bidding_status: 'waiting',
-      current_highest_bid: 0,
-      current_highest_bidder_id: null,
-      status: 'active',
-    })
-    .eq('id', sessionId);
 
-  await broadcastToChannel(channelName(sessionId), 'SALE_UNDONE', {
-    teamId: lastSale.team_id,
-    teamIdx: teamIdx >= 0 ? teamIdx : session.current_team_idx - 1,
-  });
+  if (teamIdx < 0) {
+    // Team not found in order (e.g., after shuffle) — fall back to previous position
+    const fallbackIdx = Math.max(0, session.current_team_idx - 1);
+    await admin
+      .from('auction_sessions')
+      .update({
+        current_team_idx: fallbackIdx,
+        bidding_status: 'waiting',
+        current_highest_bid: 0,
+        current_highest_bidder_id: null,
+        status: 'active',
+      })
+      .eq('id', sessionId);
+
+    await broadcastToChannel(channelName(sessionId), 'SALE_UNDONE', {
+      teamId: lastSale.team_id,
+      teamIdx: fallbackIdx,
+    });
+  } else {
+    await admin
+      .from('auction_sessions')
+      .update({
+        current_team_idx: teamIdx,
+        bidding_status: 'waiting',
+        current_highest_bid: 0,
+        current_highest_bidder_id: null,
+        status: 'active',
+      })
+      .eq('id', sessionId);
+
+    await broadcastToChannel(channelName(sessionId), 'SALE_UNDONE', {
+      teamId: lastSale.team_id,
+      teamIdx,
+    });
+  }
 
   return { success: true };
 }

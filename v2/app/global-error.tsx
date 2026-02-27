@@ -9,7 +9,7 @@ export default function GlobalError({
 }) {
   return (
     <html lang="en" className="dark landing-theme">
-      <body className="bg-[#0a0a0b] text-white">
+      <body className="bg-background text-white">
         <div className="flex min-h-screen flex-col items-center justify-center px-4">
           <div className="mx-auto max-w-md text-center">
             <div className="mb-4 text-4xl font-bold text-white/20">500</div>
