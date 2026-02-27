@@ -6,6 +6,7 @@ import type { BaseTeam, TournamentConfig, PayoutRules } from '@/lib/tournaments/
 import type { TournamentResult } from '@/actions/tournament-results';
 import { AuctionComplete } from './auction-complete';
 import { ResultsEntry } from './results-entry';
+import { BracketEntry } from './bracket-entry';
 import { Leaderboard } from './leaderboard';
 import { SettlementMatrix } from './settlement-matrix';
 import { ClipboardList, Trophy, BarChart3, Calculator, DollarSign } from 'lucide-react';
@@ -21,7 +22,7 @@ interface TournamentDashboardProps {
   initialResults: TournamentResult[];
 }
 
-type TabKey = 'summary' | 'results' | 'leaderboard' | 'settlement';
+type TabKey = 'summary' | 'bracket' | 'results' | 'leaderboard' | 'settlement';
 
 export function TournamentDashboard({
   sessionId,
@@ -33,8 +34,14 @@ export function TournamentDashboard({
   payoutRules,
   initialResults,
 }: TournamentDashboardProps) {
+  const hasBracket = !!config.bracketDevigConfig;
+
   const [activeTab, setActiveTab] = useState<TabKey>(
-    initialResults.length > 0 ? 'leaderboard' : 'summary'
+    initialResults.length > 0
+      ? 'leaderboard'
+      : hasBracket
+        ? 'bracket'
+        : 'summary'
   );
   const [results, setResults] = useState<TournamentResult[]>(initialResults);
 
@@ -100,7 +107,12 @@ export function TournamentDashboard({
 
   const tabs: Array<{ key: TabKey; label: string; icon: typeof Trophy; commissionerOnly?: boolean }> = [
     { key: 'summary', label: 'Auction Summary', icon: ClipboardList },
-    ...(isCommissioner
+    // Bracket tab: visible to all for bracket-type tournaments (commissioner can edit, others view only)
+    ...(hasBracket
+      ? [{ key: 'bracket' as TabKey, label: 'Bracket', icon: Trophy }]
+      : []),
+    // Flat results entry: only for commissioner on non-bracket tournaments (or as fallback)
+    ...(isCommissioner && !hasBracket
       ? [{ key: 'results' as TabKey, label: 'Enter Results', icon: Calculator, commissionerOnly: true }]
       : []),
     { key: 'leaderboard', label: 'Leaderboard', icon: BarChart3 },
@@ -143,7 +155,19 @@ export function TournamentDashboard({
         />
       )}
 
-      {activeTab === 'results' && isCommissioner && (
+      {activeTab === 'bracket' && hasBracket && (
+        <BracketEntry
+          sessionId={sessionId}
+          baseTeams={baseTeams}
+          config={config}
+          results={results}
+          isCommissioner={isCommissioner}
+          soldTeams={soldTeams}
+          payoutRules={payoutRules}
+        />
+      )}
+
+      {activeTab === 'results' && isCommissioner && !hasBracket && (
         <ResultsEntry
           sessionId={sessionId}
           soldTeams={soldTeams}

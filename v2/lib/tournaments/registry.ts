@@ -12,9 +12,13 @@ import {
   KENTUCKY_DERBY_2026_TEAMS,
 } from './configs/kentucky-derby-2026';
 import {
-  NFL_PLAYOFFS_2026_CONFIG,
-  NFL_PLAYOFFS_2026_TEAMS,
-} from './configs/nfl-playoffs-2026';
+  NFL_SEASON_2026_CONFIG,
+  NFL_SEASON_2026_TEAMS,
+} from './configs/nfl-season-2026';
+import {
+  WORLD_CUP_2026_CONFIG,
+  WORLD_CUP_2026_TEAMS,
+} from './configs/world-cup-2026';
 
 interface TournamentEntry {
   config: TournamentConfig;
@@ -34,9 +38,13 @@ const TOURNAMENTS: Record<string, TournamentEntry> = {
     config: KENTUCKY_DERBY_2026_CONFIG,
     teams: KENTUCKY_DERBY_2026_TEAMS,
   },
-  nfl_playoffs_2026: {
-    config: NFL_PLAYOFFS_2026_CONFIG,
-    teams: NFL_PLAYOFFS_2026_TEAMS,
+  world_cup_2026: {
+    config: WORLD_CUP_2026_CONFIG,
+    teams: WORLD_CUP_2026_TEAMS,
+  },
+  nfl_season_2026: {
+    config: NFL_SEASON_2026_CONFIG,
+    teams: NFL_SEASON_2026_TEAMS,
   },
 };
 

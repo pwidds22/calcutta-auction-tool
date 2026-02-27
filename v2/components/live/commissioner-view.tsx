@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuctionChannel } from '@/lib/auction/live/use-auction-channel';
 import { useTimer } from '@/lib/auction/live/use-timer';
 import type { BaseTeam, TournamentConfig, PayoutRules } from '@/lib/tournaments/types';
@@ -18,10 +18,10 @@ import { MyPortfolio } from './my-portfolio';
 import { ResultsTable } from './results-table';
 import { StrategyOverlay } from './strategy-overlay';
 import { TimerDisplay } from './timer-display';
-import { closeBidding } from '@/actions/bidding';
+import { closeBidding, autoAdvance, toggleAutoMode } from '@/actions/bidding';
 import { TournamentDashboard } from './tournament-dashboard';
 import type { TournamentResult } from '@/actions/tournament-results';
-import { Shuffle } from 'lucide-react';
+import { Shuffle, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface CommissionerViewProps {
@@ -115,6 +115,7 @@ export function CommissionerView({
       teamOrder: session.team_order,
       timerEndsAt: session.timer_ends_at,
       timerDurationMs: session.timer_duration_ms,
+      autoMode: session.settings?.autoMode,
     },
   });
 
@@ -137,13 +138,29 @@ export function CommissionerView({
     await updateTeamOrder(session.id, order);
   }, [activeTeamOrder, session.id]);
 
-  // Timer: commissioner auto-closes bidding on expiry
+  // Track autoMode via ref so the stable onExpire callback always reads the latest value
+  const autoModeRef = useRef(channel.autoMode);
+  autoModeRef.current = channel.autoMode;
+
+  // Timer: commissioner auto-closes (or auto-advances in auto-mode) on expiry
   const timer = useTimer({
     isCommissioner: true,
     onExpire: useCallback(() => {
-      closeBidding(session.id);
+      if (autoModeRef.current) {
+        autoAdvance(session.id);
+      } else {
+        closeBidding(session.id);
+      }
     }, [session.id]),
   });
+
+  // Toggle auto-mode handler
+  const [togglingAutoMode, setTogglingAutoMode] = useState(false);
+  const handleToggleAutoMode = useCallback(async () => {
+    setTogglingAutoMode(true);
+    await toggleAutoMode(session.id);
+    setTogglingAutoMode(false);
+  }, [session.id]);
 
   // Sync timer state from channel (includes DB-initialized state on mount)
   useEffect(() => {
@@ -165,6 +182,43 @@ export function CommissionerView({
         onlineCount={channel.onlineUsers.length}
         auctionStatus={channel.auctionStatus}
       />
+
+      {/* Auto-mode toggle — visible during active/paused auctions when timer is enabled */}
+      {session.settings?.timer?.enabled && (channel.auctionStatus === 'active' || channel.auctionStatus === 'paused' || channel.auctionStatus === 'lobby') && (
+        <button
+          type="button"
+          onClick={handleToggleAutoMode}
+          disabled={togglingAutoMode}
+          className={`flex w-full items-center justify-between rounded-lg border px-4 py-2.5 transition-colors ${
+            channel.autoMode
+              ? 'border-amber-500/40 bg-amber-500/10'
+              : 'border-white/[0.06] bg-white/[0.02] hover:border-white/10'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <Zap className={`size-3.5 ${channel.autoMode ? 'text-amber-400' : 'text-white/40'}`} />
+            <span className={`text-sm font-medium ${channel.autoMode ? 'text-amber-300' : 'text-white/50'}`}>
+              {channel.autoMode ? 'Auto-auction ON' : 'Auto-auction OFF'}
+            </span>
+            <span className="text-[10px] text-white/30">
+              {channel.autoMode
+                ? '— bidding opens, closes, and sells automatically'
+                : '— click to enable hands-free mode'}
+            </span>
+          </div>
+          <div
+            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+              channel.autoMode ? 'bg-amber-500' : 'bg-white/10'
+            }`}
+          >
+            <span
+              className={`inline-block size-3.5 transform rounded-full bg-white transition-transform ${
+                channel.autoMode ? 'translate-x-4' : 'translate-x-0.5'
+              }`}
+            />
+          </div>
+        </button>
+      )}
 
       {!channel.isConnected && channel.auctionStatus !== 'lobby' && channel.auctionStatus !== 'completed' && (
         <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-2 text-center text-sm text-red-400">
@@ -238,6 +292,7 @@ export function CommissionerView({
               hasSoldTeams={channel.soldTeams.length > 0}
               currentTeamIdx={channel.currentTeamIdx}
               timerIsRunning={timer.state.isRunning}
+              autoMode={channel.autoMode}
             />
 
             {/* Commissioner can bid too */}

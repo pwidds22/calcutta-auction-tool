@@ -11,24 +11,29 @@ import {
   type SessionSettings,
 } from '@/lib/auction/live/types';
 import { getPayoutPresets, type PayoutPreset } from '@/lib/tournaments/payout-presets';
-import { ArrowLeft, Gavel, Timer, DollarSign, Trophy, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Gavel, Timer, DollarSign, Trophy, ChevronDown, ChevronUp, Zap } from 'lucide-react';
 import Link from 'next/link';
 
 interface CreateSessionFormProps {
   tournaments: TournamentConfig[];
+  initialTournamentId?: string;
 }
 
 type PayoutMode = 'balanced' | 'topHeavy' | 'withProps' | 'custom';
 
-export function CreateSessionForm({ tournaments }: CreateSessionFormProps) {
+export function CreateSessionForm({ tournaments, initialTournamentId }: CreateSessionFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const activeTournament = tournaments.find((t) => t.isActive) ?? tournaments[0];
+  // Use initialTournamentId from URL if provided, otherwise fall back to active tournament
+  const defaultTournament =
+    (initialTournamentId && tournaments.find((t) => t.id === initialTournamentId)) ||
+    tournaments.find((t) => t.isActive) ||
+    tournaments[0];
 
   const [name, setName] = useState('');
-  const [tournamentId, setTournamentId] = useState(activeTournament?.id ?? '');
+  const [tournamentId, setTournamentId] = useState(defaultTournament?.id ?? '');
   const [potSize, setPotSize] = useState('10000');
 
   // Bid increment preset
@@ -38,6 +43,9 @@ export function CreateSessionForm({ tournaments }: CreateSessionFormProps) {
   const [timerEnabled, setTimerEnabled] = useState(false);
   const [initialDuration, setInitialDuration] = useState('20');
   const [resetDuration, setResetDuration] = useState('8');
+
+  // Auto-auction mode (requires timer)
+  const [autoMode, setAutoMode] = useState(false);
 
   // Payout rules
   const [payoutMode, setPayoutMode] = useState<PayoutMode>('balanced');
@@ -95,6 +103,7 @@ export function CreateSessionForm({ tournaments }: CreateSessionFormProps) {
         initialDurationSec: Math.max(5, Math.min(120, Number(initialDuration) || 20)),
         resetDurationSec: Math.max(3, Math.min(30, Number(resetDuration) || 8)),
       },
+      autoMode: timerEnabled && autoMode,
     };
 
     const result = await createSession({
@@ -157,7 +166,13 @@ export function CreateSessionForm({ tournaments }: CreateSessionFormProps) {
           </label>
           <select
             value={tournamentId}
-            onChange={(e) => setTournamentId(e.target.value)}
+            onChange={(e) => {
+              setTournamentId(e.target.value);
+              // Reset payout mode when switching tournaments (presets differ per sport)
+              setPayoutMode('balanced');
+              setCustomRules({});
+              setShowCustomEditor(false);
+            }}
             className="h-10 w-full rounded-md border border-white/10 bg-white/[0.04] px-3 text-sm text-white focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
           >
             {tournaments.map((t) => (
@@ -348,7 +363,11 @@ export function CreateSessionForm({ tournaments }: CreateSessionFormProps) {
           </label>
           <button
             type="button"
-            onClick={() => setTimerEnabled(!timerEnabled)}
+            onClick={() => {
+              const next = !timerEnabled;
+              setTimerEnabled(next);
+              if (!next) setAutoMode(false);
+            }}
             className={`flex w-full items-center justify-between rounded-md border px-3 py-2.5 transition-colors ${
               timerEnabled
                 ? 'border-emerald-500/50 bg-emerald-500/10 text-white'
@@ -372,43 +391,81 @@ export function CreateSessionForm({ tournaments }: CreateSessionFormProps) {
           </button>
 
           {timerEnabled && (
-            <div className="mt-2 grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs text-white/40 mb-1">
-                  Initial countdown
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    value={initialDuration}
-                    onChange={(e) => setInitialDuration(e.target.value)}
-                    min={5}
-                    max={120}
-                    className="h-9 w-full rounded-md border border-white/10 bg-white/[0.04] px-3 pr-8 text-sm text-white focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/30">
-                    sec
-                  </span>
+            <div className="mt-2 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-white/40 mb-1">
+                    Initial countdown
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      value={initialDuration}
+                      onChange={(e) => setInitialDuration(e.target.value)}
+                      min={5}
+                      max={120}
+                      className="h-9 w-full rounded-md border border-white/10 bg-white/[0.04] px-3 pr-8 text-sm text-white focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/30">
+                      sec
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs text-white/40 mb-1">
+                    Reset on new bid
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      value={resetDuration}
+                      onChange={(e) => setResetDuration(e.target.value)}
+                      min={3}
+                      max={30}
+                      className="h-9 w-full rounded-md border border-white/10 bg-white/[0.04] px-3 pr-8 text-sm text-white focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/30">
+                      sec
+                    </span>
+                  </div>
                 </div>
               </div>
-              <div>
-                <label className="block text-xs text-white/40 mb-1">
-                  Reset on new bid
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    value={resetDuration}
-                    onChange={(e) => setResetDuration(e.target.value)}
-                    min={3}
-                    max={30}
-                    className="h-9 w-full rounded-md border border-white/10 bg-white/[0.04] px-3 pr-8 text-sm text-white focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/30">
-                    sec
-                  </span>
+
+              {/* Auto-auction mode */}
+              <button
+                type="button"
+                onClick={() => setAutoMode(!autoMode)}
+                className={`flex w-full items-center justify-between rounded-md border px-3 py-2.5 transition-colors ${
+                  autoMode
+                    ? 'border-amber-500/50 bg-amber-500/10 text-white'
+                    : 'border-white/10 bg-white/[0.02] text-white/50 hover:border-white/20'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Zap className={`size-3.5 ${autoMode ? 'text-amber-400' : 'text-white/40'}`} />
+                  <div className="text-left">
+                    <span className="text-sm">
+                      {autoMode ? 'Auto-auction enabled' : 'Auto-auction (hands-free)'}
+                    </span>
+                    <p className="text-[10px] opacity-50">
+                      {autoMode
+                        ? 'Bidding opens, closes, and advances automatically'
+                        : 'Commissioner controls each step manually'}
+                    </p>
+                  </div>
                 </div>
-              </div>
+                <div
+                  className={`h-5 w-9 rounded-full p-0.5 transition-colors ${
+                    autoMode ? 'bg-amber-500' : 'bg-white/20'
+                  }`}
+                >
+                  <div
+                    className={`size-4 rounded-full bg-white transition-transform ${
+                      autoMode ? 'translate-x-4' : 'translate-x-0'
+                    }`}
+                  />
+                </div>
+              </button>
             </div>
           )}
         </div>

@@ -1,15 +1,16 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
-const publicRoutes = ['/', '/login', '/register', '/auth/callback', '/forgot-password', '/reset-password']
+const publicRoutes = ['/', '/login', '/register', '/auth/callback', '/forgot-password', '/reset-password', '/events', '/blog']
 const paidRoutes: string[] = []
 
 export async function middleware(request: NextRequest) {
   const { user, supabase, supabaseResponse } = await updateSession(request)
   const path = request.nextUrl.pathname
 
-  // Allow public routes
-  if (publicRoutes.includes(path)) {
+  // Allow public routes (exact match or prefix match for /blog/*)
+  const isPublic = publicRoutes.includes(path) || path.startsWith('/blog/')
+  if (isPublic) {
     if (user && (path === '/login' || path === '/register')) {
       const url = request.nextUrl.clone()
       url.pathname = '/auction'

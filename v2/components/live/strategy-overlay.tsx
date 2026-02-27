@@ -4,7 +4,7 @@ import type { BaseTeam, TournamentConfig, PayoutRules } from '@/lib/tournaments/
 import type { SoldTeam } from '@/lib/auction/live/use-auction-channel';
 import { initializeTeams } from '@/lib/calculations/initialize';
 import { formatCurrency } from '@/lib/calculations/format';
-import { TrendingUp, Lock } from 'lucide-react';
+import { TrendingUp, Lock, ExternalLink } from 'lucide-react';
 
 interface StrategyOverlayProps {
   hasPaid: boolean;
@@ -28,15 +28,47 @@ export function StrategyOverlay({
   soldTeams,
 }: StrategyOverlayProps) {
   if (!hasPaid) {
+    const paymentUrl = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_URL;
+
     return (
-      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 text-center">
-        <Lock className="mx-auto mb-2 size-5 text-amber-400" />
-        <p className="text-sm font-medium text-amber-400">
-          Unlock Strategy Data
-        </p>
-        <p className="mt-1 text-xs text-white/40">
-          See fair values, suggested bids, and profit projections — $29.99
-        </p>
+      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+        <div className="flex items-start gap-3">
+          <div className="rounded-lg bg-amber-500/10 p-2">
+            <Lock className="size-5 text-amber-400" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-medium text-amber-300">
+              Strategy Data Available
+            </p>
+            <p className="mt-0.5 text-xs text-white/40">
+              See fair values, suggested bids, edge %, and round-by-round
+              profit projections for every team — live during bidding.
+            </p>
+          </div>
+        </div>
+        <div className="mt-3 flex items-center gap-2">
+          {paymentUrl ? (
+            <a
+              href={paymentUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-amber-400"
+            >
+              Unlock for $29.99
+              <ExternalLink className="size-3.5" />
+            </a>
+          ) : (
+            <a
+              href="/payment"
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-amber-400"
+            >
+              Unlock for $29.99
+            </a>
+          )}
+          <span className="text-[10px] text-white/30">
+            Opens in new tab — come back to keep bidding
+          </span>
+        </div>
       </div>
     );
   }

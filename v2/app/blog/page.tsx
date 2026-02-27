@@ -1,6 +1,5 @@
 import Link from 'next/link';
-import { Navbar } from '@/components/layout/navbar';
-import { Footer } from '@/components/layout/footer';
+import { PublicPageLayout } from '@/components/layout/public-page-layout';
 import { getAllPosts } from '@/lib/blog';
 import { Calendar, Clock, Tag } from 'lucide-react';
 
@@ -14,8 +13,7 @@ export default function BlogPage() {
   const posts = getAllPosts();
 
   return (
-    <>
-      <Navbar />
+    <PublicPageLayout>
       <main className="mx-auto max-w-3xl px-4 py-12">
         <div className="mb-10 text-center">
           <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
@@ -82,7 +80,6 @@ export default function BlogPage() {
           </div>
         )}
       </main>
-      <Footer />
-    </>
+    </PublicPageLayout>
   );
 }

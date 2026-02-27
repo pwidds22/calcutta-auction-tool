@@ -13,6 +13,7 @@ const SPORT_COLORS: Record<string, string> = {
   golf: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
   horse_racing: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
   nfl: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  soccer: 'bg-sky-500/10 text-sky-400 border-sky-500/20',
 };
 
 function formatDate(dateStr: string): string {
@@ -26,6 +27,7 @@ function sportLabel(sport: string): string {
     golf: 'Golf',
     horse_racing: 'Horse Racing',
     nfl: 'NFL',
+    soccer: 'Soccer',
   };
   return labels[sport] ?? sport.toUpperCase();
 }
@@ -99,7 +101,7 @@ export function TournamentCard({ config, teamCount, isActive }: TournamentCardPr
       {/* CTA */}
       <div className="mt-4 flex gap-2">
         <Link
-          href="/host/create"
+          href={`/host/create?tournament=${config.id}`}
           className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-emerald-700"
         >
           Host Auction

@@ -37,6 +37,8 @@ export interface AuctionChannelState {
   timerEndsAt: string | null;
   timerDurationMs: number;
   timerIsRunning: boolean;
+  // Auto-auction mode
+  autoMode: boolean;
 }
 
 export interface UseAuctionChannelOptions {
@@ -55,6 +57,7 @@ export interface UseAuctionChannelOptions {
     teamOrder?: number[];
     timerEndsAt?: string | null;
     timerDurationMs?: number | null;
+    autoMode?: boolean;
   };
 }
 
@@ -79,6 +82,7 @@ export function useAuctionChannel(
     timerEndsAt: initialState.timerEndsAt ?? null,
     timerDurationMs: initialState.timerDurationMs ?? 0,
     timerIsRunning: !!(initialState.timerEndsAt && initialState.timerDurationMs && new Date(initialState.timerEndsAt) > new Date()),
+    autoMode: initialState.autoMode ?? false,
   });
 
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -228,6 +232,9 @@ export function useAuctionChannel(
           timerDurationMs: 0,
           timerIsRunning: false,
         }));
+      })
+      .on('broadcast', { event: 'AUTO_MODE_TOGGLED' }, ({ payload }) => {
+        setState((prev) => ({ ...prev, autoMode: payload.autoMode }));
       })
       .on('broadcast', { event: 'RESULT_UPDATED' }, ({ payload }) => {
         const handler = (window as unknown as Record<string, unknown>).__tournamentResultUpdate;

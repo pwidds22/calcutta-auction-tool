@@ -7,6 +7,7 @@ export interface TimerSettings {
 export interface SessionSettings {
   timer?: TimerSettings;
   bidIncrements?: number[];
+  autoMode?: boolean;
 }
 
 export const DEFAULT_TIMER_SETTINGS: TimerSettings = {

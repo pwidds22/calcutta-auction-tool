@@ -1,7 +1,6 @@
 import { listTournamentsWithTeams } from '@/lib/tournaments/registry';
 import { TournamentCard } from '@/components/events/tournament-card';
-import { Navbar } from '@/components/layout/navbar';
-import { Footer } from '@/components/layout/footer';
+import { PublicPageLayout } from '@/components/layout/public-page-layout';
 
 export const metadata = {
   title: 'Events & Tournaments | Calcutta Edge',
@@ -23,8 +22,7 @@ export default function EventsPage() {
   const upcoming = sorted.filter((t) => !t.config.isActive);
 
   return (
-    <>
-      <Navbar />
+    <PublicPageLayout>
       <main className="mx-auto max-w-5xl px-4 py-12">
         <div className="mb-10 text-center">
           <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
@@ -94,7 +92,6 @@ export default function EventsPage() {
           </div>
         </section>
       </main>
-      <Footer />
-    </>
+    </PublicPageLayout>
   );
 }

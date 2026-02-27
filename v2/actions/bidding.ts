@@ -9,6 +9,40 @@ function channelName(sessionId: string) {
   return `auction:${sessionId}`;
 }
 
+/**
+ * Helper: open bidding + start timer on the current team.
+ * Used by auto-mode after start/sell/skip to keep the auction flowing.
+ * Uses admin client to bypass RLS (called from within other server actions).
+ */
+async function autoOpenBidding(
+  admin: ReturnType<typeof createAdminClient>,
+  sessionId: string,
+  settings: SessionSettings | null
+) {
+  await admin
+    .from('auction_sessions')
+    .update({ bidding_status: 'open' })
+    .eq('id', sessionId);
+
+  await broadcastToChannel(channelName(sessionId), 'BIDDING_OPEN', {});
+
+  // Start timer
+  if (settings?.timer?.enabled) {
+    const durationMs = settings.timer.initialDurationSec * 1000;
+    const endsAt = new Date(Date.now() + durationMs).toISOString();
+
+    await admin
+      .from('auction_sessions')
+      .update({ timer_ends_at: endsAt, timer_duration_ms: durationMs })
+      .eq('id', sessionId);
+
+    await broadcastToChannel(channelName(sessionId), 'TIMER_START', {
+      endsAt,
+      durationMs,
+    });
+  }
+}
+
 export async function startAuction(sessionId: string) {
   const supabase = await createClient();
   const {
@@ -18,7 +52,7 @@ export async function startAuction(sessionId: string) {
 
   const { data: session } = await supabase
     .from('auction_sessions')
-    .select('commissioner_id, status, team_order, current_team_idx')
+    .select('commissioner_id, status, team_order, current_team_idx, settings')
     .eq('id', sessionId)
     .single();
 
@@ -48,6 +82,13 @@ export async function startAuction(sessionId: string) {
     currentTeamIdx: resumeIdx,
     teamId: session.team_order[resumeIdx],
   });
+
+  // Auto-mode: immediately open bidding on the first team
+  const settings = session.settings as SessionSettings | null;
+  if (settings?.autoMode) {
+    const admin = createAdminClient();
+    await autoOpenBidding(admin, sessionId, settings);
+  }
 
   return { success: true };
 }
@@ -161,7 +202,7 @@ export async function placeBid(sessionId: string, amount: number) {
   const { data: session } = await supabase
     .from('auction_sessions')
     .select(
-      'status, bidding_status, current_highest_bid, team_order, current_team_idx, settings'
+      'status, bidding_status, current_highest_bid, team_order, current_team_idx, settings, timer_ends_at'
     )
     .eq('id', sessionId)
     .single();
@@ -209,22 +250,28 @@ export async function placeBid(sessionId: string, amount: number) {
     amount,
   });
 
-  // Reset timer on new bid
+  // Reset timer on new bid — only extend if remaining time is LESS than reset duration
   const settings = session.settings as SessionSettings | null;
   if (settings?.timer?.enabled) {
-    const durationMs = settings.timer.resetDurationSec * 1000;
-    const endsAt = new Date(Date.now() + durationMs).toISOString();
+    const resetMs = settings.timer.resetDurationSec * 1000;
+    const remainingMs = session.timer_ends_at
+      ? new Date(session.timer_ends_at).getTime() - Date.now()
+      : 0;
 
-    // Persist timer to DB for reconnection
-    await admin
-      .from('auction_sessions')
-      .update({ timer_ends_at: endsAt, timer_duration_ms: durationMs })
-      .eq('id', sessionId);
+    // Only reset if the clock has less time than the reset window
+    if (remainingMs < resetMs) {
+      const endsAt = new Date(Date.now() + resetMs).toISOString();
 
-    await broadcastToChannel(channelName(sessionId), 'TIMER_RESET', {
-      endsAt,
-      durationMs,
-    });
+      await admin
+        .from('auction_sessions')
+        .update({ timer_ends_at: endsAt, timer_duration_ms: resetMs })
+        .eq('id', sessionId);
+
+      await broadcastToChannel(channelName(sessionId), 'TIMER_RESET', {
+        endsAt,
+        durationMs: resetMs,
+      });
+    }
   }
 
   return { success: true };
@@ -356,6 +403,12 @@ export async function sellTeam(sessionId: string) {
     );
   }
 
+  // Auto-mode: open bidding on next team automatically
+  const settings = session.settings as SessionSettings | null;
+  if (!isLastTeam && settings?.autoMode) {
+    await autoOpenBidding(admin, sessionId, settings);
+  }
+
   return { success: true, isComplete: isLastTeam };
 }
 
@@ -449,7 +502,7 @@ export async function skipTeam(sessionId: string) {
 
   const { data: session } = await supabase
     .from('auction_sessions')
-    .select('commissioner_id, status, team_order, current_team_idx')
+    .select('commissioner_id, status, team_order, current_team_idx, settings')
     .eq('id', sessionId)
     .single();
 
@@ -460,7 +513,9 @@ export async function skipTeam(sessionId: string) {
   const nextIdx = session.current_team_idx + 1;
   const isLastTeam = nextIdx >= session.team_order.length;
 
-  await supabase
+  const admin = createAdminClient();
+
+  await admin
     .from('auction_sessions')
     .update({
       current_team_idx: isLastTeam ? session.current_team_idx : nextIdx,
@@ -477,6 +532,12 @@ export async function skipTeam(sessionId: string) {
     teamId,
     nextTeamIdx: isLastTeam ? null : nextIdx,
   });
+
+  // Auto-mode: open bidding on next team automatically
+  const settings = session.settings as SessionSettings | null;
+  if (!isLastTeam && settings?.autoMode) {
+    await autoOpenBidding(admin, sessionId, settings);
+  }
 
   return { success: true };
 }
@@ -565,6 +626,176 @@ export async function pauseAuction(sessionId: string) {
   await broadcastToChannel(channelName(sessionId), 'AUCTION_PAUSED', {});
 
   return { success: true };
+}
+
+/**
+ * Auto-advance: called by commissioner timer expiry in auto-mode.
+ * Closes bidding → sells to highest bidder (or skips if no bids) → opens next.
+ * Everything happens server-side in one call to avoid race conditions.
+ */
+export async function autoAdvance(sessionId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: 'Not authenticated' };
+
+  const { data: session } = await supabase
+    .from('auction_sessions')
+    .select('*')
+    .eq('id', sessionId)
+    .single();
+
+  if (!session || session.commissioner_id !== user.id)
+    return { error: 'Not authorized' };
+  if (session.status !== 'active') return { error: 'Auction not active' };
+
+  const admin = createAdminClient();
+  const teamId = session.team_order[session.current_team_idx];
+
+  // 1. Close bidding
+  await admin
+    .from('auction_sessions')
+    .update({
+      bidding_status: 'closed',
+      timer_ends_at: null,
+      timer_duration_ms: null,
+    })
+    .eq('id', sessionId);
+
+  await broadcastToChannel(channelName(sessionId), 'BIDDING_CLOSED', {});
+  await broadcastToChannel(channelName(sessionId), 'TIMER_STOP', {});
+
+  const hasBids =
+    session.current_highest_bidder_id && session.current_highest_bid > 0;
+
+  const nextIdx = session.current_team_idx + 1;
+  const isLastTeam = nextIdx >= session.team_order.length;
+
+  if (hasBids) {
+    // 2a. Sell team to highest bidder
+    const winnerId = session.current_highest_bidder_id!;
+    const winAmount = session.current_highest_bid;
+
+    // Mark winning bid
+    await admin
+      .from('auction_bids')
+      .update({ is_winning_bid: true })
+      .eq('session_id', sessionId)
+      .eq('team_id', teamId)
+      .eq('bidder_id', winnerId)
+      .eq('amount', winAmount);
+
+    // Get winner name
+    const { data: winnerParticipant } = await admin
+      .from('auction_participants')
+      .select('display_name')
+      .eq('session_id', sessionId)
+      .eq('user_id', winnerId)
+      .single();
+
+    // Sync auction data
+    await syncAuctionData(
+      admin,
+      sessionId,
+      session.tournament_id,
+      teamId,
+      winnerId,
+      winAmount,
+      session.payout_rules,
+      session.estimated_pot_size
+    );
+
+    // Advance
+    await admin
+      .from('auction_sessions')
+      .update({
+        current_team_idx: isLastTeam ? session.current_team_idx : nextIdx,
+        bidding_status: 'waiting',
+        current_highest_bid: 0,
+        current_highest_bidder_id: null,
+        ...(isLastTeam ? { status: 'completed' } : {}),
+      })
+      .eq('id', sessionId);
+
+    await broadcastToChannel(channelName(sessionId), 'TEAM_SOLD', {
+      teamId,
+      winnerId,
+      winnerName: winnerParticipant?.display_name ?? 'Unknown',
+      amount: winAmount,
+      nextTeamIdx: isLastTeam ? null : nextIdx,
+      isComplete: isLastTeam,
+    });
+
+    if (isLastTeam) {
+      await broadcastToChannel(channelName(sessionId), 'AUCTION_COMPLETED', {});
+      return { success: true, isComplete: true };
+    }
+  } else {
+    // 2b. Skip team (no bids)
+    await admin
+      .from('auction_sessions')
+      .update({
+        current_team_idx: isLastTeam ? session.current_team_idx : nextIdx,
+        bidding_status: 'waiting',
+        current_highest_bid: 0,
+        current_highest_bidder_id: null,
+      })
+      .eq('id', sessionId);
+
+    await broadcastToChannel(channelName(sessionId), 'TEAM_SKIPPED', {
+      teamId,
+      nextTeamIdx: isLastTeam ? null : nextIdx,
+    });
+
+    if (isLastTeam) {
+      return { success: true, isComplete: true };
+    }
+  }
+
+  // 3. Auto-open bidding on next team
+  const settings = session.settings as SessionSettings | null;
+  if (settings?.autoMode) {
+    await autoOpenBidding(admin, sessionId, settings);
+  }
+
+  return { success: true, isComplete: false };
+}
+
+/**
+ * Toggle auto-mode on/off mid-auction.
+ */
+export async function toggleAutoMode(sessionId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: 'Not authenticated' };
+
+  const { data: session } = await supabase
+    .from('auction_sessions')
+    .select('commissioner_id, settings')
+    .eq('id', sessionId)
+    .single();
+
+  if (!session || session.commissioner_id !== user.id)
+    return { error: 'Not authorized' };
+
+  const settings = (session.settings as SessionSettings | null) ?? {};
+  const newAutoMode = !settings.autoMode;
+
+  await supabase
+    .from('auction_sessions')
+    .update({
+      settings: { ...settings, autoMode: newAutoMode },
+    })
+    .eq('id', sessionId);
+
+  await broadcastToChannel(channelName(sessionId), 'AUTO_MODE_TOGGLED', {
+    autoMode: newAutoMode,
+  });
+
+  return { success: true, autoMode: newAutoMode };
 }
 
 export async function completeAuction(sessionId: string) {

@@ -108,6 +108,7 @@ export function ParticipantView({
       teamOrder: session.team_order,
       timerEndsAt: session.timer_ends_at,
       timerDurationMs: session.timer_duration_ms,
+      autoMode: session.settings?.autoMode,
     },
   });
 

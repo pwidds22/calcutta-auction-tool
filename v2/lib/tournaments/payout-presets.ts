@@ -135,38 +135,86 @@ export const KENTUCKY_DERBY_PAYOUT_PRESETS: Record<string, PayoutPreset> = {
   },
 };
 
-export const NFL_PLAYOFFS_PAYOUT_PRESETS: Record<string, PayoutPreset> = {
+export const NFL_SEASON_PAYOUT_PRESETS: Record<string, PayoutPreset> = {
   balanced: {
     label: 'Balanced',
-    description: 'Reward every playoff win — keeps owners engaged all postseason',
+    description: 'Reward milestones from playoffs to Super Bowl',
     rules: {
-      wildcard: 2.0,
-      divisional: 4.0,
-      conference: 8.0,
+      playoffBerth: 1.5,
+      divisionWinner: 3.0,
+      conferenceChamp: 8.0,
       superBowl: 30.0,
       mvp: 0,
+      mostWins: 0,
     },
   },
   topHeavy: {
     label: 'Super Bowl Heavy',
     description: 'Most of the pot goes to the champion',
     rules: {
-      wildcard: 1.0,
-      divisional: 2.0,
-      conference: 5.0,
+      playoffBerth: 0.5,
+      divisionWinner: 1.5,
+      conferenceChamp: 5.0,
       superBowl: 50.0,
       mvp: 0,
+      mostWins: 0,
     },
   },
   withProps: {
-    label: 'With MVP',
-    description: '80% game payouts, 20% for Super Bowl MVP owner',
+    label: 'With Awards',
+    description: '75% milestone payouts, 25% for MVP + Best Record',
     rules: {
-      wildcard: 1.5,
-      divisional: 3.0,
-      conference: 6.0,
-      superBowl: 25.0,
-      mvp: 20.0,
+      playoffBerth: 1.0,
+      divisionWinner: 2.5,
+      conferenceChamp: 6.0,
+      superBowl: 22.0,
+      mvp: 15.0,
+      mostWins: 10.0,
+    },
+  },
+};
+
+export const WORLD_CUP_PAYOUT_PRESETS: Record<string, PayoutPreset> = {
+  balanced: {
+    label: 'Balanced',
+    description: 'Reward every knockout win — keeps all nations\u2019 owners engaged',
+    rules: {
+      groupStage: 0.25,
+      r32: 0.5,
+      r16: 1.5,
+      qf: 4.0,
+      sf: 8.0,
+      champion: 25.0,
+      goldenBoot: 0,
+      goldenBall: 0,
+    },
+  },
+  topHeavy: {
+    label: 'Champion Heavy',
+    description: 'Most of the pot goes to the World Cup winner',
+    rules: {
+      groupStage: 0.1,
+      r32: 0.25,
+      r16: 0.75,
+      qf: 2.0,
+      sf: 5.0,
+      champion: 45.0,
+      goldenBoot: 0,
+      goldenBall: 0,
+    },
+  },
+  withProps: {
+    label: 'With Individual Awards',
+    description: '80% match payouts, 20% for Golden Boot + Golden Ball',
+    rules: {
+      groupStage: 0.2,
+      r32: 0.4,
+      r16: 1.2,
+      qf: 3.0,
+      sf: 6.0,
+      champion: 20.0,
+      goldenBoot: 10.0,
+      goldenBall: 10.0,
     },
   },
 };
@@ -175,7 +223,8 @@ const PRESET_MAP: Record<string, Record<string, PayoutPreset>> = {
   march_madness_2026: MARCH_MADNESS_PAYOUT_PRESETS,
   masters_2026: MASTERS_PAYOUT_PRESETS,
   kentucky_derby_2026: KENTUCKY_DERBY_PAYOUT_PRESETS,
-  nfl_playoffs_2026: NFL_PLAYOFFS_PAYOUT_PRESETS,
+  nfl_season_2026: NFL_SEASON_PAYOUT_PRESETS,
+  world_cup_2026: WORLD_CUP_PAYOUT_PRESETS,
 };
 
 /**

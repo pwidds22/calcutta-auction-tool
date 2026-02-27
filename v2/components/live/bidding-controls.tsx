@@ -12,7 +12,7 @@ import {
   undoLastSale,
   pauseAuction,
 } from '@/actions/bidding';
-import { Play, Gavel, XCircle, SkipForward, Undo2, Pause } from 'lucide-react';
+import { Play, Gavel, XCircle, SkipForward, Undo2, Pause, Zap } from 'lucide-react';
 
 interface BiddingControlsProps {
   sessionId: string;
@@ -23,6 +23,7 @@ interface BiddingControlsProps {
   hasSoldTeams: boolean;
   currentTeamIdx: number | null;
   timerIsRunning?: boolean;
+  autoMode?: boolean;
 }
 
 export function BiddingControls({
@@ -34,6 +35,7 @@ export function BiddingControls({
   hasSoldTeams,
   currentTeamIdx,
   timerIsRunning,
+  autoMode,
 }: BiddingControlsProps) {
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -80,14 +82,21 @@ export function BiddingControls({
       <div className="flex gap-2">
         {biddingStatus === 'waiting' && (
           <>
-            <Button
-              onClick={() => handle(() => openBidding(sessionId), 'open')}
-              disabled={loading === 'open'}
-              className="flex-1 gap-2 bg-emerald-600 text-white hover:bg-emerald-700"
-            >
-              <Gavel className="size-4" />
-              Open Bidding
-            </Button>
+            {autoMode ? (
+              <div className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-sm text-amber-300/80">
+                <Zap className="size-3.5 animate-pulse text-amber-400" />
+                Auto-opening bidding...
+              </div>
+            ) : (
+              <Button
+                onClick={() => handle(() => openBidding(sessionId), 'open')}
+                disabled={loading === 'open'}
+                className="flex-1 gap-2 bg-emerald-600 text-white hover:bg-emerald-700"
+              >
+                <Gavel className="size-4" />
+                Open Bidding
+              </Button>
+            )}
             <Button
               onClick={() => handle(() => skipTeam(sessionId), 'skip')}
               disabled={loading === 'skip'}
@@ -108,7 +117,7 @@ export function BiddingControls({
               className="flex-1 gap-2 bg-amber-600 text-white hover:bg-amber-700"
             >
               <XCircle className="size-4" />
-              {timerIsRunning ? 'Close Early' : 'Close Bidding'}
+              {autoMode ? 'Close Early (Override)' : timerIsRunning ? 'Close Early' : 'Close Bidding'}
             </Button>
             <Button
               onClick={() => handle(() => skipTeam(sessionId), 'skip')}
@@ -124,25 +133,36 @@ export function BiddingControls({
 
         {biddingStatus === 'closed' && (
           <>
-            {currentHighestBid > 0 ? (
-              <Button
-                onClick={() => handle(() => sellTeam(sessionId), 'sell')}
-                disabled={loading === 'sell'}
-                className="flex-1 gap-2 bg-emerald-600 text-white hover:bg-emerald-700"
-              >
-                <Gavel className="size-4" />
-                Sell to {currentHighestBidderName} for $
-                {currentHighestBid.toLocaleString()}
-              </Button>
+            {autoMode ? (
+              <div className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-sm text-amber-300/80">
+                <Zap className="size-3.5 animate-pulse text-amber-400" />
+                {currentHighestBid > 0
+                  ? `Auto-selling to ${currentHighestBidderName} for $${currentHighestBid.toLocaleString()}...`
+                  : 'No bids — auto-skipping...'}
+              </div>
             ) : (
-              <Button
-                onClick={() => handle(() => skipTeam(sessionId), 'skip')}
-                disabled={loading === 'skip'}
-                className="flex-1 gap-2 bg-white/[0.06] text-white/60 hover:bg-white/[0.1]"
-              >
-                <SkipForward className="size-3.5" />
-                No bids — Skip
-              </Button>
+              <>
+                {currentHighestBid > 0 ? (
+                  <Button
+                    onClick={() => handle(() => sellTeam(sessionId), 'sell')}
+                    disabled={loading === 'sell'}
+                    className="flex-1 gap-2 bg-emerald-600 text-white hover:bg-emerald-700"
+                  >
+                    <Gavel className="size-4" />
+                    Sell to {currentHighestBidderName} for $
+                    {currentHighestBid.toLocaleString()}
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => handle(() => skipTeam(sessionId), 'skip')}
+                    disabled={loading === 'skip'}
+                    className="flex-1 gap-2 bg-white/[0.06] text-white/60 hover:bg-white/[0.1]"
+                  >
+                    <SkipForward className="size-3.5" />
+                    No bids — Skip
+                  </Button>
+                )}
+              </>
             )}
           </>
         )}

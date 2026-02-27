@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { Navbar } from '@/components/layout/navbar';
-import { Footer } from '@/components/layout/footer';
+import { PublicPageLayout } from '@/components/layout/public-page-layout';
 import { getPostBySlug, getAllSlugs } from '@/lib/blog';
 import { MdxContent } from '@/components/blog/mdx-content';
 import { Calendar, Clock, ArrowLeft, Tag } from 'lucide-react';
@@ -39,8 +38,7 @@ export default async function BlogPostPage({ params }: PageProps) {
   if (!post) notFound();
 
   return (
-    <>
-      <Navbar />
+    <PublicPageLayout>
       <main className="mx-auto max-w-3xl px-4 py-12">
         {/* Back link */}
         <Link
@@ -113,7 +111,6 @@ export default async function BlogPostPage({ params }: PageProps) {
           </Link>
         </div>
       </main>
-      <Footer />
-    </>
+    </PublicPageLayout>
   );
 }
