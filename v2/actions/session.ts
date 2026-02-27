@@ -1,11 +1,17 @@
 'use server';
 
+import { createHash } from 'crypto';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { broadcastToChannel } from '@/lib/supabase/broadcast';
-import { getTournament } from '@/lib/tournaments/registry';
+import { getTournament, isHostable } from '@/lib/tournaments/registry';
 import type { PayoutRules } from '@/lib/tournaments/types';
 import type { SessionSettings } from '@/lib/auction/live/types';
+
+/** SHA-256 hash for session passwords (room access codes, not user credentials) */
+function hashPassword(password: string): string {
+  return createHash('sha256').update(password).digest('hex');
+}
 
 // 6-char code using unambiguous characters (no I/O/1/0)
 function generateJoinCode(): string {
@@ -23,6 +29,7 @@ export async function createSession(input: {
   payoutRules: PayoutRules;
   estimatedPotSize: number;
   settings?: SessionSettings;
+  password?: string;
 }) {
   const supabase = await createClient();
   const {
@@ -32,6 +39,7 @@ export async function createSession(input: {
 
   const tournament = getTournament(input.tournamentId);
   if (!tournament) return { error: 'Invalid tournament' };
+  if (!isHostable(tournament.config)) return { error: 'Hosting for this tournament is not open yet' };
 
   // Generate unique join code (retry on collision)
   const admin = createAdminClient();
@@ -61,6 +69,7 @@ export async function createSession(input: {
       team_order: teamOrder,
       status: 'lobby',
       settings: input.settings ?? {},
+      password_hash: input.password ? hashPassword(input.password) : null,
     })
     .select('id, join_code')
     .single();
@@ -78,7 +87,7 @@ export async function createSession(input: {
   return { sessionId: session.id, joinCode: session.join_code };
 }
 
-export async function joinSession(joinCode: string, displayName: string) {
+export async function joinSession(joinCode: string, displayName: string, password?: string) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -90,14 +99,22 @@ export async function joinSession(joinCode: string, displayName: string) {
   // Case-insensitive join code lookup
   const { data: session, error: lookupError } = await supabase
     .from('auction_sessions')
-    .select('id, status, name')
+    .select('id, status, name, password_hash')
     .eq('join_code', joinCode.toUpperCase().trim())
     .single();
 
   if (lookupError || !session) return { error: 'Invalid join code' };
   if (session.status === 'completed') return { error: 'This auction has ended' };
 
-  // Check if already joined
+  // Validate password if session has one
+  if (session.password_hash) {
+    if (!password) return { error: 'This session requires a password' };
+    if (hashPassword(password) !== session.password_hash) {
+      return { error: 'Incorrect password' };
+    }
+  }
+
+  // Check if already joined (skip password check for returning participants)
   const { data: existing } = await supabase
     .from('auction_participants')
     .select('id')
@@ -246,6 +263,36 @@ export async function updateTeamOrder(
   return { success: true };
 }
 
+export async function deleteSession(sessionId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: 'Not authenticated' };
+
+  // Verify commissioner ownership
+  const { data: session } = await supabase
+    .from('auction_sessions')
+    .select('commissioner_id, status')
+    .eq('id', sessionId)
+    .single();
+
+  if (!session) return { error: 'Session not found' };
+  if (session.commissioner_id !== user.id) return { error: 'Not authorized' };
+  if (session.status === 'active') {
+    return { error: 'Cannot delete an active auction. Pause or complete it first.' };
+  }
+
+  // CASCADE will auto-delete participants + bids
+  const { error } = await supabase
+    .from('auction_sessions')
+    .delete()
+    .eq('id', sessionId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
 export async function getMyHostedSessions() {
   const supabase = await createClient();
   const {
@@ -253,10 +300,10 @@ export async function getMyHostedSessions() {
   } = await supabase.auth.getUser();
   if (!user) return { sessions: [], joined: [] };
 
-  // Sessions I created
+  // Sessions I created (include password_hash presence for lock icon)
   const { data: hosted } = await supabase
     .from('auction_sessions')
-    .select('id, name, join_code, status, tournament_id, created_at')
+    .select('id, name, join_code, status, tournament_id, created_at, password_hash')
     .eq('commissioner_id', user.id)
     .order('created_at', { ascending: false });
 
@@ -272,11 +319,29 @@ export async function getMyHostedSessions() {
     const sessionIds = participations.map((p) => p.session_id);
     const { data } = await supabase
       .from('auction_sessions')
-      .select('id, name, join_code, status, tournament_id, created_at')
+      .select('id, name, join_code, status, tournament_id, created_at, password_hash')
       .in('id', sessionIds)
       .order('created_at', { ascending: false });
     joined = data ?? [];
   }
 
   return { sessions: hosted ?? [], joined: joined ?? [] };
+}
+
+/** Check if a session requires a password (for join form UI) */
+export async function checkSessionRequiresPassword(joinCode: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: 'Not authenticated' };
+
+  const { data: session } = await supabase
+    .from('auction_sessions')
+    .select('id, password_hash')
+    .eq('join_code', joinCode.toUpperCase().trim())
+    .single();
+
+  if (!session) return { requiresPassword: false };
+  return { requiresPassword: !!session.password_hash };
 }

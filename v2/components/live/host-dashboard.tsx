@@ -1,8 +1,11 @@
 'use client';
 
+import { useState, useTransition } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Plus, Radio, Users, ArrowRight } from 'lucide-react';
+import { Plus, Radio, Users, ArrowRight, Trash2, Lock, Link2, Check } from 'lucide-react';
+import { deleteSession } from '@/actions/session';
 
 interface Session {
   id: string;
@@ -11,6 +14,7 @@ interface Session {
   status: string;
   tournament_id: string;
   created_at: string;
+  password_hash?: string | null;
 }
 
 interface HostDashboardProps {
@@ -25,22 +29,83 @@ const statusColors: Record<string, string> = {
   completed: 'bg-white/[0.06] text-white/40',
 };
 
+function DeleteConfirmDialog({
+  sessionName,
+  onConfirm,
+  onCancel,
+  isPending,
+}: {
+  sessionName: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+  isPending: boolean;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div className="mx-4 w-full max-w-sm rounded-xl border border-white/10 bg-zinc-900 p-6 shadow-2xl">
+        <h3 className="text-lg font-semibold text-white">Delete Auction</h3>
+        <p className="mt-2 text-sm text-white/50">
+          Are you sure you want to delete{' '}
+          <span className="font-medium text-white/70">{sessionName}</span>? This
+          will permanently remove the session, all participants, and all bid
+          history. This action cannot be undone.
+        </p>
+        <div className="mt-5 flex gap-2 justify-end">
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            disabled={isPending}
+            className="border-white/10 text-white/60 hover:bg-white/[0.06]"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={onConfirm}
+            disabled={isPending}
+            className="bg-red-600 text-white hover:bg-red-700"
+          >
+            {isPending ? 'Deleting...' : 'Delete'}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SessionCard({
   session,
   isHosted,
+  onDelete,
 }: {
   session: Session;
   isHosted: boolean;
+  onDelete?: (session: Session) => void;
 }) {
+  const [copied, setCopied] = useState(false);
   const href = isHosted ? `/host/${session.id}` : `/live/${session.id}`;
+  const canDelete = isHosted && session.status !== 'active';
+  const hasPassword = !!session.password_hash;
+
+  const copyJoinLink = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const url = `${window.location.origin}/join?code=${session.join_code}`;
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
-    <Link
-      href={href}
-      className="flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 transition-colors hover:bg-white/[0.04]"
-    >
-      <div>
-        <h3 className="text-sm font-semibold text-white">{session.name}</h3>
+    <div className="group flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.02] transition-colors hover:bg-white/[0.04]">
+      <Link href={href} className="flex-1 p-4">
+        <h3 className="text-sm font-semibold text-white flex items-center gap-1.5">
+          {session.name}
+          {hasPassword && (
+            <span title="Password protected">
+              <Lock className="size-3 text-amber-400/60" />
+            </span>
+          )}
+        </h3>
         <div className="mt-1 flex items-center gap-2">
           <span
             className={`rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${statusColors[session.status] ?? statusColors.lobby}`}
@@ -54,9 +119,43 @@ function SessionCard({
             {new Date(session.created_at).toLocaleDateString()}
           </span>
         </div>
+      </Link>
+      <div className="flex items-center gap-1 pr-4">
+        {isHosted && (
+          <button
+            onClick={copyJoinLink}
+            className={`rounded-lg p-2 transition-all ${
+              copied
+                ? 'text-emerald-400'
+                : 'text-white/20 opacity-0 hover:bg-white/[0.06] hover:text-white/50 group-hover:opacity-100'
+            }`}
+            title={copied ? 'Copied!' : 'Copy join link'}
+          >
+            {copied ? (
+              <Check className="size-4" />
+            ) : (
+              <Link2 className="size-4" />
+            )}
+          </button>
+        )}
+        {canDelete && onDelete && (
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onDelete(session);
+            }}
+            className="rounded-lg p-2 text-white/20 opacity-0 transition-all hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100"
+            title="Delete session"
+          >
+            <Trash2 className="size-4" />
+          </button>
+        )}
+        <Link href={href} className="p-2">
+          <ArrowRight className="size-4 text-white/30" />
+        </Link>
       </div>
-      <ArrowRight className="size-4 text-white/30" />
-    </Link>
+    </div>
   );
 }
 
@@ -64,8 +163,55 @@ export function HostDashboard({
   hostedSessions,
   joinedSessions,
 }: HostDashboardProps) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [deleteTarget, setDeleteTarget] = useState<Session | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  function handleDelete(session: Session) {
+    setError(null);
+    setDeleteTarget(session);
+  }
+
+  function handleConfirmDelete() {
+    if (!deleteTarget) return;
+    startTransition(async () => {
+      const result = await deleteSession(deleteTarget.id);
+      if (result.error) {
+        setError(result.error);
+        setDeleteTarget(null);
+      } else {
+        setDeleteTarget(null);
+        router.refresh();
+      }
+    });
+  }
+
   return (
     <div className="space-y-8">
+      {/* Delete confirmation dialog */}
+      {deleteTarget && (
+        <DeleteConfirmDialog
+          sessionName={deleteTarget.name}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setDeleteTarget(null)}
+          isPending={isPending}
+        />
+      )}
+
+      {/* Error toast */}
+      {error && (
+        <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+          {error}
+          <button
+            onClick={() => setError(null)}
+            className="ml-2 text-red-400/60 hover:text-red-400"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -110,7 +256,12 @@ export function HostDashboard({
         ) : (
           <div className="space-y-2">
             {hostedSessions.map((s) => (
-              <SessionCard key={s.id} session={s} isHosted />
+              <SessionCard
+                key={s.id}
+                session={s}
+                isHosted
+                onDelete={handleDelete}
+              />
             ))}
           </div>
         )}

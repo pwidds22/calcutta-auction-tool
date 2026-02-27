@@ -68,3 +68,14 @@ export function listTournaments(): TournamentConfig[] {
 export function listTournamentsWithTeams(): TournamentEntry[] {
   return Object.values(TOURNAMENTS);
 }
+
+/** Check if a tournament's hosting window is currently open */
+export function isHostable(config: TournamentConfig): boolean {
+  if (!config.hostingOpensAt) return true; // no gate = always open
+  return new Date() >= new Date(config.hostingOpensAt);
+}
+
+/** List only tournaments whose hosting window is open */
+export function listHostableTournaments(): TournamentConfig[] {
+  return listTournaments().filter(isHostable);
+}

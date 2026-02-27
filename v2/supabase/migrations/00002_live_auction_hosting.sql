@@ -25,6 +25,7 @@ create table public.auction_sessions (
   settings jsonb default '{}'::jsonb,
   timer_ends_at timestamptz default null,
   timer_duration_ms integer default null,
+  password_hash text default null,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -49,6 +50,12 @@ create policy "Commissioners can update their sessions"
   to authenticated
   using (commissioner_id = (select auth.uid()))
   with check (commissioner_id = (select auth.uid()));
+
+-- Commissioners can delete their own sessions (CASCADE deletes participants + bids)
+create policy "Commissioners can delete their sessions"
+  on public.auction_sessions for delete
+  to authenticated
+  using (commissioner_id = (select auth.uid()));
 
 -- Reuse existing handle_updated_at() trigger function
 create trigger set_auction_sessions_updated_at

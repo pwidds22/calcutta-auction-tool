@@ -63,16 +63,19 @@ export const MARCH_MADNESS_PAYOUT_PRESETS: Record<string, PayoutPreset> = {
   },
 };
 
+/**
+ * Masters: makeCut×50 + top20×20 + top10×10 + top5×5 + winner×1 = 100%
+ */
 export const MASTERS_PAYOUT_PRESETS: Record<string, PayoutPreset> = {
   balanced: {
     label: 'Balanced',
     description: 'Spread payouts across finishes — rewards consistency',
     rules: {
-      makeCut: 0.5,
-      top20: 1.5,
-      top10: 3.0,
-      top5: 6.0,
-      winner: 25.0,
+      makeCut: 0.10,   // ×50 = 5%
+      top20: 0.50,     // ×20 = 10%
+      top10: 1.50,     // ×10 = 15%
+      top5: 4.00,      // ×5  = 20%
+      winner: 50.00,   // ×1  = 50%
       lowRound: 0,
     },
   },
@@ -80,11 +83,11 @@ export const MASTERS_PAYOUT_PRESETS: Record<string, PayoutPreset> = {
     label: 'Winner Takes Most',
     description: 'Majority of the pot goes to the champion',
     rules: {
-      makeCut: 0.25,
-      top20: 0.75,
-      top10: 1.5,
-      top5: 3.0,
-      winner: 50.0,
+      makeCut: 0.04,   // ×50 = 2%
+      top20: 0.15,     // ×20 = 3%
+      top10: 0.50,     // ×10 = 5%
+      top5: 2.00,      // ×5  = 10%
+      winner: 80.00,   // ×1  = 80%
       lowRound: 0,
     },
   },
@@ -92,24 +95,27 @@ export const MASTERS_PAYOUT_PRESETS: Record<string, PayoutPreset> = {
     label: 'With Low Round',
     description: '85% placement payouts, 15% for low round bonus',
     rules: {
-      makeCut: 0.4,
-      top20: 1.2,
-      top10: 2.5,
-      top5: 5.0,
-      winner: 21.0,
-      lowRound: 15.0,
+      makeCut: 0.08,   // ×50 = 4%
+      top20: 0.40,     // ×20 = 8%
+      top10: 1.20,     // ×10 = 12%
+      top5: 3.20,      // ×5  = 16%
+      winner: 45.00,   // ×1  = 45%
+      lowRound: 15.00,
     },
   },
 };
 
+/**
+ * Kentucky Derby: show×3 + place×2 + win×1 = 100%
+ */
 export const KENTUCKY_DERBY_PAYOUT_PRESETS: Record<string, PayoutPreset> = {
   balanced: {
     label: 'Balanced',
     description: 'Reward show, place, and win finishes',
     rules: {
-      show: 5.0,
-      place: 10.0,
-      win: 50.0,
+      show: 5.00,      // ×3 = 15%
+      place: 10.00,    // ×2 = 20%
+      win: 65.00,      // ×1 = 65%
       bestName: 0,
     },
   },
@@ -117,9 +123,9 @@ export const KENTUCKY_DERBY_PAYOUT_PRESETS: Record<string, PayoutPreset> = {
     label: 'Winner Takes Most',
     description: 'Heavy payout for the winner — small show/place bonus',
     rules: {
-      show: 2.0,
-      place: 5.0,
-      win: 75.0,
+      show: 2.00,      // ×3 = 6%
+      place: 4.50,     // ×2 = 9%
+      win: 85.00,      // ×1 = 85%
       bestName: 0,
     },
   },
@@ -127,23 +133,26 @@ export const KENTUCKY_DERBY_PAYOUT_PRESETS: Record<string, PayoutPreset> = {
     label: 'With Best Name',
     description: '85% race payouts, 15% for best horse name vote',
     rules: {
-      show: 4.0,
-      place: 8.0,
-      win: 43.0,
-      bestName: 15.0,
+      show: 4.00,      // ×3 = 12%
+      place: 8.00,     // ×2 = 16%
+      win: 57.00,      // ×1 = 57%
+      bestName: 15.00,
     },
   },
 };
 
+/**
+ * NFL: playoffBerth×14 + divisionWinner×8 + conferenceChamp×2 + superBowl×1 = 100%
+ */
 export const NFL_SEASON_PAYOUT_PRESETS: Record<string, PayoutPreset> = {
   balanced: {
     label: 'Balanced',
     description: 'Reward milestones from playoffs to Super Bowl',
     rules: {
-      playoffBerth: 1.5,
-      divisionWinner: 3.0,
-      conferenceChamp: 8.0,
-      superBowl: 30.0,
+      playoffBerth: 1.00,      // ×14 = 14%
+      divisionWinner: 2.00,    // ×8  = 16%
+      conferenceChamp: 7.50,   // ×2  = 15%
+      superBowl: 55.00,        // ×1  = 55%
       mvp: 0,
       mostWins: 0,
     },
@@ -152,10 +161,10 @@ export const NFL_SEASON_PAYOUT_PRESETS: Record<string, PayoutPreset> = {
     label: 'Super Bowl Heavy',
     description: 'Most of the pot goes to the champion',
     rules: {
-      playoffBerth: 0.5,
-      divisionWinner: 1.5,
-      conferenceChamp: 5.0,
-      superBowl: 50.0,
+      playoffBerth: 0.50,      // ×14 = 7%
+      divisionWinner: 1.00,    // ×8  = 8%
+      conferenceChamp: 5.00,   // ×2  = 10%
+      superBowl: 75.00,        // ×1  = 75%
       mvp: 0,
       mostWins: 0,
     },
@@ -164,27 +173,30 @@ export const NFL_SEASON_PAYOUT_PRESETS: Record<string, PayoutPreset> = {
     label: 'With Awards',
     description: '75% milestone payouts, 25% for MVP + Best Record',
     rules: {
-      playoffBerth: 1.0,
-      divisionWinner: 2.5,
-      conferenceChamp: 6.0,
-      superBowl: 22.0,
-      mvp: 15.0,
-      mostWins: 10.0,
+      playoffBerth: 0.75,      // ×14 = 10.5%
+      divisionWinner: 1.50,    // ×8  = 12%
+      conferenceChamp: 5.00,   // ×2  = 10%
+      superBowl: 42.50,        // ×1  = 42.5%
+      mvp: 15.00,
+      mostWins: 10.00,
     },
   },
 };
 
+/**
+ * World Cup: groupStage×32 + r32×16 + r16×8 + qf×4 + sf×2 + champion×1 = 100%
+ */
 export const WORLD_CUP_PAYOUT_PRESETS: Record<string, PayoutPreset> = {
   balanced: {
     label: 'Balanced',
     description: 'Reward every knockout win — keeps all nations\u2019 owners engaged',
     rules: {
-      groupStage: 0.25,
-      r32: 0.5,
-      r16: 1.5,
-      qf: 4.0,
-      sf: 8.0,
-      champion: 25.0,
+      groupStage: 0.125,  // ×32 = 4%
+      r32: 0.375,         // ×16 = 6%
+      r16: 1.25,          // ×8  = 10%
+      qf: 4.00,           // ×4  = 16%
+      sf: 7.00,           // ×2  = 14%
+      champion: 50.00,    // ×1  = 50%
       goldenBoot: 0,
       goldenBall: 0,
     },
@@ -193,12 +205,12 @@ export const WORLD_CUP_PAYOUT_PRESETS: Record<string, PayoutPreset> = {
     label: 'Champion Heavy',
     description: 'Most of the pot goes to the World Cup winner',
     rules: {
-      groupStage: 0.1,
-      r32: 0.25,
-      r16: 0.75,
-      qf: 2.0,
-      sf: 5.0,
-      champion: 45.0,
+      groupStage: 0.125,  // ×32 = 4%
+      r32: 0.25,          // ×16 = 4%
+      r16: 0.75,          // ×8  = 6%
+      qf: 2.00,           // ×4  = 8%
+      sf: 4.00,           // ×2  = 8%
+      champion: 70.00,    // ×1  = 70%
       goldenBoot: 0,
       goldenBall: 0,
     },
@@ -207,14 +219,14 @@ export const WORLD_CUP_PAYOUT_PRESETS: Record<string, PayoutPreset> = {
     label: 'With Individual Awards',
     description: '80% match payouts, 20% for Golden Boot + Golden Ball',
     rules: {
-      groupStage: 0.2,
-      r32: 0.4,
-      r16: 1.2,
-      qf: 3.0,
-      sf: 6.0,
-      champion: 20.0,
-      goldenBoot: 10.0,
-      goldenBall: 10.0,
+      groupStage: 0.125,  // ×32 = 4%
+      r32: 0.25,          // ×16 = 4%
+      r16: 1.00,          // ×8  = 8%
+      qf: 3.00,           // ×4  = 12%
+      sf: 6.00,           // ×2  = 12%
+      champion: 40.00,    // ×1  = 40%
+      goldenBoot: 10.00,
+      goldenBall: 10.00,
     },
   },
 };

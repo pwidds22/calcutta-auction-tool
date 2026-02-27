@@ -11,8 +11,20 @@ import {
   type SessionSettings,
 } from '@/lib/auction/live/types';
 import { getPayoutPresets, type PayoutPreset } from '@/lib/tournaments/payout-presets';
-import { ArrowLeft, Gavel, Timer, DollarSign, Trophy, ChevronDown, ChevronUp, Zap } from 'lucide-react';
+import { ArrowLeft, Gavel, Timer, DollarSign, Trophy, ChevronDown, ChevronUp, Zap, Lock } from 'lucide-react';
 import Link from 'next/link';
+
+/** Check if a tournament's hosting window is open (pure client-side check) */
+function isHostable(t: TournamentConfig): boolean {
+  if (!t.hostingOpensAt) return true;
+  return new Date() >= new Date(t.hostingOpensAt);
+}
+
+/** Format a date string nicely for display, e.g. "Mar 1" */
+function formatGateDate(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
 
 interface CreateSessionFormProps {
   tournaments: TournamentConfig[];
@@ -26,10 +38,11 @@ export function CreateSessionForm({ tournaments, initialTournamentId }: CreateSe
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Use initialTournamentId from URL if provided, otherwise fall back to active tournament
+  // Use initialTournamentId from URL if provided (and hostable), otherwise first hostable active tournament
   const defaultTournament =
-    (initialTournamentId && tournaments.find((t) => t.id === initialTournamentId)) ||
-    tournaments.find((t) => t.isActive) ||
+    (initialTournamentId && tournaments.find((t) => t.id === initialTournamentId && isHostable(t))) ||
+    tournaments.find((t) => t.isActive && isHostable(t)) ||
+    tournaments.find((t) => isHostable(t)) ||
     tournaments[0];
 
   const [name, setName] = useState('');
@@ -46,6 +59,10 @@ export function CreateSessionForm({ tournaments, initialTournamentId }: CreateSe
 
   // Auto-auction mode (requires timer)
   const [autoMode, setAutoMode] = useState(false);
+
+  // Optional session password
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   // Payout rules
   const [payoutMode, setPayoutMode] = useState<PayoutMode>('balanced');
@@ -90,6 +107,10 @@ export function CreateSessionForm({ tournaments, initialTournamentId }: CreateSe
       setError('Select a tournament');
       return;
     }
+    if (!isHostable(selectedTournament)) {
+      setError(`Hosting for ${selectedTournament.name} opens ${selectedTournament.hostingOpensAt ? formatGateDate(selectedTournament.hostingOpensAt) : 'later'}`);
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -112,6 +133,7 @@ export function CreateSessionForm({ tournaments, initialTournamentId }: CreateSe
       payoutRules,
       estimatedPotSize: Number(potSize) || 10000,
       settings,
+      password: password.trim() || undefined,
     });
 
     if (result.error) {
@@ -175,12 +197,21 @@ export function CreateSessionForm({ tournaments, initialTournamentId }: CreateSe
             }}
             className="h-10 w-full rounded-md border border-white/10 bg-white/[0.04] px-3 text-sm text-white focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
           >
-            {tournaments.map((t) => (
-              <option key={t.id} value={t.id} className="bg-zinc-900">
-                {t.name}
-              </option>
-            ))}
+            {tournaments.map((t) => {
+              const hostable = isHostable(t);
+              return (
+                <option key={t.id} value={t.id} disabled={!hostable} className="bg-zinc-900">
+                  {t.name}{!hostable && t.hostingOpensAt ? ` — Opens ${formatGateDate(t.hostingOpensAt)}` : ''}
+                </option>
+              );
+            })}
           </select>
+          {selectedTournament && !isHostable(selectedTournament) && selectedTournament.hostingOpensAt && (
+            <p className="mt-1.5 flex items-center gap-1.5 text-xs text-amber-400/80">
+              <Lock className="size-3" />
+              Hosting opens {formatGateDate(selectedTournament.hostingOpensAt)}. Check back then!
+            </p>
+          )}
         </div>
 
         {/* Estimated pot size */}
@@ -466,6 +497,40 @@ export function CreateSessionForm({ tournaments, initialTournamentId }: CreateSe
                   />
                 </div>
               </button>
+            </div>
+          )}
+        </div>
+
+        {/* Optional session password */}
+        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 space-y-3">
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="flex w-full items-center justify-between"
+          >
+            <div className="flex items-center gap-2">
+              <Lock className="size-3.5 text-white/40" />
+              <span className="text-sm font-medium text-white/60">Session Password</span>
+              <span className="text-[10px] text-white/30">(optional)</span>
+            </div>
+            {showPassword ? (
+              <ChevronUp className="size-4 text-white/30" />
+            ) : (
+              <ChevronDown className="size-4 text-white/30" />
+            )}
+          </button>
+          {showPassword && (
+            <div>
+              <input
+                type="text"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Leave blank for no password"
+                className="h-9 w-full rounded-md border border-white/10 bg-white/[0.04] px-3 text-sm text-white placeholder:text-white/20 focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+              />
+              <p className="mt-1.5 text-[11px] text-white/30">
+                Participants will need this password to join. Share it separately from the join link.
+              </p>
             </div>
           )}
         </div>

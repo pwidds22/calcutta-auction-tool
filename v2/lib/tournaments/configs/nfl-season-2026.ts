@@ -22,10 +22,10 @@ export const NFL_SEASON_2026_CONFIG: TournamentConfig = {
   ],
   devigStrategy: 'global',
   defaultPayoutRules: {
-    playoffBerth: 1.5,
-    divisionWinner: 3.0,
-    conferenceChamp: 8.0,
-    superBowl: 30.0,
+    playoffBerth: 1.00,
+    divisionWinner: 2.00,
+    conferenceChamp: 7.50,
+    superBowl: 55.00,
     mvp: 0.0,
     mostWins: 0.0,
   },
@@ -38,6 +38,7 @@ export const NFL_SEASON_2026_CONFIG: TournamentConfig = {
   teamLabel: 'Team',
   groupLabel: 'Division',
   startDate: '2026-09-10',
+  hostingOpensAt: '2026-08-27',
   isActive: false,
 };
 

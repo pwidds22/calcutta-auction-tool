@@ -70,6 +70,7 @@ export const MARCH_MADNESS_2026_CONFIG: TournamentConfig = {
   teamLabel: 'Team',
   groupLabel: 'Region',
   startDate: '2026-03-17',
+  hostingOpensAt: '2026-03-01',
   isActive: true,
 };
 

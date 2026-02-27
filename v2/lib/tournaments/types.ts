@@ -50,6 +50,8 @@ export interface TournamentConfig {
   teamLabel: string;
   groupLabel: string;
   startDate: string;
+  /** ISO date when hosting opens (typically 2-3 weeks before startDate). If omitted, hosting is always open. */
+  hostingOpensAt?: string;
   isActive: boolean;
 }
 
