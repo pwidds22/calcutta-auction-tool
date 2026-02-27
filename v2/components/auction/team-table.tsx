@@ -23,7 +23,7 @@ import { TeamTableRow } from './team-table-row';
 import { ArrowUpDown, Lock } from 'lucide-react';
 import type { GroupFilter, StatusFilter, SortOption } from '@/lib/calculations/types';
 
-const PREVIEW_SEED_CUTOFF = 2; // Show seeds 1 and 2 in free preview
+const PREVIEW_SEED_CUTOFF = 1; // Show only #1 seeds in free preview
 
 const STATUSES: StatusFilter[] = ['All', 'Available', 'Taken', 'My Teams'];
 
