@@ -224,7 +224,9 @@ export async function placeBid(sessionId: string, amount: number) {
   const admin = createAdminClient();
 
   // Atomic conditional update (handles race conditions)
-  const { error: updateError } = await admin
+  // The .lt() filter means this only updates if incoming bid > current high bid.
+  // If another bid was placed first, this returns count=0 (no rows matched).
+  const { error: updateError, count } = await admin
     .from('auction_sessions')
     .update({
       current_highest_bid: amount,
@@ -236,7 +238,12 @@ export async function placeBid(sessionId: string, amount: number) {
 
   if (updateError) return { error: updateError.message };
 
-  // Insert bid record
+  // If no rows matched, the bid was outpaced by another — reject it
+  if (count === 0) {
+    return { error: 'Bid must be higher than current high bid' };
+  }
+
+  // Insert bid record (only if we won the atomic update)
   await admin.from('auction_bids').insert({
     session_id: sessionId,
     team_id: teamId,
@@ -245,6 +252,7 @@ export async function placeBid(sessionId: string, amount: number) {
     is_winning_bid: false,
   });
 
+  // Broadcast only after confirmed DB update
   await broadcastToChannel(channelName(sessionId), 'NEW_BID', {
     teamId,
     bidderId: user.id,
@@ -495,6 +503,62 @@ async function syncAuctionData(
   }
 }
 
+/** Reverse sync for a single team when a sale is undone — resets purchasePrice & isMyTeam */
+async function reverseSyncAuctionData(
+  admin: ReturnType<typeof createAdminClient>,
+  sessionId: string,
+  tournamentId: string,
+  teamId: number
+) {
+  try {
+    const { data: participants } = await admin
+      .from('auction_participants')
+      .select('user_id')
+      .eq('session_id', sessionId);
+
+    if (!participants?.length) return;
+
+    const userIds = participants.map((p) => p.user_id);
+    const { data: profiles } = await admin
+      .from('profiles')
+      .select('id, has_paid')
+      .in('id', userIds);
+
+    const paidUsers =
+      profiles?.filter((p) => p.has_paid).map((p) => p.id) ?? [];
+
+    for (const userId of paidUsers) {
+      const { data: existing } = await admin
+        .from('auction_data')
+        .select('teams')
+        .eq('user_id', userId)
+        .eq('event_type', tournamentId)
+        .single();
+
+      if (!existing?.teams) continue;
+
+      const existingTeams = existing.teams as Array<{
+        id: number;
+        purchasePrice: number;
+        isMyTeam: boolean;
+      }>;
+
+      // Reset the undone team to unowned state
+      const updatedTeams = existingTeams.map((t) =>
+        t.id === teamId ? { ...t, purchasePrice: 0, isMyTeam: false } : t
+      );
+
+      await admin
+        .from('auction_data')
+        .update({ teams: updatedTeams })
+        .eq('user_id', userId)
+        .eq('event_type', tournamentId);
+    }
+  } catch (err) {
+    console.error('[reverseSyncAuctionData] Failed to reverse sync:', err);
+  }
+}
+
 export async function skipTeam(sessionId: string) {
   const supabase = await createClient();
   const {
@@ -504,12 +568,15 @@ export async function skipTeam(sessionId: string) {
 
   const { data: session } = await supabase
     .from('auction_sessions')
-    .select('commissioner_id, status, team_order, current_team_idx, settings')
+    .select('commissioner_id, status, bidding_status, team_order, current_team_idx, settings')
     .eq('id', sessionId)
     .single();
 
   if (!session || session.commissioner_id !== user.id)
     return { error: 'Not authorized' };
+  if (session.status !== 'active') return { error: 'Auction not active' };
+  if (session.bidding_status === 'open')
+    return { error: 'Close bidding before skipping a team' };
 
   const teamId = session.team_order[session.current_team_idx];
   const nextIdx = session.current_team_idx + 1;
@@ -526,6 +593,7 @@ export async function skipTeam(sessionId: string) {
       current_highest_bidder_id: null,
       timer_ends_at: null,
       timer_duration_ms: null,
+      ...(isLastTeam ? { status: 'completed' } : {}),
     })
     .eq('id', sessionId);
 
@@ -535,9 +603,14 @@ export async function skipTeam(sessionId: string) {
     nextTeamIdx: isLastTeam ? null : nextIdx,
   });
 
+  if (isLastTeam) {
+    await broadcastToChannel(channelName(sessionId), 'AUCTION_COMPLETED', {});
+    return { success: true, isComplete: true };
+  }
+
   // Auto-mode: open bidding on next team automatically
   const settings = session.settings as SessionSettings | null;
-  if (!isLastTeam && settings?.autoMode) {
+  if (settings?.autoMode) {
     await autoOpenBidding(admin, sessionId, settings);
   }
 
@@ -553,7 +626,7 @@ export async function undoLastSale(sessionId: string) {
 
   const { data: session } = await supabase
     .from('auction_sessions')
-    .select('commissioner_id, team_order, current_team_idx')
+    .select('commissioner_id, team_order, current_team_idx, tournament_id')
     .eq('id', sessionId)
     .single();
 
@@ -579,6 +652,14 @@ export async function undoLastSale(sessionId: string) {
     .from('auction_bids')
     .update({ is_winning_bid: false })
     .eq('id', lastSale.id);
+
+  // Reverse the strategy tool sync — reset the team to unowned state
+  await reverseSyncAuctionData(
+    admin,
+    sessionId,
+    session.tournament_id,
+    lastSale.team_id
+  );
 
   // Find the team's index in the current order
   const teamIdx = session.team_order.indexOf(lastSale.team_id);
@@ -762,6 +843,7 @@ export async function autoAdvance(sessionId: string) {
         bidding_status: 'waiting',
         current_highest_bid: 0,
         current_highest_bidder_id: null,
+        ...(isLastTeam ? { status: 'completed' } : {}),
       })
       .eq('id', sessionId);
 
@@ -771,6 +853,7 @@ export async function autoAdvance(sessionId: string) {
     });
 
     if (isLastTeam) {
+      await broadcastToChannel(channelName(sessionId), 'AUCTION_COMPLETED', {});
       return { success: true, isComplete: true };
     }
   }

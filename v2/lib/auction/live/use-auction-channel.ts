@@ -120,20 +120,24 @@ export function useAuctionChannel(
         setState((prev) => ({ ...prev, biddingStatus: 'open' }));
       })
       .on('broadcast', { event: 'NEW_BID' }, ({ payload }) => {
-        setState((prev) => ({
-          ...prev,
-          currentHighestBid: payload.amount,
-          currentHighestBidderName: payload.bidderName,
-          bidHistory: [
-            ...prev.bidHistory,
-            {
-              bidderId: payload.bidderId,
-              bidderName: payload.bidderName,
-              amount: payload.amount,
-              timestamp: new Date().toISOString(),
-            },
-          ],
-        }));
+        setState((prev) => {
+          // Guard against out-of-order events: only update high bid if actually higher
+          const isHigher = payload.amount > prev.currentHighestBid;
+          return {
+            ...prev,
+            currentHighestBid: isHigher ? payload.amount : prev.currentHighestBid,
+            currentHighestBidderName: isHigher ? payload.bidderName : prev.currentHighestBidderName,
+            bidHistory: [
+              ...prev.bidHistory,
+              {
+                bidderId: payload.bidderId,
+                bidderName: payload.bidderName,
+                amount: payload.amount,
+                timestamp: new Date().toISOString(),
+              },
+            ],
+          };
+        });
       })
       .on('broadcast', { event: 'BIDDING_CLOSED' }, () => {
         setState((prev) => ({

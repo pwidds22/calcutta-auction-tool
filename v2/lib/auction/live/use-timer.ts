@@ -52,6 +52,9 @@ export function useTimer({ onExpire, isCommissioner }: UseTimerOptions) {
 
   const start = useCallback(
     (endsAt: string, durationMs: number) => {
+      // Guard against zero/negative duration (prevents divide-by-zero in progress bar)
+      if (durationMs <= 0) return;
+
       // Cancel any existing timer
       if (rafRef.current !== null) {
         cancelAnimationFrame(rafRef.current);

@@ -522,7 +522,7 @@ export function CreateSessionForm({ tournaments, initialTournamentId }: CreateSe
           {showPassword && (
             <div>
               <input
-                type="text"
+                type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Leave blank for no password"

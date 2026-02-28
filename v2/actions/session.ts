@@ -44,14 +44,21 @@ export async function createSession(input: {
   // Generate unique join code (retry on collision)
   const admin = createAdminClient();
   let joinCode = generateJoinCode();
+  let codeIsUnique = false;
   for (let attempts = 0; attempts < 5; attempts++) {
     const { data: existing } = await admin
       .from('auction_sessions')
       .select('id')
       .eq('join_code', joinCode)
       .single();
-    if (!existing) break;
+    if (!existing) {
+      codeIsUnique = true;
+      break;
+    }
     joinCode = generateJoinCode();
+  }
+  if (!codeIsUnique) {
+    return { error: 'Could not generate unique join code. Please try again.' };
   }
 
   // Default team order: as listed in tournament config
@@ -106,15 +113,7 @@ export async function joinSession(joinCode: string, displayName: string, passwor
   if (lookupError || !session) return { error: 'Invalid join code' };
   if (session.status === 'completed') return { error: 'This auction has ended' };
 
-  // Validate password if session has one
-  if (session.password_hash) {
-    if (!password) return { error: 'This session requires a password' };
-    if (hashPassword(password) !== session.password_hash) {
-      return { error: 'Incorrect password' };
-    }
-  }
-
-  // Check if already joined (skip password check for returning participants)
+  // Check if already joined FIRST — returning participants skip password re-entry
   const { data: existing } = await supabase
     .from('auction_participants')
     .select('id')
@@ -124,6 +123,14 @@ export async function joinSession(joinCode: string, displayName: string, passwor
 
   if (existing) {
     return { sessionId: session.id, name: session.name };
+  }
+
+  // Validate password if session has one (only for new participants)
+  if (session.password_hash) {
+    if (!password) return { error: 'This session requires a password' };
+    if (hashPassword(password) !== session.password_hash) {
+      return { error: 'Incorrect password' };
+    }
   }
 
   const { error: joinError } = await supabase
