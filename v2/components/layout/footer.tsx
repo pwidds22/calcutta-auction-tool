@@ -3,7 +3,7 @@ import Link from 'next/link'
 const PRODUCT_LINKS = [
   { label: 'Host Auction', href: '/host' },
   { label: 'Join Auction', href: '/join' },
-  { label: 'Strategy Tool', href: '/auction' },
+  { label: 'Strategy Analytics', href: '/auction' },
   { label: 'Pricing', href: '#pricing' },
   { label: 'Sign In', href: '/login' },
   { label: 'Create Account', href: '/register' },

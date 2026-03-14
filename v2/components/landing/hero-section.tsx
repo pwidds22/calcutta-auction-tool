@@ -114,16 +114,15 @@ export function HeroSection() {
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
           {/* Left: Copy */}
           <div className="max-w-xl">
-            <Link
-              href="/events"
-              className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-400 transition-colors hover:bg-amber-500/20"
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-400"
             >
               <span className="relative flex size-1.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
                 <span className="relative inline-flex size-1.5 rounded-full bg-amber-400" />
               </span>
-              March Madness 2026 &middot; Masters &middot; NFL &amp; More
-            </Link>
+              March Madness 2026 &middot; Masters &middot; World Cup &amp; More
+            </span>
 
             <h1 className="mt-6 text-4xl font-bold leading-[1.1] tracking-tight text-white sm:text-5xl">
               Host Your Calcutta Auction.{' '}
